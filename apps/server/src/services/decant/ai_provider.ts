@@ -40,7 +40,7 @@ class AIProvider {
      * Initialize the AI provider with configuration from options
      */
     async initialize(): Promise<void> {
-        const provider = await options.getOption('aiProvider') || 'openai';
+        const provider = await options.getOption('aiSelectedProvider') || 'openai';
 
         this.config = {
             provider: provider as AIProviderConfig['provider'],
