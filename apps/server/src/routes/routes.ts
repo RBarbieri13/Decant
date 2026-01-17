@@ -27,6 +27,7 @@ import bulkActionRoute from "./api/bulk_action.js";
 import clipperRoute from "./api/clipper.js";
 import cloningApiRoute from "./api/cloning.js";
 import databaseRoute from "./api/database.js";
+import decantRoute from "./api/decant.js";
 import etapiTokensApiRoutes from "./api/etapi_tokens.js";
 import exportRoute from "./api/export.js";
 import filesRoute from "./api/files.js";
@@ -380,6 +381,21 @@ function register(app: express.Application) {
     asyncApiRoute(GET, "/api/llm/providers/ollama/models", ollamaRoute.listModels);
     asyncApiRoute(GET, "/api/llm/providers/openai/models", openaiRoute.listModels);
     asyncApiRoute(GET, "/api/llm/providers/anthropic/models", anthropicRoute.listModels);
+
+    // Decant API - AI-powered URL metadata extraction and resource management
+    asyncApiRoute(PST, "/api/decant/extract", decantRoute.extractMetadata);
+    asyncApiRoute(GET, "/api/decant/resources", decantRoute.listResources);
+    asyncApiRoute(PST, "/api/decant/resources", decantRoute.createResource);
+    asyncApiRoute(GET, "/api/decant/resources/:resourceId", decantRoute.getResource);
+    asyncApiRoute(PUT, "/api/decant/resources/:resourceId", decantRoute.updateResource);
+    asyncApiRoute(DEL, "/api/decant/resources/:resourceId", decantRoute.deleteResource);
+    asyncApiRoute(PST, "/api/decant/resources/:resourceId/refresh", decantRoute.refreshResource);
+    asyncApiRoute(GET, "/api/decant/categories", decantRoute.getCategories);
+    asyncApiRoute(GET, "/api/decant/search", decantRoute.searchResources);
+    asyncApiRoute(GET, "/api/decant/hierarchies", decantRoute.getHierarchies);
+    asyncApiRoute(PST, "/api/decant/ai/test", decantRoute.testAIConnection);
+    asyncApiRoute(GET, "/api/decant/cache/stats", decantRoute.getCacheStats);
+    asyncApiRoute(PST, "/api/decant/cache/clear", decantRoute.clearCache);
 
     app.use("", router);
 }
