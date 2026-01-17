@@ -1,0 +1,19 @@
+/**
+ * Decant Styles - Main entry point
+ *
+ * Import all Decant stylesheets in the correct order.
+ */
+
+/* Theme Variables (must be first) */
+@import './themes/light.css';
+@import './themes/dark.css';
+
+/* Core Styles */
+@import './decant.css';
+
+/* Component Styles */
+@import './cards.css';
+@import './modal.css';
+
+/* Box Icons (loaded from CDN or local) */
+@import 'https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css';

@@ -1,0 +1,118 @@
+/**
+ * Decant - Dark Theme
+ *
+ * Modern dark theme for reduced eye strain.
+ */
+
+[data-theme="dark"] {
+    /* Primary Backgrounds */
+    --decant-bg-primary: #111827;
+    --decant-bg-secondary: #1f2937;
+    --decant-bg-tertiary: #374151;
+    --decant-bg-hover: #4b5563;
+    --decant-bg-active: rgba(59, 130, 246, 0.2);
+
+    /* Text Colors */
+    --decant-text-primary: #f9fafb;
+    --decant-text-secondary: #d1d5db;
+    --decant-text-tertiary: #6b7280;
+    --decant-text-inverse: #111827;
+    --decant-text-link: #60a5fa;
+
+    /* Border Colors */
+    --decant-border-light: #374151;
+    --decant-border-medium: #4b5563;
+    --decant-border-dark: #6b7280;
+    --decant-border-focus: #60a5fa;
+
+    /* Accent Colors */
+    --decant-accent-primary: #3b82f6;
+    --decant-accent-primary-hover: #60a5fa;
+    --decant-accent-primary-light: rgba(59, 130, 246, 0.2);
+
+    --decant-accent-secondary: #a78bfa;
+    --decant-accent-success: #34d399;
+    --decant-accent-warning: #fbbf24;
+    --decant-accent-danger: #f87171;
+
+    /* Shadows - Darker for dark theme */
+    --decant-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+    --decant-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+    --decant-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    --decant-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+
+    /* Component-specific */
+    --decant-card-bg: #1f2937;
+    --decant-card-border: #374151;
+    --decant-card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+
+    --decant-sidebar-bg: #111827;
+    --decant-sidebar-border: #374151;
+    --decant-sidebar-item-hover: #1f2937;
+    --decant-sidebar-item-active: #3b82f6;
+
+    --decant-input-bg: #1f2937;
+    --decant-input-border: #4b5563;
+    --decant-input-focus-ring: rgba(96, 165, 250, 0.3);
+
+    /* Scrollbar */
+    --decant-scrollbar-track: #1f2937;
+    --decant-scrollbar-thumb: #4b5563;
+    --decant-scrollbar-thumb-hover: #6b7280;
+}
+
+/* Dark theme specific overrides */
+[data-theme="dark"] .content-card {
+    background: var(--decant-card-bg);
+    border-color: var(--decant-card-border);
+}
+
+[data-theme="dark"] .content-card:hover {
+    border-color: var(--decant-border-medium);
+}
+
+[data-theme="dark"] .modal {
+    background: var(--decant-bg-primary);
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+    border-color: var(--decant-border-light);
+}
+
+[data-theme="dark"] .import-textarea {
+    background: var(--decant-bg-secondary);
+    border-color: var(--decant-border-light);
+}
+
+[data-theme="dark"] .import-preview {
+    background: var(--decant-bg-secondary);
+}
+
+[data-theme="dark"] .url-item {
+    background: var(--decant-bg-tertiary);
+}
+
+[data-theme="dark"] .card-menu,
+[data-theme="dark"] .space-menu,
+[data-theme="dark"] .filter-panel {
+    background: var(--decant-bg-secondary);
+    border-color: var(--decant-border-light);
+}
+
+[data-theme="dark"] .tag {
+    background: var(--decant-bg-tertiary);
+}
+
+[data-theme="dark"] .thumbnail-fallback {
+    background: var(--decant-bg-tertiary);
+}
+
+[data-theme="dark"] .board-column {
+    background: var(--decant-bg-secondary);
+    border-color: var(--decant-border-light);
+}
+
+[data-theme="dark"] .board-column-header {
+    border-color: var(--decant-border-light);
+}

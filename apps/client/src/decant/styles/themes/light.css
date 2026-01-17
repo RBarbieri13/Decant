@@ -1,0 +1,103 @@
+/**
+ * Decant - Light Theme
+ *
+ * Clean, modern light theme inspired by Toby.
+ */
+
+[data-theme="light"],
+:root {
+    /* Primary Backgrounds */
+    --decant-bg-primary: #ffffff;
+    --decant-bg-secondary: #f9fafb;
+    --decant-bg-tertiary: #f3f4f6;
+    --decant-bg-hover: #e5e7eb;
+    --decant-bg-active: #dbeafe;
+
+    /* Text Colors */
+    --decant-text-primary: #111827;
+    --decant-text-secondary: #4b5563;
+    --decant-text-tertiary: #9ca3af;
+    --decant-text-inverse: #ffffff;
+    --decant-text-link: #2563eb;
+
+    /* Border Colors */
+    --decant-border-light: #e5e7eb;
+    --decant-border-medium: #d1d5db;
+    --decant-border-dark: #9ca3af;
+    --decant-border-focus: #3b82f6;
+
+    /* Accent Colors */
+    --decant-accent-primary: #3b82f6;
+    --decant-accent-primary-hover: #2563eb;
+    --decant-accent-primary-light: rgba(59, 130, 246, 0.1);
+
+    --decant-accent-secondary: #8b5cf6;
+    --decant-accent-success: #10b981;
+    --decant-accent-warning: #f59e0b;
+    --decant-accent-danger: #ef4444;
+
+    /* Shadows */
+    --decant-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --decant-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --decant-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --decant-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+    /* Component-specific */
+    --decant-card-bg: #ffffff;
+    --decant-card-border: #e5e7eb;
+    --decant-card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+
+    --decant-sidebar-bg: #ffffff;
+    --decant-sidebar-border: #e5e7eb;
+    --decant-sidebar-item-hover: #f3f4f6;
+    --decant-sidebar-item-active: #3b82f6;
+
+    --decant-input-bg: #f9fafb;
+    --decant-input-border: #d1d5db;
+    --decant-input-focus-ring: rgba(59, 130, 246, 0.2);
+
+    /* Scrollbar */
+    --decant-scrollbar-track: #f3f4f6;
+    --decant-scrollbar-thumb: #d1d5db;
+    --decant-scrollbar-thumb-hover: #9ca3af;
+}
+
+/* Scrollbar Styling */
+.decant-app ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.decant-app ::-webkit-scrollbar-track {
+    background: var(--decant-scrollbar-track);
+    border-radius: 4px;
+}
+
+.decant-app ::-webkit-scrollbar-thumb {
+    background: var(--decant-scrollbar-thumb);
+    border-radius: 4px;
+}
+
+.decant-app ::-webkit-scrollbar-thumb:hover {
+    background: var(--decant-scrollbar-thumb-hover);
+}
+
+/* Selection */
+.decant-app ::selection {
+    background: var(--decant-accent-primary-light);
+    color: var(--decant-accent-primary);
+}
+
+/* Focus Ring */
+.decant-app *:focus-visible {
+    outline: 2px solid var(--decant-accent-primary);
+    outline-offset: 2px;
+}
+
+.decant-app button:focus-visible,
+.decant-app input:focus-visible,
+.decant-app select:focus-visible,
+.decant-app textarea:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--decant-input-focus-ring);
+}

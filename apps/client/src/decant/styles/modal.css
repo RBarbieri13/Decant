@@ -1,0 +1,328 @@
+/**
+ * Decant - Modal Styles
+ *
+ * Styles for import modal and other dialog components.
+ */
+
+/* ============================================================
+   Modal Overlay
+   ============================================================ */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 24px;
+    animation: fadeIn var(--decant-transition-fast);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ============================================================
+   Modal Container
+   ============================================================ */
+
+.modal {
+    background: var(--decant-bg-primary);
+    border-radius: var(--decant-radius-xl);
+    box-shadow: var(--decant-shadow-xl);
+    width: 100%;
+    max-width: 560px;
+    max-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
+    animation: slideUp var(--decant-transition-normal);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Modal Header */
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--decant-border-light);
+}
+
+.modal-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.modal-header h2 i {
+    color: var(--decant-accent-primary);
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--decant-text-tertiary);
+    border-radius: var(--decant-radius-sm);
+    cursor: pointer;
+    font-size: 20px;
+    transition: all var(--decant-transition-fast);
+}
+
+.modal-close:hover {
+    background: var(--decant-bg-hover);
+    color: var(--decant-text-primary);
+}
+
+/* Modal Body */
+.modal-body {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+/* Modal Footer */
+.modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--decant-border-light);
+}
+
+/* ============================================================
+   Import Modal Specifics
+   ============================================================ */
+
+.import-modal {
+    max-width: 640px;
+}
+
+.import-input-section {
+    margin-bottom: 20px;
+}
+
+.import-input-section label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.import-textarea {
+    width: 100%;
+    min-height: 160px;
+    padding: 12px;
+    border: 1px solid var(--decant-border-light);
+    border-radius: var(--decant-radius-md);
+    background: var(--decant-bg-secondary);
+    color: var(--decant-text-primary);
+    font-family: var(--decant-font-mono);
+    font-size: 13px;
+    line-height: 1.6;
+    resize: vertical;
+    outline: none;
+    transition: border-color var(--decant-transition-fast);
+}
+
+.import-textarea:focus {
+    border-color: var(--decant-accent-primary);
+}
+
+.import-textarea::placeholder {
+    color: var(--decant-text-tertiary);
+}
+
+.import-space-section {
+    margin-bottom: 20px;
+}
+
+.import-space-section label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.import-space-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--decant-border-light);
+    border-radius: var(--decant-radius-md);
+    background: var(--decant-bg-primary);
+    color: var(--decant-text-primary);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* Import Preview */
+.import-preview {
+    background: var(--decant-bg-secondary);
+    border-radius: var(--decant-radius-md);
+    padding: 16px;
+}
+
+.import-preview h4 {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+}
+
+.type-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.type-summary .type-badge {
+    position: static;
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+.type-summary .type-badge i {
+    font-size: 14px;
+}
+
+.url-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.url-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--decant-bg-primary);
+    border-radius: var(--decant-radius-sm);
+    font-size: 12px;
+}
+
+.url-item i {
+    flex-shrink: 0;
+}
+
+.url-domain {
+    font-weight: 500;
+    flex-shrink: 0;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.url-path {
+    flex: 1;
+    color: var(--decant-text-tertiary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.url-invalid {
+    color: var(--decant-accent-danger);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.url-item.more {
+    color: var(--decant-text-tertiary);
+    justify-content: center;
+}
+
+.invalid-warning {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 8px 12px;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--decant-accent-danger);
+    border-radius: var(--decant-radius-sm);
+    font-size: 12px;
+}
+
+.import-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 12px;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--decant-accent-danger);
+    border-radius: var(--decant-radius-md);
+    font-size: 13px;
+}
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--decant-radius-md);
+    cursor: pointer;
+    transition: all var(--decant-transition-fast);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: var(--decant-accent-primary);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #2563eb;
+}
+
+.btn-secondary {
+    background: var(--decant-bg-tertiary);
+    color: var(--decant-text-primary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--decant-bg-hover);
+}
+
+.btn i.spinning {
+    animation: spin 1s linear infinite;
+}

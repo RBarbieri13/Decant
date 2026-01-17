@@ -1,0 +1,511 @@
+/**
+ * Decant - Card Component Styles
+ *
+ * Styles for content cards in various view modes.
+ */
+
+/* ============================================================
+   Content Grid
+   ============================================================ */
+
+.content-grid {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+/* Grid View */
+.content-grid.view-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    align-content: start;
+}
+
+/* List View */
+.content-grid.view-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Masonry View */
+.content-grid.view-masonry {
+    columns: 4;
+    column-gap: 20px;
+}
+
+@media (max-width: 1400px) {
+    .content-grid.view-masonry { columns: 3; }
+}
+
+@media (max-width: 1000px) {
+    .content-grid.view-masonry { columns: 2; }
+}
+
+.content-grid.view-masonry .content-card {
+    break-inside: avoid;
+    margin-bottom: 20px;
+}
+
+/* Board View */
+.content-grid.view-board {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding-bottom: 20px;
+}
+
+.board-column {
+    flex: 0 0 300px;
+    background: var(--decant-bg-primary);
+    border-radius: var(--decant-radius-lg);
+    border: 1px solid var(--decant-border-light);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 200px);
+}
+
+.board-column-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--decant-border-light);
+}
+
+.column-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.column-count {
+    font-size: 12px;
+    color: var(--decant-text-tertiary);
+    background: var(--decant-bg-tertiary);
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.board-column-content {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Empty State */
+.content-grid.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 48px;
+    max-width: 400px;
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: var(--decant-text-tertiary);
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+}
+
+.empty-state p {
+    font-size: 14px;
+    color: var(--decant-text-secondary);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Loading Skeleton */
+.content-card.skeleton {
+    background: var(--decant-bg-primary);
+    border-radius: var(--decant-radius-lg);
+    overflow: hidden;
+}
+
+.skeleton-thumbnail {
+    height: 160px;
+    background: linear-gradient(90deg, var(--decant-bg-tertiary) 25%, var(--decant-bg-hover) 50%, var(--decant-bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+.skeleton-content {
+    padding: 16px;
+}
+
+.skeleton-title,
+.skeleton-meta {
+    height: 16px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--decant-bg-tertiary) 25%, var(--decant-bg-hover) 50%, var(--decant-bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+.skeleton-title {
+    width: 80%;
+    margin-bottom: 8px;
+}
+
+.skeleton-meta {
+    width: 50%;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ============================================================
+   Content Card
+   ============================================================ */
+
+.content-card {
+    position: relative;
+    background: var(--decant-bg-primary);
+    border: 1px solid var(--decant-border-light);
+    border-radius: var(--decant-radius-lg);
+    overflow: hidden;
+    transition: all var(--decant-transition-fast);
+    cursor: pointer;
+}
+
+.content-card:hover {
+    border-color: var(--decant-border-medium);
+    box-shadow: var(--decant-shadow-md);
+}
+
+.content-card.selected {
+    border-color: var(--decant-accent-primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.content-card.dragging {
+    opacity: 0.5;
+}
+
+/* Card Checkbox */
+.card-checkbox {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity var(--decant-transition-fast);
+}
+
+.content-card:hover .card-checkbox,
+.content-card.selected .card-checkbox {
+    opacity: 1;
+}
+
+.card-checkbox input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--decant-accent-primary);
+}
+
+/* Card Thumbnail */
+.card-thumbnail {
+    position: relative;
+    height: 160px;
+    background: var(--decant-bg-tertiary);
+    overflow: hidden;
+}
+
+.card-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--decant-transition-slow);
+}
+
+.content-card:hover .card-thumbnail img {
+    transform: scale(1.05);
+}
+
+.thumbnail-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.thumbnail-fallback i {
+    font-size: 48px;
+}
+
+/* Type Badge */
+.type-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    color: white;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: var(--decant-radius-sm);
+}
+
+.type-badge i {
+    font-size: 12px;
+}
+
+/* Duration Badge */
+.duration-badge {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: var(--decant-radius-sm);
+}
+
+/* Card Content */
+.card-content {
+    padding: 14px;
+}
+
+/* Card Source */
+.card-source {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.favicon {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+}
+
+.domain {
+    font-size: 12px;
+    color: var(--decant-text-tertiary);
+}
+
+.type-badge-inline {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    margin-left: auto;
+}
+
+/* Card Title */
+.card-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin: 0 0 8px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.pin-icon {
+    color: var(--decant-accent-warning);
+    margin-right: 4px;
+}
+
+/* Card Description */
+.card-description {
+    font-size: 13px;
+    color: var(--decant-text-secondary);
+    line-height: 1.5;
+    margin: 0 0 12px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Card Tags */
+.card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.tag {
+    padding: 2px 8px;
+    background: var(--decant-bg-tertiary);
+    color: var(--decant-text-secondary);
+    font-size: 11px;
+    border-radius: 999px;
+}
+
+.tag-more {
+    padding: 2px 8px;
+    color: var(--decant-text-tertiary);
+    font-size: 11px;
+}
+
+/* Card Footer */
+.card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.card-time {
+    font-size: 12px;
+    color: var(--decant-text-tertiary);
+}
+
+.card-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity var(--decant-transition-fast);
+}
+
+.content-card:hover .card-actions {
+    opacity: 1;
+}
+
+.action-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--decant-text-tertiary);
+    border-radius: var(--decant-radius-sm);
+    cursor: pointer;
+    transition: all var(--decant-transition-fast);
+}
+
+.action-btn:hover {
+    background: var(--decant-bg-hover);
+    color: var(--decant-text-primary);
+}
+
+.action-btn.active {
+    color: var(--decant-accent-warning);
+}
+
+/* Card Menu */
+.card-menu {
+    position: absolute;
+    bottom: 48px;
+    right: 12px;
+    background: var(--decant-bg-primary);
+    border: 1px solid var(--decant-border-light);
+    border-radius: var(--decant-radius-md);
+    box-shadow: var(--decant-shadow-lg);
+    padding: 4px;
+    min-width: 140px;
+    z-index: 100;
+}
+
+.card-menu button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--decant-text-primary);
+    font-size: 13px;
+    text-align: left;
+    border-radius: var(--decant-radius-sm);
+    cursor: pointer;
+}
+
+.card-menu button:hover {
+    background: var(--decant-bg-hover);
+}
+
+.card-menu button.danger {
+    color: var(--decant-accent-danger);
+}
+
+.card-menu hr {
+    border: none;
+    border-top: 1px solid var(--decant-border-light);
+    margin: 4px 0;
+}
+
+/* ============================================================
+   List View Card
+   ============================================================ */
+
+.content-card.view-list {
+    display: flex;
+    border-radius: var(--decant-radius-md);
+}
+
+.content-card.view-list .card-thumbnail {
+    display: none;
+}
+
+.content-card.view-list .card-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+    padding: 12px 16px;
+}
+
+.content-card.view-list .card-source {
+    margin-bottom: 0;
+    flex-shrink: 0;
+    width: 180px;
+}
+
+.content-card.view-list .card-title {
+    flex: 1;
+    margin: 0;
+    -webkit-line-clamp: 1;
+}
+
+.content-card.view-list .card-description {
+    display: none;
+}
+
+.content-card.view-list .card-tags {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.content-card.view-list .card-footer {
+    flex-shrink: 0;
+}
+
+.content-card.view-list .card-checkbox {
+    position: static;
+    opacity: 1;
+}
+
+.content-card.view-list .card-actions {
+    opacity: 1;
+}
