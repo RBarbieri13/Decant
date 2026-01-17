@@ -1,0 +1,1104 @@
+/*
+ * Gumroad-inspired Theme for Trilium Notes
+ *
+ * Design System: Pop-Brutalist / Neo-Brutalist
+ * Core Philosophy: High saturation, hard borders, flat surfaces, deep offset shadows, playful interactions
+ *
+ * Design Rules:
+ * 1. Hard Borders: 2px solid #000000
+ * 2. Hard Shadows: No blur, solid black offsets (4px 4px 0px #000000)
+ * 3. Flat Colors: No gradients - Pink, Yellow, Lavender
+ * 4. Square/Slight Radius: 4px for containers, 50px for pills
+ * 5. Typography: Space Grotesk (or similar geometric sans-serif)
+ * 6. Interaction: On hover, elements translate up/left with larger shadow
+ */
+
+/* Import the Next theme base for modern components */
+@import url(./theme-next/base.css);
+
+/* Import Space Grotesk (similar to Gumroad's ABC Favorit) */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+/*
+ * CSS VARIABLES - Gumroad Design Tokens
+ */
+:root {
+    --theme-style: light;
+
+    /* 🎨 GUMROAD PALETTE */
+    --gum-pink: #FF90E8;
+    --gum-pink-light: #FFB8F0;
+    --gum-pink-dark: #E070C8;
+    --gum-yellow: #E1FF3C;
+    --gum-blue: #90A8ED;
+    --gum-green: #23C66B;
+    --gum-black: #000000;
+    --gum-white: #FFFFFF;
+    --gum-bg: #F4F4F0;
+    --gum-error: #FF6B6B;
+    --gum-gray-100: #F5F5F5;
+    --gum-gray-200: #E5E5E5;
+    --gum-gray-300: #D4D4D4;
+    --gum-gray-400: #A3A3A3;
+    --gum-gray-500: #737373;
+    --gum-gray-600: #525252;
+    --gum-gray-700: #404040;
+    --gum-gray-800: #262626;
+    --gum-gray-900: #171717;
+
+    /* 📐 DIMENSIONS - Brutalist Style */
+    --gum-border-width: 2px;
+    --gum-border-radius: 4px;
+    --gum-pill-radius: 50px;
+
+    /* 🌑 HARD SHADOWS - No blur! */
+    --gum-shadow-default: 4px 4px 0px #000000;
+    --gum-shadow-hover: 6px 6px 0px #000000;
+    --gum-shadow-active: 2px 2px 0px #000000;
+    --gum-shadow-pink: 4px 4px 0px var(--gum-pink);
+
+    /* Typography - Space Grotesk (like ABC Favorit) */
+    --main-font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --main-font-size: 15px;
+    --tree-font-family: var(--main-font-family);
+    --tree-font-size: 14px;
+    --detail-font-family: var(--main-font-family);
+    --detail-font-size: 16px;
+    --monospace-font-family: 'JetBrains Mono', monospace;
+    --monospace-font-size: 14px;
+
+    /* Main Colors */
+    --main-background-color: var(--gum-bg);
+    --main-text-color: var(--gum-black);
+    --main-border-color: var(--gum-black);
+    --subtle-border-color: var(--gum-gray-300);
+    --native-titlebar-background: var(--gum-white);
+
+    /* Accented Areas */
+    --accented-background-color: var(--gum-white);
+    --more-accented-background-color: var(--gum-gray-100);
+
+    /* Dropdowns & Menus */
+    --dropdown-border-color: var(--gum-black);
+    --dropdown-shadow-opacity: 0;
+    --dropdown-border-radius: var(--gum-border-radius);
+    --dropdown-backdrop-filter: none;
+    --dropdown-item-icon-destructive-color: var(--gum-error);
+
+    /* Buttons - Brutalist Style */
+    --button-background-color: var(--gum-white);
+    --button-border-color: var(--gum-black);
+    --button-text-color: var(--gum-black);
+    --button-border-radius: var(--gum-border-radius);
+    --button-disabled-background-color: var(--gum-gray-200);
+    --button-disabled-text-color: var(--gum-gray-500);
+
+    --primary-button-background-color: var(--gum-pink);
+    --primary-button-text-color: var(--gum-black);
+    --primary-button-border-color: var(--gum-black);
+
+    /* Command buttons */
+    --cmd-button-background-color: var(--gum-white);
+    --cmd-button-text-color: var(--gum-black);
+    --cmd-button-hover-background-color: var(--gum-yellow);
+    --cmd-button-hover-text-color: var(--gum-black);
+    --cmd-button-shadow-color: transparent;
+
+    /* Icon buttons */
+    --icon-button-color: var(--gum-black);
+    --icon-button-hover-background: var(--gum-yellow);
+    --icon-button-hover-color: var(--gum-black);
+
+    /* Text Colors */
+    --muted-text-color: var(--gum-gray-500);
+    --contextual-help-icon-color: var(--gum-blue);
+
+    /* Inputs - Brutalist Style */
+    --input-background-color: var(--gum-white);
+    --input-text-color: var(--gum-black);
+    --input-placeholder-color: var(--gum-gray-400);
+    --input-hover-background: var(--gum-white);
+    --input-hover-color: var(--gum-black);
+    --input-focus-outline-color: var(--gum-pink);
+    --input-focus-background: var(--gum-white);
+    --input-focus-color: var(--gum-black);
+    --input-selection-background: var(--gum-pink);
+    --input-selection-text-color: var(--gum-black);
+
+    /* Radio & Checkboxes */
+    --radio-checkbox-background: var(--gum-white);
+    --radio-checkbox-hover-background: var(--gum-gray-100);
+    --radio-checkbox-indicator-color: var(--gum-black);
+
+    /* Select dropdowns */
+    --select-focus-background: var(--gum-white);
+    --select-focus-text-color: var(--gum-black);
+
+    /* Links */
+    --link-color: var(--gum-blue);
+    --link-hover-background: transparent;
+    --link-hover-color: var(--gum-pink);
+    --link-selection-outline-color: var(--gum-pink);
+
+    /* Hover & Active States */
+    --hover-item-text-color: var(--gum-black);
+    --hover-item-background-color: var(--gum-yellow);
+    --hover-item-border-color: var(--gum-black);
+
+    --active-item-text-color: var(--gum-black);
+    --active-item-background-color: var(--gum-pink);
+    --active-item-border-color: var(--gum-black);
+
+    /* Menu Styling */
+    --menu-text-color: var(--gum-black);
+    --menu-background-color: var(--gum-white);
+    --menu-background-color-no-backdrop: var(--gum-white);
+    --menu-item-icon-color: var(--gum-black);
+    --menu-item-disabled-opacity: 0.4;
+    --menu-item-keyboard-shortcut-color: var(--gum-gray-500);
+    --menu-item-arrow-color: var(--gum-black);
+    --menu-item-delimiter-color: var(--gum-black);
+    --menu-item-group-header-color: var(--gum-gray-600);
+
+    /* Modal Styling */
+    --modal-backdrop-color: rgba(0, 0, 0, 0.5);
+    --modal-shadow-color: rgba(0, 0, 0, 0);
+    --modal-border-color: var(--gum-black);
+    --modal-background-color: var(--gum-white);
+    --modal-title-color: var(--gum-black);
+    --modal-control-button-background: var(--gum-white);
+    --modal-control-button-color: var(--gum-black);
+    --modal-control-button-hover-background: var(--gum-yellow);
+    --modal-control-button-hover-color: var(--gum-black);
+    --modal-close-button-hover-background: var(--gum-error);
+    --modal-footer-background: var(--gum-gray-100);
+    --modal-footer-color: var(--gum-black);
+
+    /* Toast Notifications */
+    --toast-background: var(--gum-black);
+    --toast-text-color: var(--gum-white);
+    --toast-close-button-background: rgba(255, 255, 255, 0.2);
+
+    /* Quick Search */
+    --quick-search-background: var(--gum-white);
+    --quick-search-color: var(--gum-gray-500);
+    --quick-search-hover-background: var(--gum-white);
+    --quick-search-focus-border: var(--gum-pink);
+    --quick-search-focus-background: var(--gum-white);
+    --quick-search-focus-color: var(--gum-black);
+    --quick-search-result-content-background: var(--gum-gray-100);
+    --quick-search-result-highlight-color: var(--gum-pink);
+
+    /* Left Pane / Sidebar - Gumroad Dark Style */
+    --left-pane-collapsed-border-color: var(--gum-black);
+    --left-pane-background-color: var(--gum-black);
+    --left-pane-text-color: var(--gum-white);
+    --left-pane-icon-color: var(--gum-gray-400);
+    --left-pane-item-hover-background: rgba(255, 255, 255, 0.1);
+    --left-pane-item-selected-background: var(--gum-pink);
+    --left-pane-item-selected-color: var(--gum-black);
+    --left-pane-item-selected-shadow: none;
+    --left-pane-item-action-button-background: rgba(255, 255, 255, 0.2);
+    --left-pane-item-action-button-color: var(--gum-white);
+    --left-pane-item-action-button-hover-background: var(--gum-yellow);
+    --left-pane-item-action-button-hover-shadow: none;
+    --left-pane-item-selected-action-button-hover-shadow: none;
+    --left-pane-item-selected-shadow-size: 0px;
+
+    /* Launcher Pane - Vertical */
+    --launcher-pane-vert-background-color: var(--gum-black);
+    --launcher-pane-vert-text-color: var(--gum-white);
+    --launcher-pane-vert-button-hover-color: var(--gum-black);
+    --launcher-pane-vert-button-hover-background: var(--gum-pink);
+    --launcher-pane-vert-button-hover-shadow: none;
+    --launcher-pane-vert-button-focus-outline-color: var(--gum-pink);
+    --launcher-pane-vert-background-color-bgfx: var(--gum-black);
+
+    /* Launcher Pane - Horizontal */
+    --launcher-pane-horiz-border-color: var(--gum-black);
+    --launcher-pane-horiz-background-color: var(--gum-white);
+    --launcher-pane-horiz-text-color: var(--gum-black);
+    --launcher-pane-horiz-button-hover-color: var(--gum-black);
+    --launcher-pane-horiz-button-hover-background: var(--gum-pink);
+    --launcher-pane-horiz-button-hover-shadow: none;
+    --launcher-pane-horiz-button-focus-outline-color: var(--gum-pink);
+    --launcher-pane-horiz-background-color-bgfx: var(--gum-white);
+    --launcher-pane-horiz-border-color-bgfx: var(--gum-black);
+
+    /* Global Menu */
+    --global-menu-update-available-badge-background-color: var(--gum-yellow);
+    --global-menu-update-available-badge-color: var(--gum-black);
+
+    /* Status Icons */
+    --protected-session-active-icon-color: var(--gum-green);
+    --sync-status-error-pulse-color: var(--gum-error);
+
+    /* Classic Toolbar */
+    --classic-toolbar-vert-layout-background-color: var(--gum-white);
+    --classic-toolbar-horiz-layout-background-color: var(--gum-white);
+
+    /* Center Pane Background Effects */
+    --center-pane-vert-layout-background-color-bgfx: var(--gum-white);
+    --center-pane-horiz-layout-background-color-bgfx: var(--gum-white);
+
+    /* Right Pane */
+    --right-pane-heading-color: var(--gum-black);
+    --right-pane-background-color: var(--gum-white);
+    --right-pane-background-color-bgfx: var(--gum-white);
+    --right-pane-item-hover-background: var(--gum-yellow);
+    --right-pane-item-hover-color: var(--gum-black);
+
+    /* Root Background */
+    --root-background: var(--gum-black);
+
+    /* Gutter */
+    --gutter-color: var(--gum-gray-300);
+    --gutter-hover-color: var(--gum-pink);
+
+    /* Tabs */
+    --tab-close-button-hover-background: var(--gum-error);
+    --tab-close-button-hover-color: var(--gum-white);
+
+    --active-tab-background-color: var(--gum-white);
+    --active-tab-hover-background-color: var(--gum-white);
+    --active-tab-icon-color: var(--gum-black);
+    --active-tab-text-color: var(--gum-black);
+    --active-tab-shadow: var(--gum-shadow-default);
+    --active-tab-dragging-shadow: var(--gum-shadow-hover);
+
+    --inactive-tab-background-color: var(--gum-gray-100);
+    --inactive-tab-hover-background-color: var(--gum-yellow);
+    --inactive-tab-text-color: var(--gum-black);
+
+    /* Alert Bar */
+    --alert-bar-background: var(--gum-yellow);
+
+    /* Badges */
+    --badge-background-color: var(--gum-yellow);
+    --badge-text-color: var(--gum-black);
+    --badge-temporaraily-editable-background-color: var(--gum-green);
+    --badge-read-only-background-color: var(--gum-error);
+    --badge-share-background-color: var(--gum-blue);
+    --badge-clipped-note-background-color: var(--gum-pink);
+    --badge-execute-background-color: var(--gum-blue);
+
+    /* Note Icon */
+    --note-icon-background-color: var(--gum-black);
+    --note-icon-color: var(--gum-white);
+    --note-icon-hover-background-color: var(--gum-pink);
+
+    /* Promoted Attributes */
+    --promoted-attribute-card-background-color: var(--gum-white);
+    --promoted-attribute-card-shadow: var(--gum-shadow-default);
+
+    /* Floating Buttons */
+    --floating-button-shadow-color: var(--gum-black);
+    --floating-button-background-color: var(--gum-white);
+    --floating-button-color: var(--gum-black);
+    --floating-button-hover-background: var(--gum-yellow);
+    --floating-button-hover-color: var(--gum-black);
+    --floating-button-show-button-background: var(--gum-white);
+    --floating-button-show-button-color: var(--gum-black);
+    --floating-button-show-button-shadow: var(--gum-shadow-default);
+    --floating-button-show-button-hover-background: var(--gum-yellow);
+    --floating-button-show-button-hover-shadow: var(--gum-shadow-hover);
+    --floating-button-hide-button-background: var(--gum-gray-100);
+    --floating-button-hide-button-color: var(--gum-black);
+
+    /* New Tab Button */
+    --new-tab-button-background: var(--gum-white);
+    --new-tab-button-color: var(--gum-black);
+    --new-tab-button-shadow: var(--gum-shadow-default);
+    --new-tab-button-hover-background: var(--gum-pink);
+    --new-tab-button-hover-color: var(--gum-black);
+
+    /* Bottom Panel */
+    --bottom-panel-background-color: var(--gum-white);
+    --bottom-panel-title-bar-background-color: var(--gum-gray-100);
+
+    /* Status Bar */
+    --status-bar-border-color: var(--gum-black);
+
+    /* Scrollbar */
+    --scrollbar-thumb-color: var(--gum-black);
+    --scrollbar-thumb-hover-color: var(--gum-pink);
+    --scrollbar-background-color: var(--gum-gray-200);
+
+    /* Selection */
+    --selection-background-color: var(--gum-pink);
+
+    /* Mermaid */
+    --mermaid-theme: default;
+
+    /* Code Blocks */
+    --code-block-box-shadow: var(--gum-shadow-default);
+
+    /* Cards */
+    --card-background-color: var(--gum-white);
+    --card-background-hover-color: var(--gum-white);
+    --card-border-color: var(--gum-black);
+    --card-shadow-color: var(--gum-black);
+    --card-box-shadow: none;
+
+    /* Calendar */
+    --calendar-color: var(--gum-black);
+    --calendar-weekday-labels-color: var(--gum-gray-600);
+    --calendar-day-hover-color: var(--gum-black);
+    --calendar-day-hover-background: var(--gum-pink);
+    --calendar-day-highlight-background: var(--gum-yellow);
+
+    /* Timeline */
+    --timeline-bullet-color: var(--gum-black);
+    --timeline-bullet-hover-color: var(--gum-pink);
+    --timeline-connector-color: var(--gum-black);
+    --timeline-connector-active-color: var(--gum-pink);
+    --timeline-connector-hover-blend-mode: normal;
+
+    /* Tooltips */
+    --tooltip-background-color: var(--gum-black);
+    --tooltip-foreground-color: var(--gum-white);
+    --tooltip-shadow-color: transparent;
+
+    /* Help */
+    --help-background-color: var(--gum-white);
+    --help-card-background: var(--gum-white);
+    --help-card-shadow: var(--gum-shadow-default);
+    --help-card-heading-color: var(--gum-black);
+    --help-kbd-shortcut-color: var(--gum-black);
+    --help-kbd-shortcut-background: var(--gum-yellow);
+    --help-kbd-shortcut-shadow: var(--gum-shadow-active);
+    --help-code-color: var(--gum-black);
+    --help-code-background: var(--gum-gray-100);
+
+    /* CKEditor */
+    --ck-editor-popup-border-color: var(--gum-black);
+    --ck-editor-toolbar-button-on-background: var(--gum-pink);
+    --ck-editor-toolbar-button-on-color: var(--gum-black);
+    --ck-editor-toolbar-button-on-shadow: none;
+    --ck-editor-toolbar-dropdown-button-open-background: var(--gum-yellow);
+
+    /* Calendar Collection */
+    --calendar-coll-event-background-lightness: 90%;
+    --calendar-coll-event-background-saturation: 100%;
+    --calendar-coll-event-background-color: var(--gum-pink);
+    --calendar-coll-event-text-color: var(--gum-black);
+    --calendar-coll-event-hover-filter: none;
+    --callendar-coll-event-archived-sripe-color: rgba(0, 0, 0, 0.1);
+    --calendar-coll-today-background-color: var(--gum-yellow);
+
+    /* Tree item color lightness constraints */
+    --tree-item-light-theme-max-color-lightness: 70;
+    --tree-item-dark-theme-min-color-lightness: 70;
+
+    /* Center pane border radius */
+    --center-pane-border-radius: var(--gum-border-radius);
+
+    /* Tab bar */
+    --tab-bar-height: 54px;
+    --tab-height: 40px;
+
+    /* Theme capabilities */
+    --tab-note-icons: true;
+    --allow-background-effects: false;
+
+    /* Tool dialog */
+    --tool-dialog-background-color: var(--gum-white);
+    --tool-dialog-shadow-color: var(--gum-black);
+}
+
+/*
+ * ============================================
+ * BRUTALIST COMPONENT STYLES
+ * ============================================
+ */
+
+/*
+ * GLOBAL STYLES
+ */
+
+body {
+    font-family: var(--main-font-family);
+    font-weight: 500;
+}
+
+/*
+ * BUTTONS - Gumroad Brutalist Style
+ */
+
+.btn {
+    font-family: var(--main-font-family);
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 12px 24px;
+    border: var(--gum-border-width) solid var(--gum-black) !important;
+    border-radius: var(--gum-border-radius);
+    box-shadow: var(--gum-shadow-default);
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    cursor: pointer;
+}
+
+.btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: var(--gum-shadow-hover);
+}
+
+.btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: none !important;
+}
+
+.btn.btn-primary {
+    background-color: var(--gum-pink);
+    border-color: var(--gum-black) !important;
+    color: var(--gum-black);
+}
+
+.btn.btn-primary:hover {
+    background-color: var(--gum-pink);
+}
+
+.btn:not(.btn-primary) {
+    background-color: var(--gum-white);
+    color: var(--gum-black);
+}
+
+.btn:not(.btn-primary):hover {
+    background-color: var(--gum-white);
+}
+
+/* Icon action buttons */
+.icon-action {
+    border: var(--gum-border-width) solid var(--gum-black);
+    border-radius: var(--gum-border-radius);
+    box-shadow: var(--gum-shadow-active);
+    transition: all 0.2s ease;
+}
+
+.icon-action:hover:not(.disabled) {
+    background-color: var(--gum-yellow);
+    transform: translate(-1px, -1px);
+    box-shadow: var(--gum-shadow-default);
+}
+
+/*
+ * INPUT FIELDS - Brutalist Style
+ */
+
+input,
+select,
+textarea,
+.form-control,
+.form-select {
+    font-family: var(--main-font-family);
+    font-size: 16px;
+    padding: 12px 16px;
+    background-color: var(--gum-white);
+    border: var(--gum-border-width) solid var(--gum-black) !important;
+    border-radius: var(--gum-border-radius);
+    outline: none;
+    transition: box-shadow 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.form-control:focus,
+.form-select:focus {
+    box-shadow: var(--gum-shadow-pink) !important;
+    border-color: var(--gum-black) !important;
+    outline: none;
+}
+
+/*
+ * LEFT PANE / SIDEBAR - Gumroad Dark Style
+ */
+
+#left-pane {
+    border-right: var(--gum-border-width) solid var(--gum-gray-800);
+}
+
+#left-pane div.tree {
+    padding: 12px 8px 40px 8px;
+}
+
+/* Tree items */
+#left-pane span.fancytree-node {
+    border: var(--gum-border-width) solid transparent;
+    border-radius: var(--gum-border-radius);
+    padding: 8px 12px;
+    margin: 2px 0;
+    transition: all 0.15s ease;
+}
+
+#left-pane span.fancytree-node:hover {
+    background: var(--left-pane-item-hover-background);
+    border-color: transparent;
+}
+
+/* Active/Selected tree item - PINK highlight */
+#left-pane span.fancytree-node.fancytree-active {
+    background: var(--gum-pink) !important;
+    color: var(--gum-black) !important;
+    border-color: var(--gum-black) !important;
+    box-shadow: var(--gum-shadow-active);
+}
+
+#left-pane span.fancytree-node.fancytree-active::before {
+    display: none;
+}
+
+#left-pane span.fancytree-node.fancytree-active .fancytree-title,
+#left-pane span.fancytree-node.fancytree-active .fancytree-custom-icon {
+    color: var(--gum-black) !important;
+    font-weight: 700;
+}
+
+/* Tree icons */
+#left-pane .fancytree-custom-icon {
+    color: var(--gum-gray-400);
+}
+
+#left-pane span.fancytree-node:hover .fancytree-custom-icon {
+    color: var(--gum-white);
+}
+
+/* Tree expander */
+#left-pane .fancytree-expander {
+    color: var(--gum-gray-500);
+}
+
+#left-pane .fancytree-expander:hover {
+    color: var(--gum-pink);
+}
+
+/* Quick search in sidebar */
+div.quick-search {
+    margin: 8px;
+}
+
+div.quick-search::before {
+    background: var(--gum-white);
+    border: var(--gum-border-width) solid var(--gum-black);
+    border-radius: var(--gum-border-radius);
+    box-shadow: var(--gum-shadow-active);
+}
+
+div.quick-search:hover::before {
+    box-shadow: var(--gum-shadow-default);
+    transform: translate(-1px, -1px);
+}
+
+div.quick-search:focus-within::before {
+    box-shadow: var(--gum-shadow-pink);
+}
+
+div.quick-search input {
+    color: var(--gum-black);
+}
+
+div.quick-search input::placeholder {
+    color: var(--gum-gray-500);
+}
+
+div.quick-search .search-button {
+    color: var(--gum-black) !important;
+}
+
+/*
+ * LAUNCHER PANE
+ */
+
+#launcher-pane.vertical {
+    border-right: var(--gum-border-width) solid var(--gum-gray-800);
+}
+
+#launcher-pane .launcher-button {
+    border: var(--gum-border-width) solid transparent;
+    border-radius: var(--gum-border-radius);
+    transition: all 0.15s ease;
+}
+
+#launcher-pane .launcher-button:hover {
+    background: var(--gum-pink) !important;
+    color: var(--gum-black) !important;
+    border-color: var(--gum-black) !important;
+}
+
+/*
+ * TAB BAR - Brutalist Style
+ */
+
+.tab-row-container {
+    background: var(--gum-bg);
+    border-bottom: var(--gum-border-width) solid var(--gum-black);
+}
+
+.tab-row-widget .note-tab .note-tab-wrapper {
+    border: var(--gum-border-width) solid var(--gum-black);
+    border-bottom: none;
+    border-radius: var(--gum-border-radius) var(--gum-border-radius) 0 0;
+    background: var(--gum-gray-100);
+    transition: all 0.15s ease;
+}
+
+.tab-row-widget .note-tab:not([active]) .note-tab-wrapper:hover {
+    background: var(--gum-yellow);
+    transform: translateY(-2px);
+}
+
+.tab-row-widget .note-tab[active] .note-tab-wrapper {
+    background: var(--gum-white);
+    box-shadow: var(--gum-shadow-default);
+    z-index: 1;
+}
+
+.tab-row-widget .note-tab .note-tab-wrapper::after {
+    background-color: var(--gum-pink);
+    height: 4px;
+    border-radius: 0;
+}
+
+/* New tab button */
+.tab-row-widget .note-new-tab::before {
+    background: var(--gum-white);
+    border: var(--gum-border-width) solid var(--gum-black);
+    box-shadow: var(--gum-shadow-active);
+}
+
+.tab-row-widget .note-new-tab:hover::before {
+    background: var(--gum-pink);
+    box-shadow: var(--gum-shadow-default);
+    transform: translate(-2px, -2px);
+}
+
+/*
+ * DROPDOWN MENUS - Brutalist Style
+ */
+
+.dropdown-menu,
+.tabulator-popup-container {
+    border: var(--gum-border-width) solid var(--gum-black) !important;
+    border-radius: var(--gum-border-radius);
+    box-shadow: var(--gum-shadow-hover) !important;
+    padding: 8px !important;
+}
+
+body.desktop .dropdown-menu::before {
+    display: none;
+}
+
+.dropdown-item {
+    border: var(--gum-border-width) solid transparent !important;
+    border-radius: var(--gum-border-radius);
+    padding: 8px 12px !important;
+    margin: 2px 0;
+    transition: all 0.15s ease;
+}
+
+.dropdown-item:hover:not(.disabled) {
+    background-color: var(--gum-yellow) !important;
+    border-color: var(--gum-black) !important;
+}
+
+.dropdown-item.active,
+.dropdown-item:focus {
+    background-color: var(--gum-pink) !important;
+    border-color: var(--gum-black) !important;
+}
+
+.dropdown-divider {
+    border-color: var(--gum-black);
+    margin: 8px 0;
+}
+
+/*
+ * MODALS - Brutalist Style
+ */
+
+.modal-content {
+    border: var(--gum-border-width) solid var(--gum-black) !important;
+    border-radius: var(--gum-border-radius);
+    box-shadow: var(--gum-shadow-hover) !important;
+}
+
+.modal-header {
+    border-bottom: var(--gum-border-width) solid var(--gum-black);
+    font-weight: 700;
+}
+
+.modal-footer {
+    border-top: var(--gum-border-width) solid var(--gum-black);
+    background: var(--gum-gray-100);
+}
+
+/*
+ * CARDS & NOTE LIST - Brutalist Style
+ */
+
+.note-list .note-book-card {
+    background: var(--gum-white);
+    border: var(--gum-border-width) solid var(--gum-black) !important;
+    border-radius: var(--gum-border-radius);
+    box-shadow: none;
+    transition: all 0.2s ease;
+}
+
+.note-list .note-book-card:hover {
+    box-shadow: var(--gum-shadow-default);
+    transform: translate(-2px, -2px);
+}
+
+.note-list .note-book-card:active {
+    box-shadow: none;
+    transform: translate(2px, 2px);
+}
+
+/*
+ * CENTER PANE
+ */
+
+#center-pane .note-split {
+    background: var(--gum-white);
+    border: var(--gum-border-width) solid var(--gum-black);
+    border-radius: var(--gum-border-radius);
+    margin: 4px;
+}
+
+/*
+ * BADGES - Gumroad Pill Style
+ */
+
+.badge {
+    font-family: var(--main-font-family);
+    font-weight: 800;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 12px;
+    border: var(--gum-border-width) solid var(--gum-black);
+    border-radius: var(--gum-pill-radius);
+    background: var(--gum-yellow);
+    color: var(--gum-black);
+}
+
+/*
+ * TOOLTIPS - Brutalist Style
+ */
+
+.tooltip .tooltip-inner {
+    background-color: var(--gum-black) !important;
+    color: var(--gum-white) !important;
+    border: var(--gum-border-width) solid var(--gum-white) !important;
+    border-radius: var(--gum-border-radius);
+    padding: 8px 12px !important;
+    font-weight: 600;
+    box-shadow: var(--gum-shadow-default);
+}
+
+/*
+ * SCROLLBAR - Brutalist Style
+ */
+
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--gum-gray-200);
+    border: var(--gum-border-width) solid var(--gum-black);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--gum-black);
+    border: none;
+    border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--gum-pink);
+}
+
+/* Dark scrollbar for left pane */
+#left-pane::-webkit-scrollbar-track,
+#left-pane *::-webkit-scrollbar-track {
+    background: var(--gum-gray-800);
+    border-color: var(--gum-gray-600);
+}
+
+#left-pane::-webkit-scrollbar-thumb,
+#left-pane *::-webkit-scrollbar-thumb {
+    background: var(--gum-gray-500);
+}
+
+#left-pane::-webkit-scrollbar-thumb:hover,
+#left-pane *::-webkit-scrollbar-thumb:hover {
+    background: var(--gum-pink);
+}
+
+/*
+ * NOTE TITLE
+ */
+
+.note-title-widget input {
+    font-family: var(--main-font-family);
+    font-weight: 700;
+    font-size: 2rem !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.note-title-widget input:focus {
+    box-shadow: none !important;
+}
+
+/*
+ * FLOATING BUTTONS - Brutalist Style
+ */
+
+.floating-buttons-children {
+    background: var(--gum-white);
+    border: var(--gum-border-width) solid var(--gum-black);
+    border-radius: var(--gum-border-radius);
+    box-shadow: var(--gum-shadow-default);
+}
+
+div.floating-buttons-children > button:hover,
+div.floating-buttons-children .floating-button:hover {
+    background: var(--gum-yellow);
+}
+
+/*
+ * TREE ACTIONS TOOLBAR
+ */
+
+#left-pane .tree-actions {
+    background: var(--gum-gray-800);
+    border: var(--gum-border-width) solid var(--gum-gray-600);
+    border-radius: var(--gum-border-radius);
+}
+
+#left-pane .tree-actions:hover {
+    background: var(--gum-black);
+    border-color: var(--gum-pink);
+    box-shadow: var(--gum-shadow-pink);
+}
+
+#left-pane .tree-actions button {
+    color: var(--gum-white);
+}
+
+#left-pane .tree-actions button:hover {
+    background: var(--gum-pink);
+    color: var(--gum-black);
+}
+
+#left-pane .tree-actions::after {
+    background: var(--gum-pink);
+    color: var(--gum-black);
+    border-radius: var(--gum-border-radius);
+}
+
+/*
+ * PROMOTED ATTRIBUTES
+ */
+
+div.promoted-attribute-cell {
+    background: var(--gum-white);
+    border: var(--gum-border-width) solid var(--gum-black);
+    border-radius: var(--gum-border-radius);
+    box-shadow: var(--gum-shadow-active);
+}
+
+/*
+ * ALERT BAR
+ */
+
+#center-pane .note-split > div.alert {
+    background: var(--gum-yellow) !important;
+    border: none !important;
+    border-bottom: var(--gum-border-width) solid var(--gum-black) !important;
+    font-weight: 600;
+}
+
+/*
+ * SELECTION HIGHLIGHT
+ */
+
+::selection {
+    background-color: var(--gum-pink);
+    color: var(--gum-black);
+}
+
+/*
+ * CALENDAR
+ */
+
+.calendar-dropdown-widget .calendar-body a:hover {
+    background: var(--gum-pink) !important;
+    color: var(--gum-black) !important;
+    border-radius: var(--gum-border-radius);
+}
+
+.calendar-dropdown-widget .calendar-body a.calendar-date-exists:not(:hover)::before {
+    background: var(--gum-yellow);
+    border-radius: var(--gum-border-radius);
+}
+
+/*
+ * CKEDITOR CONTENT
+ */
+
+.ck-content a {
+    color: var(--gum-blue);
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.ck-content a:hover {
+    color: var(--gum-pink);
+}
+
+/* Code blocks - Brutalist */
+.ck-content pre,
+pre.hljs {
+    background: var(--gum-black);
+    color: var(--gum-white);
+    border: var(--gum-border-width) solid var(--gum-black);
+    border-radius: var(--gum-border-radius);
+    box-shadow: var(--gum-shadow-default);
+}
+
+.ck-content code {
+    background: var(--gum-yellow);
+    color: var(--gum-black);
+    padding: 2px 6px;
+    border-radius: var(--gum-border-radius);
+    font-weight: 600;
+}
+
+/*
+ * ADMONITIONS - Brutalist Style
+ */
+
+.admonition {
+    border: var(--gum-border-width) solid var(--gum-black);
+    border-radius: var(--gum-border-radius);
+    box-shadow: var(--gum-shadow-active);
+    border-left-width: 4px;
+}
+
+.admonition.note {
+    --accent-color: var(--gum-blue);
+    background: rgba(144, 168, 237, 0.2);
+}
+
+.admonition.tip {
+    --accent-color: var(--gum-green);
+    background: rgba(35, 198, 107, 0.2);
+}
+
+.admonition.important {
+    --accent-color: var(--gum-pink);
+    background: rgba(255, 144, 232, 0.2);
+}
+
+.admonition.caution {
+    --accent-color: var(--gum-error);
+    background: rgba(255, 107, 107, 0.2);
+}
+
+.admonition.warning {
+    --accent-color: var(--gum-yellow);
+    background: rgba(225, 255, 60, 0.3);
+}
+
+/*
+ * KEYBOARD SHORTCUTS
+ */
+
+kbd {
+    font-family: var(--main-font-family);
+    font-weight: 700;
+    background: var(--gum-yellow);
+    color: var(--gum-black);
+    border: var(--gum-border-width) solid var(--gum-black);
+    border-radius: var(--gum-border-radius);
+    padding: 2px 8px;
+    box-shadow: var(--gum-shadow-active);
+}
+
+/*
+ * HORIZONTAL LAYOUT
+ */
+
+body.layout-horizontal .tab-row-container {
+    background: var(--gum-white);
+    border-bottom: var(--gum-border-width) solid var(--gum-black);
+}
+
+body.layout-horizontal #root-widget {
+    background: var(--gum-bg);
+}
+
+/*
+ * MOBILE SIDEBAR
+ */
+
+@media (max-width: 991px) {
+    body.mobile:not(.force-fixed-tree) #mobile-sidebar-wrapper {
+        background: var(--gum-black) !important;
+        border-right: var(--gum-border-width) solid var(--gum-pink);
+    }
+}
+
+/*
+ * HELP CARDS
+ */
+
+.help-cards kbd {
+    background: var(--gum-yellow);
+    border: var(--gum-border-width) solid var(--gum-black);
+    box-shadow: var(--gum-shadow-active);
+}
+
+/*
+ * RIGHT PANE
+ */
+
+#right-pane {
+    background: var(--gum-white);
+    border-left: var(--gum-border-width) solid var(--gum-black);
+}
+
+#right-pane .card-header {
+    border-bottom: var(--gum-border-width) solid var(--gum-black);
+    font-weight: 700;
+}
+
+#right-pane .toc li:hover,
+#right-pane .highlights-list li:hover {
+    background: var(--gum-yellow);
+    border-radius: var(--gum-border-radius);
+}
+
+/*
+ * TINTED NOTE COLORS
+ */
+
+#left-pane .fancytree-node.tinted {
+    --custom-color: var(--light-theme-custom-color);
+}
+
+#left-pane .fancytree-node.tinted.fancytree-active {
+    --custom-bg-color: var(--gum-pink);
+}
+
+/*
+ * PROTECTED SESSION ICON
+ */
+
+#left-pane span.fancytree-node.protected > span.fancytree-custom-icon:after {
+    background: var(--gum-pink);
+    color: var(--gum-black);
+}
