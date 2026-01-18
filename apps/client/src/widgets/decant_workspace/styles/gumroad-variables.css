@@ -1,0 +1,282 @@
+/**
+ * Gumroad "Pop-Brutalist" Design System
+ *
+ * CSS custom properties for the Decant Workspace widget.
+ * Inspired by Gumroad's distinctive visual style.
+ */
+
+:root {
+    /* Primary Colors */
+    --gum-pink: #FF90E8;
+    --gum-yellow: #E1FF3C;
+    --gum-blue: #90A8ED;
+    --gum-green: #23C66B;
+
+    /* Neutrals */
+    --gum-black: #000000;
+    --gum-white: #FFFFFF;
+    --gum-bg: #F4F4F0;
+    --gum-gray-light: #E8E8E4;
+    --gum-gray: #666666;
+    --gum-gray-dark: #333333;
+
+    /* Borders & Shadows */
+    --gum-border-width: 2px;
+    --gum-border-radius: 4px;
+    --gum-border: var(--gum-border-width) solid var(--gum-black);
+    --gum-shadow: 4px 4px 0px var(--gum-black);
+    --gum-shadow-hover: 6px 6px 0px var(--gum-black);
+    --gum-shadow-active: none;
+
+    /* Typography */
+    --gum-font-main: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --gum-font-weight-heading: 700;
+    --gum-font-weight-body: 400;
+    --gum-font-weight-medium: 500;
+
+    /* Spacing */
+    --gum-spacing-xs: 4px;
+    --gum-spacing-sm: 8px;
+    --gum-spacing-md: 12px;
+    --gum-spacing-lg: 16px;
+    --gum-spacing-xl: 24px;
+    --gum-spacing-2xl: 32px;
+
+    /* Transitions */
+    --gum-transition-fast: 0.1s ease;
+    --gum-transition-normal: 0.2s ease;
+
+    /* Hover transform values */
+    --gum-hover-translate: -2px;
+    --gum-active-translate: 2px;
+
+    /* Z-index layers */
+    --gum-z-base: 1;
+    --gum-z-dropdown: 100;
+    --gum-z-modal: 1000;
+    --gum-z-tooltip: 10000;
+}
+
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --gum-bg: #1a1a1a;
+        --gum-gray-light: #2a2a2a;
+        --gum-gray: #888888;
+        --gum-gray-dark: #cccccc;
+        --gum-border: var(--gum-border-width) solid var(--gum-white);
+        --gum-shadow: 4px 4px 0px var(--gum-white);
+        --gum-shadow-hover: 6px 6px 0px var(--gum-white);
+    }
+}
+
+/* Base element styles */
+.gum-element {
+    border: var(--gum-border);
+    border-radius: var(--gum-border-radius);
+    box-shadow: var(--gum-shadow);
+    transition: transform var(--gum-transition-fast), box-shadow var(--gum-transition-fast);
+    background: var(--gum-white);
+}
+
+.gum-element:hover {
+    transform: translate(var(--gum-hover-translate), var(--gum-hover-translate));
+    box-shadow: var(--gum-shadow-hover);
+}
+
+.gum-element:active {
+    transform: translate(var(--gum-active-translate), var(--gum-active-translate));
+    box-shadow: var(--gum-shadow-active);
+}
+
+/* Button styles */
+.gum-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gum-spacing-sm);
+    padding: var(--gum-spacing-sm) var(--gum-spacing-lg);
+    font-family: var(--gum-font-main);
+    font-weight: var(--gum-font-weight-medium);
+    font-size: 14px;
+    cursor: pointer;
+    border: var(--gum-border);
+    border-radius: var(--gum-border-radius);
+    box-shadow: var(--gum-shadow);
+    transition: transform var(--gum-transition-fast), box-shadow var(--gum-transition-fast);
+    background: var(--gum-white);
+    color: var(--gum-black);
+}
+
+.gum-button:hover {
+    transform: translate(var(--gum-hover-translate), var(--gum-hover-translate));
+    box-shadow: var(--gum-shadow-hover);
+}
+
+.gum-button:active {
+    transform: translate(var(--gum-active-translate), var(--gum-active-translate));
+    box-shadow: var(--gum-shadow-active);
+}
+
+.gum-button--primary {
+    background: var(--gum-pink);
+}
+
+.gum-button--secondary {
+    background: var(--gum-yellow);
+}
+
+.gum-button--success {
+    background: var(--gum-green);
+}
+
+.gum-button--info {
+    background: var(--gum-blue);
+}
+
+/* Input styles */
+.gum-input {
+    padding: var(--gum-spacing-sm) var(--gum-spacing-md);
+    font-family: var(--gum-font-main);
+    font-size: 14px;
+    border: var(--gum-border);
+    border-radius: var(--gum-border-radius);
+    background: var(--gum-white);
+    color: var(--gum-black);
+    outline: none;
+    transition: box-shadow var(--gum-transition-fast);
+}
+
+.gum-input:focus {
+    box-shadow: var(--gum-shadow);
+}
+
+.gum-input::placeholder {
+    color: var(--gum-gray);
+}
+
+/* Card styles */
+.gum-card {
+    padding: var(--gum-spacing-md);
+    background: var(--gum-white);
+    border: var(--gum-border);
+    border-radius: var(--gum-border-radius);
+    box-shadow: var(--gum-shadow);
+    transition: transform var(--gum-transition-fast), box-shadow var(--gum-transition-fast);
+}
+
+.gum-card:hover {
+    transform: translate(var(--gum-hover-translate), var(--gum-hover-translate));
+    box-shadow: var(--gum-shadow-hover);
+}
+
+.gum-card--clickable {
+    cursor: pointer;
+}
+
+.gum-card--clickable:active {
+    transform: translate(var(--gum-active-translate), var(--gum-active-translate));
+    box-shadow: var(--gum-shadow-active);
+}
+
+/* Tag/Badge styles */
+.gum-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--gum-spacing-xs) var(--gum-spacing-sm);
+    font-family: var(--gum-font-main);
+    font-size: 12px;
+    font-weight: var(--gum-font-weight-medium);
+    border: var(--gum-border);
+    border-radius: var(--gum-border-radius);
+    background: var(--gum-gray-light);
+    color: var(--gum-black);
+}
+
+.gum-tag--pink {
+    background: var(--gum-pink);
+}
+
+.gum-tag--yellow {
+    background: var(--gum-yellow);
+}
+
+.gum-tag--blue {
+    background: var(--gum-blue);
+}
+
+.gum-tag--green {
+    background: var(--gum-green);
+}
+
+/* Panel styles */
+.gum-panel {
+    background: var(--gum-bg);
+    border: var(--gum-border);
+    border-radius: var(--gum-border-radius);
+}
+
+/* Heading styles */
+.gum-heading {
+    font-family: var(--gum-font-main);
+    font-weight: var(--gum-font-weight-heading);
+    color: var(--gum-black);
+    margin: 0;
+}
+
+.gum-heading--h1 {
+    font-size: 24px;
+}
+
+.gum-heading--h2 {
+    font-size: 20px;
+}
+
+.gum-heading--h3 {
+    font-size: 16px;
+}
+
+.gum-heading--h4 {
+    font-size: 14px;
+}
+
+/* Text styles */
+.gum-text {
+    font-family: var(--gum-font-main);
+    font-weight: var(--gum-font-weight-body);
+    color: var(--gum-gray-dark);
+    margin: 0;
+}
+
+.gum-text--small {
+    font-size: 12px;
+}
+
+.gum-text--muted {
+    color: var(--gum-gray);
+}
+
+/* Background utilities */
+.gum-bg {
+    background: var(--gum-bg);
+}
+
+.gum-bg--white {
+    background: var(--gum-white);
+}
+
+.gum-bg--pink {
+    background: var(--gum-pink);
+}
+
+.gum-bg--yellow {
+    background: var(--gum-yellow);
+}
+
+.gum-bg--blue {
+    background: var(--gum-blue);
+}
+
+.gum-bg--green {
+    background: var(--gum-green);
+}

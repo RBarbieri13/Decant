@@ -17,6 +17,7 @@ import { RelationshipTool } from './relationship_tool.js';
 import { AttributeManagerTool } from './attribute_manager_tool.js';
 import { CalendarIntegrationTool } from './calendar_integration_tool.js';
 import { NoteSummarizationTool } from './note_summarization_tool.js';
+import { AutoCategorizationTool } from './auto_categorization_tool.js';
 import log from '../../log.js';
 
 // Error type guard
@@ -51,6 +52,9 @@ export async function initializeTools(): Promise<void> {
         // Register content analysis tools
         toolRegistry.registerTool(new ContentExtractionTool());  // Extract info from note content
         toolRegistry.registerTool(new CalendarIntegrationTool()); // Calendar-related operations
+
+        // Register Decant-specific tools
+        toolRegistry.registerTool(new AutoCategorizationTool()); // AI-powered content categorization
 
         // Log registered tools
         const toolCount = toolRegistry.getAllTools().length;
