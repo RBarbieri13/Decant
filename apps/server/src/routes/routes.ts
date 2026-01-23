@@ -22,6 +22,7 @@ import attachmentsApiRoute from "./api/attachments.js";
 import attributesRoute from "./api/attributes.js";
 import autocompleteApiRoute from "./api/autocomplete.js";
 import backendLogRoute from "./api/backend_log.js";
+import backendSettingsRoute from "./api/backend_settings.js";
 import branchesApiRoute from "./api/branches.js";
 import bulkActionRoute from "./api/bulk_action.js";
 import clipperRoute from "./api/clipper.js";
@@ -217,6 +218,16 @@ function register(app: express.Application) {
     apiRoute(PUT, "/api/options", optionsApiRoute.updateOptions);
     apiRoute(GET, "/api/options/user-themes", optionsApiRoute.getUserThemes);
     apiRoute(GET, "/api/options/locales", optionsApiRoute.getSupportedLocales);
+
+    // Backend Settings API
+    apiRoute(GET, "/api/backend-settings/metadata", backendSettingsRoute.getMetadata);
+    apiRoute(GET, "/api/backend-settings/options", backendSettingsRoute.getOptions);
+    apiRoute(PUT, "/api/backend-settings/option/:name", backendSettingsRoute.updateOption);
+    apiRoute(PST, "/api/backend-settings/validate", backendSettingsRoute.validateOptions);
+    apiRoute(PST, "/api/backend-settings/bulk-update", backendSettingsRoute.bulkUpdate);
+    apiRoute(GET, "/api/backend-settings/export", backendSettingsRoute.exportSettings);
+    apiRoute(PST, "/api/backend-settings/import", backendSettingsRoute.importSettings);
+    apiRoute(GET, "/api/backend-settings/audit-log", backendSettingsRoute.getAuditLog);
 
     apiRoute(PST, "/api/password/change", passwordApiRoute.changePassword);
     apiRoute(PST, "/api/password/reset", passwordApiRoute.resetPassword);

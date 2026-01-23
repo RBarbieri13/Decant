@@ -35,7 +35,8 @@ export default async function buildApp() {
     // view engine setup
     app.set("views", path.join(assetsDir, "views"));
     const ejs = await import("ejs");
-    app.engine("ejs", (filePath, options, callback) => ejs.renderFile(filePath, options, callback));
+    const ejsModule = ejs.default || ejs;
+    app.engine("ejs", (filePath, options, callback) => ejsModule.renderFile(filePath, options, callback));
     app.set("view engine", "ejs");
 
     app.use((req, res, next) => {

@@ -1,4 +1,6 @@
-import electron from "electron";
+// Use require() to bypass esbuild ESM interop wrapper which breaks CJS modules like electron
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const electron = require("electron") as typeof import("electron");
 import type { BrowserWindow, Tray } from "electron";
 import { default as i18next, t } from "i18next";
 import path from "path";

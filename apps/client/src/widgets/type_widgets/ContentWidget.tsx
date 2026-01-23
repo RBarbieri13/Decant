@@ -15,11 +15,12 @@ import AiSettings from "./options/ai_settings";
 import OtherSettings from "./options/other";
 import InternationalizationOptions from "./options/i18n";
 import AdvancedSettings from "./options/advanced";
+import BackendSettings from "./options/backend";
 import "./ContentWidget.css";
 import { t } from "../../services/i18n";
 import BackendLog from "./code/BackendLog";
 
-export type OptionPages = "_optionsAppearance" | "_optionsShortcuts" | "_optionsTextNotes" | "_optionsCodeNotes" | "_optionsImages" | "_optionsSpellcheck" | "_optionsPassword" | "_optionsMFA" | "_optionsEtapi" | "_optionsBackup" | "_optionsSync" | "_optionsAi" | "_optionsOther" | "_optionsLocalization" | "_optionsAdvanced";
+export type OptionPages = "_optionsAppearance" | "_optionsShortcuts" | "_optionsTextNotes" | "_optionsCodeNotes" | "_optionsImages" | "_optionsSpellcheck" | "_optionsPassword" | "_optionsMFA" | "_optionsEtapi" | "_optionsBackup" | "_optionsSync" | "_optionsAi" | "_optionsOther" | "_optionsLocalization" | "_optionsAdvanced" | "_optionsBackend";
 
 const CONTENT_WIDGETS: Record<OptionPages | "_backendLog", (props: TypeWidgetProps) => JSX.Element> = {
     _optionsAppearance: AppearanceSettings,
@@ -37,6 +38,7 @@ const CONTENT_WIDGETS: Record<OptionPages | "_backendLog", (props: TypeWidgetPro
     _optionsOther: OtherSettings,
     _optionsLocalization: InternationalizationOptions,
     _optionsAdvanced: AdvancedSettings,
+    _optionsBackend: BackendSettings,
     _backendLog: BackendLog
 }
 

@@ -249,7 +249,8 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                     { id: "_optionsAi", title: t("hidden-subtree.ai-llm-title"), type: "contentWidget", icon: "bx-bot" },
                     { id: "_optionsOther", title: t("hidden-subtree.other"), type: "contentWidget", icon: "bx-dots-horizontal" },
                     { id: "_optionsLocalization", title: t("hidden-subtree.localization"), type: "contentWidget", icon: "bx-world" },
-                    { id: "_optionsAdvanced", title: t("hidden-subtree.advanced-title"), type: "contentWidget" }
+                    { id: "_optionsAdvanced", title: t("hidden-subtree.advanced-title"), type: "contentWidget" },
+                    { id: "_optionsBackend", title: t("hidden-subtree.backend-settings"), type: "contentWidget", icon: "bx-server" }
                 ]
             },
             {

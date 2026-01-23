@@ -1,13 +1,41 @@
+// Global error handlers - must be first to catch any import/startup errors
+process.on('uncaughtException', (error) => {
+    console.error('[FATAL] Uncaught exception:', error);
+    try {
+        const { dialog } = require('electron');
+        if (dialog) {
+            dialog.showErrorBox('Decant Startup Error', error.stack || error.message || String(error));
+        }
+    } catch (e) {
+        // Dialog not available yet
+    }
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+    console.error('[FATAL] Unhandled rejection:', reason);
+    try {
+        const { dialog } = require('electron');
+        if (dialog && reason instanceof Error) {
+            dialog.showErrorBox('Decant Startup Error', reason.stack || reason.message || String(reason));
+        }
+    } catch (e) {
+        // Dialog not available yet
+    }
+});
+
 import { initializeTranslations } from "@triliumnext/server/src/services/i18n.js";
 import { t } from "i18next";
 
-import { app, globalShortcut, BrowserWindow } from "electron";
+// Use require() to bypass esbuild ESM interop wrapper which breaks CJS modules like electron
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const electron = require("electron") as typeof import("electron");
+const { app, globalShortcut, BrowserWindow } = electron;
+
 import sqlInit from "@triliumnext/server/src/services/sql_init.js";
 import windowService from "@triliumnext/server/src/services/window.js";
 import tray from "@triliumnext/server/src/services/tray.js";
 import options from "@triliumnext/server/src/services/options.js";
-import electronDebug from "electron-debug";
-import electronDl from "electron-dl";
 import { PRODUCT_NAME } from "./app-info";
 import port from "@triliumnext/server/src/services/port.js";
 import { join } from "path";
@@ -25,8 +53,9 @@ async function main() {
     }
 
     // Adds debug features like hotkeys for triggering dev tools and reload
-    electronDebug();
-    electronDl({ saveAs: true });
+    // Use require().default to handle ESM modules from CJS context
+    require("electron-debug").default();
+    require("electron-dl").default({ saveAs: true });
 
     // needed for excalidraw export https://github.com/zadam/trilium/issues/4271
     app.commandLine.appendSwitch("enable-experimental-web-platform-features");
@@ -84,7 +113,7 @@ async function main() {
 
     await initializeTranslations();
 
-    const isPrimaryInstance = (await import("electron")).app.requestSingleInstanceLock();
+    const isPrimaryInstance = app.requestSingleInstanceLock();
     if (!isPrimaryInstance) {
         console.info(t("desktop.instance_already_running"));
         process.exit(0);
@@ -109,6 +138,9 @@ function getUserData() {
 
 async function onReady() {
     //    app.setAppUserModelId('com.github.zadam.trilium');
+
+    // Initialize window service IPC handlers now that electron is ready
+    windowService.initWindowService();
 
     // if db is not initialized -> setup process
     // if db is initialized, then we need to wait until the migration process is finished
@@ -144,4 +176,16 @@ function getElectronLocale() {
     return uiLocale || "en"
 }
 
-main();
+main().catch((error) => {
+    console.error('[FATAL] main() failed:', error);
+    const { dialog, app } = require('electron');
+    if (app.isReady()) {
+        dialog.showErrorBox('Decant Startup Error', error.stack || error.message || String(error));
+        app.quit();
+    } else {
+        app.whenReady().then(() => {
+            dialog.showErrorBox('Decant Startup Error', error.stack || error.message || String(error));
+            app.quit();
+        });
+    }
+});

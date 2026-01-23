@@ -1,4 +1,4 @@
-import shortcutService from "../../../services/shortcuts.js";
+A car that doesn't make you feel recognizeimport shortcutService from "../../../services/shortcuts.js";
 import attributesService from "../../../services/attributes.js";
 import OnClickButtonWidget from "../onclick_button.js";
 import type FNote from "../../../entities/fnote.js";

@@ -6,6 +6,29 @@
 
 // Migrations should be kept in descending order, so the latest migration is first.
 const MIGRATIONS: (SqlMigration | JsMigration)[] = [
+    // Add option audit trail table for tracking option changes
+    {
+        version: 234,
+        sql: /*sql*/`
+            CREATE TABLE IF NOT EXISTS "option_audit_log" (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                optionName TEXT NOT NULL,
+                oldValue TEXT,
+                newValue TEXT,
+                changeType TEXT NOT NULL,
+                userId TEXT,
+                instanceId TEXT,
+                ipAddress TEXT,
+                changeReason TEXT,
+                utcDateChanged TEXT NOT NULL
+            );
+
+            CREATE INDEX IDX_option_audit_log_optionName_utcDateChanged
+                ON option_audit_log (optionName, utcDateChanged);
+            CREATE INDEX IDX_option_audit_log_utcDateChanged
+                ON option_audit_log (utcDateChanged);
+        `
+    },
     // Migrate geo map to collection
     {
         version: 233,

@@ -1,4 +1,8 @@
-import { type App, type BrowserWindow, type BrowserWindowConstructorOptions, default as electron, ipcMain, type IpcMainEvent, type WebContents } from "electron";
+// Use require() to bypass esbuild ESM interop wrapper which breaks CJS modules like electron
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const electron = require("electron") as typeof import("electron");
+const { ipcMain } = electron;
+import type { App, BrowserWindow, BrowserWindowConstructorOptions, IpcMainEvent, WebContents } from "electron";
 import fs from "fs/promises";
 import { t } from "i18next";
 import path from "path";
@@ -63,10 +67,6 @@ async function createExtraWindow(extraWindowHash: string) {
     trackWindowFocus(win);
 }
 
-electron.ipcMain.on("create-extra-window", (event, arg) => {
-    createExtraWindow(arg.extraWindowHash);
-});
-
 interface PrintOpts {
     notePath: string;
     printToPdf: boolean;
@@ -79,7 +79,7 @@ interface ExportAsPdfOpts {
     pageSize: "A0" | "A1" | "A2" | "A3" | "A4" | "A5" | "A6" | "Legal" | "Letter" | "Tabloid" | "Ledger";
 }
 
-electron.ipcMain.on("print-note", async (e, { notePath }: PrintOpts) => {
+async function handlePrintNote(e: IpcMainEvent, { notePath }: PrintOpts) {
     const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "printing");
     browserWindow.webContents.print({}, (success, failureReason) => {
         if (!success && failureReason !== "Print job canceled") {
@@ -88,9 +88,9 @@ electron.ipcMain.on("print-note", async (e, { notePath }: PrintOpts) => {
         e.sender.send("print-done", printReport);
         browserWindow.destroy();
     });
-});
+}
 
-electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pageSize }: ExportAsPdfOpts) => {
+async function handleExportAsPdf(e: IpcMainEvent, { title, notePath, landscape, pageSize }: ExportAsPdfOpts) {
     const { browserWindow, printReport } = await getBrowserWindowForPrinting(e, notePath, "exporting_pdf");
 
     async function print() {
@@ -141,7 +141,7 @@ electron.ipcMain.on("export-as-pdf", async (e, { title, notePath, landscape, pag
         e.sender.send("print-done", printReport);
         browserWindow.destroy();
     }
-});
+}
 
 async function getBrowserWindowForPrinting(e: IpcMainEvent, notePath: string, action: "printing" | "exporting_pdf") {
     const browserWindow = new electron.BrowserWindow({
@@ -388,7 +388,20 @@ function getAllWindows() {
     return allWindows;
 }
 
+/**
+ * Initialize IPC handlers for window service.
+ * Must be called after electron app is ready to avoid module-level ipcMain access.
+ */
+function initWindowService() {
+    electron.ipcMain.on("create-extra-window", (event, arg) => {
+        createExtraWindow(arg.extraWindowHash);
+    });
+    electron.ipcMain.on("print-note", handlePrintNote);
+    electron.ipcMain.on("export-as-pdf", handleExportAsPdf);
+}
+
 export default {
+    initWindowService,
     createMainWindow,
     createExtraWindow,
     createSetupWindow,

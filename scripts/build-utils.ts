@@ -52,7 +52,14 @@ export default class BuildHelper {
                 "@electron/remote",
                 "better-sqlite3",
                 "./xhr-sync-worker.js",
-                "vite"
+                "vite",
+                // Electron helper packages that use ES imports from electron
+                // must be external to avoid esbuild's ESM interop wrapper
+                "electron-debug",
+                "electron-is-dev",
+                "electron-dl",
+                "electron-localshortcut",
+                "electron-window-state"
             ],
             metafile: true,
             splitting: false,

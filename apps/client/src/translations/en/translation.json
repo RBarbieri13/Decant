@@ -1072,7 +1072,40 @@
     "create_label": "To start, please create a label with a URL address you want to embed, e.g. #webViewSrc=\"https://www.google.com\""
   },
   "backend_log": {
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "log-does-not-exist": "Log file '{{fileName}}' does not exist yet.",
+    "reading-log-failed": "Failed to read log file '{{fileName}}'."
+  },
+  "backend_settings": {
+    "loading": "Loading settings...",
+    "load_error": "Failed to load backend settings",
+    "load_failed": "Failed to load settings. Please try again.",
+    "retry": "Retry",
+    "save": "Save Changes",
+    "saved": "Settings saved successfully",
+    "save_error": "Failed to save settings",
+    "no_changes": "No changes to save",
+    "validation_errors": "Please fix validation errors before saving",
+    "restart_required": "Application restart required for changes to take effect",
+    "reload_required": "Page reload required for changes to take effect",
+    "restart_warning": "Some changes require an application restart",
+    "reload_warning": "Some changes require a page reload",
+    "no_settings_in_category": "No settings available in this category",
+    "category": {
+      "general": "General",
+      "appearance": "Appearance",
+      "editor": "Editor",
+      "sync": "Sync",
+      "security": "Security",
+      "ai": "AI"
+    },
+    "validation": {
+      "min": "Value must be at least {{min}}",
+      "max": "Value must be at most {{max}}",
+      "pattern": "Value does not match the required format",
+      "required": "This field is required",
+      "number_required": "Please enter a valid number"
+    }
   },
   "consistency_checks": {
     "title": "Consistency Checks",
