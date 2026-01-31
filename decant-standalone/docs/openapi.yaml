@@ -1,0 +1,1712 @@
+openapi: 3.0.3
+info:
+  title: Decant API
+  description: |
+    RESTful API for managing hierarchical knowledge graphs with AI-powered classification and enrichment.
+
+    Decant provides dual-hierarchy organization (functional and organizational), automatic content
+    classification using GPT-4o-mini, and real-time updates via Server-Sent Events.
+
+    ## Key Features
+    - Dual hierarchy organization (function & organization)
+    - AI-powered content classification
+    - Phase 2 enrichment for deep analysis
+    - Full-text search with advanced filters
+    - Real-time notifications via SSE
+    - Backup and restore capabilities
+  version: 1.0.0
+  contact:
+    name: API Support
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: http://localhost:{port}
+    description: Configurable port
+    variables:
+      port:
+        default: '3000'
+        description: Server port
+
+tags:
+  - name: Nodes
+    description: Node management (create, read, update, delete, merge, move)
+  - name: Hierarchy
+    description: Hierarchy tree queries and organization
+  - name: Search
+    description: Full-text search with advanced filtering
+  - name: Import
+    description: URL import with AI classification
+  - name: Queue
+    description: Background job processing
+  - name: Backup
+    description: Database backup and restore
+  - name: Audit
+    description: Change tracking and history
+  - name: Settings
+    description: API key and configuration management
+  - name: Health
+    description: Health checks and metrics
+  - name: Events
+    description: Real-time Server-Sent Events
+
+paths:
+  # ============================================================
+  # Nodes API
+  # ============================================================
+
+  /api/nodes:
+    get:
+      tags: [Nodes]
+      summary: Get all nodes
+      description: Retrieve all nodes with optional pagination
+      operationId: getAllNodes
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Node'
+                  - $ref: '#/components/schemas/PaginatedNodesResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [Nodes]
+      summary: Create a new node
+      description: Create a new node in the knowledge graph
+      operationId: createNode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNodeInput'
+      responses:
+        '201':
+          description: Node created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/nodes/{id}:
+    get:
+      tags: [Nodes]
+      summary: Get a single node
+      description: Retrieve a specific node by ID
+      operationId: getNode
+      parameters:
+        - $ref: '#/components/parameters/NodeIdParam'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags: [Nodes]
+      summary: Update a node
+      description: Update an existing node's properties
+      operationId: updateNode
+      parameters:
+        - $ref: '#/components/parameters/NodeIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNodeInput'
+      responses:
+        '200':
+          description: Node updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Nodes]
+      summary: Delete a node
+      description: Soft-delete a node (marks as deleted)
+      operationId: deleteNode
+      parameters:
+        - $ref: '#/components/parameters/NodeIdParam'
+      responses:
+        '200':
+          description: Node deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/nodes/{id}/merge:
+    post:
+      tags: [Nodes]
+      summary: Merge two nodes
+      description: Merge a secondary node into the primary node
+      operationId: mergeNodes
+      parameters:
+        - $ref: '#/components/parameters/NodeIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MergeNodesInput'
+      responses:
+        '200':
+          description: Nodes merged successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/nodes/{id}/move:
+    post:
+      tags: [Nodes]
+      summary: Move a node
+      description: Move a node to a new parent in the hierarchy
+      operationId: moveNode
+      parameters:
+        - $ref: '#/components/parameters/NodeIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveNodeInput'
+      responses:
+        '200':
+          description: Node moved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/nodes/{id}/related:
+    get:
+      tags: [Nodes]
+      summary: Get related nodes
+      description: Get nodes similar to the specified node
+      operationId: getRelatedNodes
+      parameters:
+        - $ref: '#/components/parameters/NodeIdParam'
+        - name: limit
+          in: query
+          description: Maximum number of results
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 20
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelatedNodesResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/nodes/{id}/history:
+    get:
+      tags: [Audit]
+      summary: Get node history
+      description: Get code change history for a specific node
+      operationId: getNodeHistory
+      parameters:
+        - $ref: '#/components/parameters/NodeIdParam'
+        - name: hierarchyType
+          in: query
+          description: Filter by hierarchy type
+          schema:
+            type: string
+            enum: [function, organization]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodeHistoryResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================================================
+  # Hierarchy API
+  # ============================================================
+
+  /api/hierarchy/tree/{view}:
+    get:
+      tags: [Hierarchy]
+      summary: Get hierarchy tree
+      description: Retrieve the complete hierarchy tree for a view
+      operationId: getHierarchyTree
+      parameters:
+        - $ref: '#/components/parameters/HierarchyViewParam'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/hierarchy/segments:
+    get:
+      tags: [Hierarchy]
+      summary: Get all segments
+      description: List all functional segments (top-level categories)
+      operationId: getSegments
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Segment'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/hierarchy/organizations:
+    get:
+      tags: [Hierarchy]
+      summary: Get all organizations
+      description: List all organizations (top-level organizational entities)
+      operationId: getOrganizations
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Organization'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/hierarchy/code/{view}/{code}:
+    get:
+      tags: [Hierarchy]
+      summary: Get node by hierarchy code
+      description: Retrieve a node using its hierarchy code
+      operationId: getNodeByCode
+      parameters:
+        - $ref: '#/components/parameters/HierarchyViewParam'
+        - name: code
+          in: path
+          required: true
+          description: Hierarchy code (e.g., A.LLM.T.1)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/hierarchy/path/{view}/{nodeId}:
+    get:
+      tags: [Hierarchy]
+      summary: Get ancestry path
+      description: Get the full ancestry path for a node
+      operationId: getAncestryPath
+      parameters:
+        - $ref: '#/components/parameters/HierarchyViewParam'
+        - $ref: '#/components/parameters/NodeIdParam'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AncestryPathResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/hierarchy/subtree/{view}/{path}:
+    get:
+      tags: [Hierarchy]
+      summary: Get subtree
+      description: Retrieve a subtree at a specific hierarchy path
+      operationId: getSubtree
+      parameters:
+        - $ref: '#/components/parameters/HierarchyViewParam'
+        - name: path
+          in: path
+          required: true
+          description: Hierarchy path prefix (e.g., A.LLM)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubtreeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/hierarchy/stats/{view}:
+    get:
+      tags: [Hierarchy]
+      summary: Get hierarchy statistics
+      description: Get depth statistics and cache information
+      operationId: getHierarchyStats
+      parameters:
+        - $ref: '#/components/parameters/HierarchyViewParam'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HierarchyStatsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================================================
+  # Search API
+  # ============================================================
+
+  /api/search:
+    get:
+      tags: [Search]
+      summary: Basic search
+      description: Simple search across all nodes with optional pagination
+      operationId: search
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search query string
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 500
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/SearchResult'
+                  - $ref: '#/components/schemas/PaginatedSearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/search/advanced:
+    get:
+      tags: [Search]
+      summary: Advanced search
+      description: Advanced search with filters and faceted results
+      operationId: searchAdvanced
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search query string
+          schema:
+            type: string
+        - name: segment
+          in: query
+          description: Filter by segment code
+          schema:
+            type: string
+        - name: category
+          in: query
+          description: Filter by category code
+          schema:
+            type: string
+        - name: contentType
+          in: query
+          description: Filter by content type
+          schema:
+            type: string
+        - name: organization
+          in: query
+          description: Filter by organization (partial match)
+          schema:
+            type: string
+        - name: dateStart
+          in: query
+          description: Filter by start date (ISO format)
+          schema:
+            type: string
+            format: date-time
+        - name: dateEnd
+          in: query
+          description: Filter by end date (ISO format)
+          schema:
+            type: string
+            format: date-time
+        - name: hasMetadata
+          in: query
+          description: Only enriched nodes
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvancedSearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================================================
+  # Import API
+  # ============================================================
+
+  /api/import:
+    post:
+      tags: [Import]
+      summary: Import URL
+      description: Import a URL with automatic AI classification
+      operationId: importUrl
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportUrlInput'
+      responses:
+        '200':
+          description: Import successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '408':
+          $ref: '#/components/responses/RequestTimeout'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /api/import/check:
+    get:
+      tags: [Import]
+      summary: Check import status
+      description: Check if a URL has already been imported
+      operationId: checkImportStatus
+      parameters:
+        - name: url
+          in: query
+          required: true
+          description: URL to check
+          schema:
+            type: string
+            format: uri
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportCheckResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================================================
+  # Queue API
+  # ============================================================
+
+  /api/queue/status:
+    get:
+      tags: [Queue]
+      summary: Get queue status
+      description: Get current queue statistics
+      operationId: getQueueStatus
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueStatusResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/queue/jobs:
+    get:
+      tags: [Queue]
+      summary: List jobs
+      description: List all jobs with optional filtering
+      operationId: listJobs
+      parameters:
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum: [pending, processing, complete, failed]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 500
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/queue/jobs/{nodeId}:
+    get:
+      tags: [Queue]
+      summary: Get job for node
+      description: Get the most recent job for a specific node
+      operationId: getJobForNode
+      parameters:
+        - $ref: '#/components/parameters/NodeIdParam'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobDetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/queue/retry/{jobId}:
+    post:
+      tags: [Queue]
+      summary: Retry job
+      description: Retry a failed job
+      operationId: retryJob
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Job queued for retry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/queue/jobs/{jobId}:
+    delete:
+      tags: [Queue]
+      summary: Cancel job
+      description: Cancel or remove a job from the queue
+      operationId: cancelJob
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Job cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================================================
+  # Health API
+  # ============================================================
+
+  /health:
+    get:
+      tags: [Health]
+      summary: Quick health check
+      description: Fast health check for basic monitoring
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /health/live:
+    get:
+      tags: [Health]
+      summary: Liveness probe
+      description: Kubernetes-style liveness probe
+      operationId: liveness
+      responses:
+        '200':
+          description: Process is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: alive
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /health/ready:
+    get:
+      tags: [Health]
+      summary: Readiness probe
+      description: Kubernetes-style readiness probe
+      operationId: readiness
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+        '503':
+          description: Service not ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+
+  /metrics:
+    get:
+      tags: [Health]
+      summary: Application metrics
+      description: Prometheus-style application metrics
+      operationId: metrics
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+
+  # ============================================================
+  # Settings API
+  # ============================================================
+
+  /api/settings/api-key:
+    post:
+      tags: [Settings]
+      summary: Set API key
+      description: Configure the OpenAI API key
+      operationId: setApiKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [apiKey]
+              properties:
+                apiKey:
+                  type: string
+                  minLength: 20
+                  example: sk-proj-abc123...
+      responses:
+        '200':
+          description: API key configured successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [Settings]
+      summary: Delete API key
+      description: Remove the stored OpenAI API key
+      operationId: deleteApiKey
+      responses:
+        '200':
+          description: API key deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/settings/api-key/status:
+    get:
+      tags: [Settings]
+      summary: Get API key status
+      description: Check if an OpenAI API key is configured
+      operationId: getApiKeyStatus
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  configured:
+                    type: boolean
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================================================
+  # Events API
+  # ============================================================
+
+  /api/events:
+    get:
+      tags: [Events]
+      summary: Subscribe to events
+      description: Establish a Server-Sent Events connection for real-time updates
+      operationId: subscribeToEvents
+      responses:
+        '200':
+          description: SSE connection established
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+# ============================================================
+# Components
+# ============================================================
+
+components:
+  parameters:
+    NodeIdParam:
+      name: id
+      in: path
+      required: true
+      description: Node UUID
+      schema:
+        type: string
+        format: uuid
+
+    HierarchyViewParam:
+      name: view
+      in: path
+      required: true
+      description: Hierarchy view type
+      schema:
+        type: string
+        enum: [function, organization]
+
+    PageParam:
+      name: page
+      in: query
+      description: Page number (1-based)
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+
+    LimitParam:
+      name: limit
+      in: query
+      description: Items per page
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 500
+
+  schemas:
+    # ============================================================
+    # Core Schemas
+    # ============================================================
+
+    Node:
+      type: object
+      required:
+        - id
+        - title
+        - url
+        - source_domain
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        url:
+          type: string
+          format: uri
+        source_domain:
+          type: string
+        company:
+          type: string
+          nullable: true
+        phrase_description:
+          type: string
+          nullable: true
+        short_description:
+          type: string
+          nullable: true
+        logo_url:
+          type: string
+          format: uri
+          nullable: true
+        ai_summary:
+          type: string
+          nullable: true
+        extracted_fields:
+          type: object
+          additionalProperties: true
+        metadata_tags:
+          type: array
+          items:
+            type: string
+        key_concepts:
+          type: array
+          items:
+            type: string
+        function_parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        organization_parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        function_code:
+          type: string
+          nullable: true
+        organization_code:
+          type: string
+          nullable: true
+        phase2_completed:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateNodeInput:
+      type: object
+      required:
+        - title
+        - url
+        - source_domain
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        url:
+          type: string
+          format: uri
+        source_domain:
+          type: string
+          minLength: 1
+        company:
+          type: string
+          maxLength: 200
+        phrase_description:
+          type: string
+          maxLength: 1000
+        short_description:
+          type: string
+          maxLength: 2000
+        logo_url:
+          type: string
+          format: uri
+          nullable: true
+        ai_summary:
+          type: string
+          maxLength: 5000
+        extracted_fields:
+          type: object
+        metadata_tags:
+          type: array
+          items:
+            type: string
+        key_concepts:
+          type: array
+          items:
+            type: string
+        function_parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        organization_parent_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    UpdateNodeInput:
+      type: object
+      minProperties: 1
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        company:
+          type: string
+          maxLength: 200
+        phrase_description:
+          type: string
+          maxLength: 1000
+        short_description:
+          type: string
+          maxLength: 2000
+        logo_url:
+          type: string
+          format: uri
+          nullable: true
+        ai_summary:
+          type: string
+          maxLength: 5000
+        extracted_fields:
+          type: object
+        metadata_tags:
+          type: array
+          items:
+            type: string
+        key_concepts:
+          type: array
+          items:
+            type: string
+        function_parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        organization_parent_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    MergeNodesInput:
+      type: object
+      required:
+        - secondaryId
+      properties:
+        secondaryId:
+          type: string
+          format: uuid
+        options:
+          type: object
+          properties:
+            keepMetadata:
+              type: boolean
+            appendSummary:
+              type: boolean
+
+    MoveNodeInput:
+      type: object
+      required:
+        - targetHierarchy
+      properties:
+        targetParentId:
+          type: string
+          format: uuid
+          nullable: true
+        targetHierarchy:
+          type: string
+          enum: [function, organization]
+
+    ImportUrlInput:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+        forceRefresh:
+          type: boolean
+          default: false
+        priority:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+
+    TreeNode:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+        code:
+          type: string
+        url:
+          type: string
+          format: uri
+        logo_url:
+          type: string
+          format: uri
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TreeNode'
+
+    Segment:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+
+    Organization:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+
+    # ============================================================
+    # Response Schemas
+    # ============================================================
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        details:
+          type: string
+
+    PaginatedNodesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Node'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+        hasNext:
+          type: boolean
+        hasPrev:
+          type: boolean
+
+    RelatedNodesResponse:
+      type: object
+      properties:
+        nodeId:
+          type: string
+          format: uuid
+        related:
+          type: array
+          items:
+            type: object
+            properties:
+              node:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  title:
+                    type: string
+                  url:
+                    type: string
+                  segment:
+                    type: string
+                  category:
+                    type: string
+                  contentType:
+                    type: string
+                  logo_url:
+                    type: string
+                  phrase_description:
+                    type: string
+              similarityScore:
+                type: integer
+                minimum: 0
+                maximum: 100
+              sharedAttributes:
+                type: array
+                items:
+                  type: string
+
+    SearchResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        url:
+          type: string
+        company:
+          type: string
+        phrase_description:
+          type: string
+        extracted_fields:
+          type: object
+        matchScore:
+          type: number
+          format: float
+
+    PaginatedSearchResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResult'
+        pagination:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    AdvancedSearchResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResult'
+        facets:
+          type: object
+          properties:
+            segments:
+              type: object
+              additionalProperties:
+                type: integer
+            categories:
+              type: object
+              additionalProperties:
+                type: integer
+            contentTypes:
+              type: object
+              additionalProperties:
+                type: integer
+            organizations:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  count:
+                    type: integer
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+
+    ImportResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        nodeId:
+          type: string
+          format: uuid
+        cached:
+          type: boolean
+        node:
+          $ref: '#/components/schemas/Node'
+        classification:
+          type: object
+          properties:
+            segment:
+              type: string
+            category:
+              type: string
+            contentType:
+              type: string
+            organization:
+              type: string
+            confidence:
+              type: number
+              format: float
+        hierarchyCodes:
+          type: object
+          properties:
+            function:
+              type: string
+            organization:
+              type: string
+        metadata:
+          type: object
+        phase2:
+          type: object
+          properties:
+            queued:
+              type: boolean
+            jobId:
+              type: string
+              format: uuid
+
+    ImportCheckResponse:
+      type: object
+      properties:
+        exists:
+          type: boolean
+        cached:
+          type: boolean
+        nodeId:
+          type: string
+          format: uuid
+        classification:
+          type: object
+        cachedAt:
+          type: string
+          format: date-time
+
+    QueueStatusResponse:
+      type: object
+      properties:
+        pending:
+          type: integer
+        processing:
+          type: integer
+        complete:
+          type: integer
+        failed:
+          type: integer
+        isRunning:
+          type: boolean
+
+    JobListResponse:
+      type: object
+      properties:
+        jobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Job'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    JobDetailResponse:
+      type: object
+      properties:
+        job:
+          $ref: '#/components/schemas/Job'
+          nullable: true
+
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nodeId:
+          type: string
+          format: uuid
+        phase:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, complete, failed]
+        attempts:
+          type: integer
+        errorMessage:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        processedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    NodeHistoryResponse:
+      type: object
+      properties:
+        nodeId:
+          type: string
+          format: uuid
+        changes:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              hierarchyType:
+                type: string
+              oldCode:
+                type: string
+                nullable: true
+              newCode:
+                type: string
+                nullable: true
+              changeType:
+                type: string
+              reason:
+                type: string
+              triggeredBy:
+                type: string
+              changedAt:
+                type: string
+                format: date-time
+              relatedNodes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    title:
+                      type: string
+
+    AncestryPathResponse:
+      type: object
+      properties:
+        nodeId:
+          type: string
+          format: uuid
+        view:
+          type: string
+        ancestors:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              code:
+                type: string
+              type:
+                type: string
+        depth:
+          type: integer
+
+    SubtreeResponse:
+      type: object
+      properties:
+        path:
+          type: string
+        view:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/TreeNode'
+        count:
+          type: integer
+
+    HierarchyStatsResponse:
+      type: object
+      properties:
+        view:
+          type: string
+        totalNodes:
+          type: integer
+        maxDepth:
+          type: integer
+        depthBreakdown:
+          type: object
+          additionalProperties:
+            type: integer
+        cache:
+          type: object
+          properties:
+            function:
+              type: integer
+            organization:
+              type: integer
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        latencyMs:
+          type: number
+
+    ReadinessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        overallStatus:
+          type: string
+        checks:
+          type: object
+
+    MetricsResponse:
+      type: object
+      properties:
+        uptime:
+          type: integer
+        uptimeHuman:
+          type: string
+        database:
+          type: object
+        queue:
+          type: object
+        circuitBreakers:
+          type: object
+        memoryUsage:
+          type: object
+        process:
+          type: object
+        timestamp:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    RequestTimeout:
+      description: Request Timeout
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    PayloadTooLarge:
+      description: Payload Too Large
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    TooManyRequests:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    BadGateway:
+      description: Bad Gateway
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ServiceUnavailable:
+      description: Service Unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key authentication (future enhancement)

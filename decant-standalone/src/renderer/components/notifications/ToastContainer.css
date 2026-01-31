@@ -1,0 +1,80 @@
+/* ============================================================================
+   TOAST CONTAINER STYLES
+   ============================================================================ */
+
+.decant-toast-container {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+/* Enable pointer events on toasts */
+.decant-toast-container > * {
+  pointer-events: auto;
+}
+
+/* Position variations */
+.decant-toast-container--top-right {
+  top: 24px;
+  right: 24px;
+  align-items: flex-end;
+}
+
+.decant-toast-container--top-left {
+  top: 24px;
+  left: 24px;
+  align-items: flex-start;
+}
+
+.decant-toast-container--bottom-right {
+  bottom: 24px;
+  right: 24px;
+  align-items: flex-end;
+  flex-direction: column-reverse; /* Stack from bottom up */
+}
+
+.decant-toast-container--bottom-left {
+  bottom: 24px;
+  left: 24px;
+  align-items: flex-start;
+  flex-direction: column-reverse; /* Stack from bottom up */
+}
+
+.decant-toast-container--top-center {
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+}
+
+.decant-toast-container--bottom-center {
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+  flex-direction: column-reverse; /* Stack from bottom up */
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .decant-toast-container {
+    left: 12px;
+    right: 12px;
+    top: 12px;
+    bottom: 12px;
+  }
+
+  .decant-toast-container--top-center,
+  .decant-toast-container--bottom-center {
+    transform: none;
+    left: 12px;
+  }
+
+  .decant-toast {
+    min-width: auto;
+    max-width: 100%;
+  }
+}

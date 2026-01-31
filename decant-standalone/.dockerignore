@@ -1,0 +1,85 @@
+# ============================================================
+# Docker Ignore File
+# Files and directories to exclude from Docker build context
+# ============================================================
+
+# Dependencies (will be installed fresh in container)
+node_modules/
+
+# Build output (will be rebuilt in container)
+dist/
+
+# Git
+.git/
+.gitignore
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment files (contain secrets)
+.env
+.env.local
+.env.*.local
+*.env
+
+# Test and coverage
+coverage/
+.nyc_output/
+*.spec.ts
+*.test.ts
+__tests__/
+**/__tests__/
+vitest.config.ts
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Development files
+debug-*.js
+test-*.js
+test-*.ts
+run-sync.js
+sync_imessage.py
+
+# Python
+*.py
+*.pyc
+__pycache__/
+.venv/
+venv/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+tmp/
+
+# Scripts (not needed at runtime)
+scripts/
+
+# Build configuration (copied selectively)
+vite.*.config.ts
+.eslintrc.json
+
+# Docker files (not needed inside the container)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Resources and assets not needed
+resources/

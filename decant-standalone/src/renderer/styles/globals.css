@@ -1,0 +1,330 @@
+/* ============================================================
+   Decant Global Styles - Gumroad Design System
+   ============================================================ */
+
+:root {
+  /* Primary Colors */
+  --gum-pink: #FF90E8;
+  --gum-yellow: #E1FF3C;
+  --gum-blue: #90A8ED;
+  --gum-green: #23C66B;
+
+  /* Neutrals */
+  --gum-black: #000000;
+  --gum-white: #FFFFFF;
+  --gum-bg: #F4F4F0;
+  --gum-gray-100: #F8F8F6;
+  --gum-gray-200: #E8E8E4;
+  --gum-gray-300: #D0D0CC;
+  --gum-gray-500: #888888;
+  --gum-gray-600: #666666;
+  --gum-gray-800: #333333;
+
+  /* Borders & Shadows */
+  --border-width: 2px;
+  --border-radius: 4px;
+  --shadow-default: 4px 4px 0px var(--gum-black);
+  --shadow-hover: 6px 6px 0px var(--gum-black);
+  --shadow-active: 2px 2px 0px var(--gum-black);
+  --shadow-none: none;
+
+  /* Typography */
+  --font-main: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  /* Font Sizes */
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-base: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Transitions */
+  --transition-fast: 0.1s ease;
+  --transition-normal: 0.2s ease;
+
+  /* Layout */
+  --panel-spaces-width: 220px;
+  --panel-tree-width: 350px;
+  --panel-detail-min-width: 400px;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  /* Neutrals - Inverted */
+  --gum-black: #FFFFFF;
+  --gum-white: #1A1A1A;
+  --gum-bg: #0D0D0D;
+  --gum-gray-100: #252525;
+  --gum-gray-200: #333333;
+  --gum-gray-300: #444444;
+  --gum-gray-500: #888888;
+  --gum-gray-600: #AAAAAA;
+  --gum-gray-800: #DDDDDD;
+
+  /* Slightly muted primary colors for dark mode */
+  --gum-pink: #FF6BD6;
+  --gum-yellow: #C4E100;
+  --gum-blue: #7B95E0;
+  --gum-green: #1DAF5A;
+
+  /* Shadows in dark mode */
+  --shadow-default: 4px 4px 0px rgba(255, 255, 255, 0.3);
+  --shadow-hover: 6px 6px 0px rgba(255, 255, 255, 0.4);
+  --shadow-active: 2px 2px 0px rgba(255, 255, 255, 0.2);
+}
+
+/* Reset & Base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: var(--font-size-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-main);
+  font-weight: var(--font-weight-normal);
+  background-color: var(--gum-bg);
+  color: var(--gum-black);
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+}
+
+h1 { font-size: var(--font-size-2xl); }
+h2 { font-size: var(--font-size-xl); }
+h3 { font-size: var(--font-size-lg); }
+
+code, pre {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+/* Links */
+a {
+  color: var(--gum-black);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--gum-yellow);
+  color: var(--gum-black);
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gum-gray-200);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gum-gray-500);
+  border-radius: var(--border-radius);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gum-gray-600);
+}
+
+/* Focus States */
+:focus-visible {
+  outline: 2px solid var(--gum-black);
+  outline-offset: 2px;
+}
+
+/* Gumroad Interactive Element Base */
+.gum-element {
+  border: var(--border-width) solid var(--gum-black);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-default);
+  background: var(--gum-white);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.gum-element:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.gum-element:active {
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-none);
+}
+
+/* Gumroad Button */
+.gum-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: var(--border-width) solid var(--gum-black);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-default);
+  background: var(--gum-white);
+  font-family: var(--font-main);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.gum-button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.gum-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-none);
+}
+
+.gum-button--pink { background: var(--gum-pink); }
+.gum-button--yellow { background: var(--gum-yellow); }
+.gum-button--blue { background: var(--gum-blue); }
+.gum-button--green { background: var(--gum-green); }
+
+.gum-button--small {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-xs);
+}
+
+/* Gumroad Input */
+.gum-input {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: var(--border-width) solid var(--gum-black);
+  border-radius: var(--border-radius);
+  font-family: var(--font-main);
+  font-size: var(--font-size-base);
+  background: var(--gum-white);
+  transition: box-shadow var(--transition-fast);
+}
+
+.gum-input:focus {
+  outline: none;
+  box-shadow: var(--shadow-default);
+}
+
+.gum-input::placeholder {
+  color: var(--gum-gray-500);
+}
+
+/* Gumroad Card */
+.gum-card {
+  padding: var(--space-md);
+  border: var(--border-width) solid var(--gum-black);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-default);
+  background: var(--gum-white);
+}
+
+/* Gumroad Badge */
+.gum-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border: var(--border-width) solid var(--gum-black);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  background: var(--gum-white);
+}
+
+.gum-badge--pink { background: var(--gum-pink); }
+.gum-badge--yellow { background: var(--gum-yellow); }
+.gum-badge--blue { background: var(--gum-blue); }
+.gum-badge--green { background: var(--gum-green); }
+
+/* Panels */
+.panel {
+  background: var(--gum-white);
+  border-right: var(--border-width) solid var(--gum-black);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel:last-child {
+  border-right: none;
+}
+
+.panel-header {
+  padding: var(--space-md);
+  border-bottom: var(--border-width) solid var(--gum-black);
+  background: var(--gum-gray-100);
+  font-weight: var(--font-weight-bold);
+}
+
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-md);
+}
+
+/* Utility Classes */
+.text-muted { color: var(--gum-gray-600); }
+.text-small { font-size: var(--font-size-sm); }
+.text-mono { font-family: var(--font-mono); }
+.text-bold { font-weight: var(--font-weight-bold); }
+.text-center { text-align: center; }
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-1 { flex: 1; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-xs { gap: var(--space-xs); }
+.gap-sm { gap: var(--space-sm); }
+.gap-md { gap: var(--space-md); }
+
+.p-sm { padding: var(--space-sm); }
+.p-md { padding: var(--space-md); }
+.p-lg { padding: var(--space-lg); }
+
+.mb-sm { margin-bottom: var(--space-sm); }
+.mb-md { margin-bottom: var(--space-md); }
+.mb-lg { margin-bottom: var(--space-lg); }

@@ -1,0 +1,49 @@
+# ============================================================
+# Decant - Docker Compose Configuration
+# Local development and production deployment setup
+# ============================================================
+
+version: '3.8'
+
+services:
+  decant:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: decant-app
+    ports:
+      - "3000:3000"
+    volumes:
+      # Persist database data
+      - decant-data:/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_PATH=/data/decant.db
+      # OpenAI API key (required for AI features)
+      # Set this in .env file or pass via command line
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      # Optional: Configure log level
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    # Resource limits (adjust based on your needs)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+volumes:
+  decant-data:
+    driver: local
+    name: decant-data

@@ -1,0 +1,307 @@
+# Server.ts Integration Patch
+
+This file shows the exact changes needed to integrate startup validation into server.ts.
+
+## Step 1: Add Imports (after line 26)
+
+```diff
+ import {
+   startProcessingQueue,
+   stopProcessingQueue,
+   getProcessingQueue,
+ } from './backend/services/processing_queue.js';
+ import {
+   metricsMiddleware,
+   startStatsCollection,
+   stopStatsCollection,
+ } from './backend/services/metrics/index.js';
++import {
++  validateStartup,
++  printStartupResults,
++  printStartupError,
++  runPendingMigrationsIfNeeded,
++} from './backend/startup/index.js';
++import { initializeProvider } from './backend/services/llm/provider.js';
+
+ const __dirname = path.dirname(fileURLToPath(import.meta.url));
+-const app = express();
+```
+
+## Step 2: Add Validation Function (before `const app = express();`)
+
+```diff
+ const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+-// Log configuration summary at startup
+-logConfigSummary();
++// ============================================================
++// Startup Validation
++// ============================================================
++
++async function performStartupValidation(): Promise<void> {
++  try {
++    // Run all validations
++    const result = await validateStartup();
++
++    // Print formatted results
++    printStartupResults(result);
++
++    // Exit if critical errors
++    if (!result.canStart) {
++      log.fatal('Startup validation failed - cannot start server');
++      process.exit(1);
++    }
++
++    // Auto-run pending migrations if any
++    if (result.details.database.pendingCount > 0) {
++      log.info('Running pending migrations...');
++      const applied = runPendingMigrationsIfNeeded();
++      log.info(`Applied ${applied.length} migration(s)`, { migrations: applied });
++    }
++
++    // Initialize LLM provider if available
++    if (result.features.aiClassification && config.OPENAI_API_KEY) {
++      log.info('Initializing LLM provider...');
++      initializeProvider({
++        type: 'openai',
++        apiKey: config.OPENAI_API_KEY,
++        model: config.OPENAI_MODEL,
++      });
++      log.info('LLM provider initialized', { model: config.OPENAI_MODEL });
++    }
++
++    // Log enabled features
++    log.info('Feature flags', {
++      aiClassification: result.features.aiClassification,
++      aiEnrichment: result.features.aiEnrichment,
++      backgroundQueue: result.features.backgroundQueue,
++      encryption: result.features.encryption,
++    });
++
++    // Log warnings to structured logs
++    if (result.warnings.length > 0) {
++      result.warnings.forEach(warning => {
++        log.warn(warning);
++      });
++    }
++  } catch (error) {
++    printStartupError(error instanceof Error ? error : new Error(String(error)));
++    process.exit(1);
++  }
++}
++
++// Run startup validation before initializing app
++await performStartupValidation();
++
++// Log configuration summary
++logConfigSummary();
++
++const app = express();
+```
+
+## Step 3: Update Graceful Shutdown (in gracefulShutdown function, around line 154)
+
+```diff
+   // Stop processing queue (wait for active jobs to complete)
+   try {
+     log.info('Stopping processing queue...');
+     await stopProcessingQueue();
+     log.info('Processing queue stopped');
+   } catch (queueError) {
+     log.error('Error stopping processing queue', { err: queueError });
+   }
+
++  // Stop metrics stats collection
++  stopStatsCollection();
++  log.info('Metrics stats collection stopped');
++
+   // Stop cache auto-cleanup
+   cache.stopAutoCleanup();
+   log.info('Cache auto-cleanup stopped');
+```
+
+## Complete File Structure After Integration
+
+```typescript
+// ============================================================
+// Decant Express Server
+// ============================================================
+
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { Server } from 'http';
+import { initializeDatabase, runMigrations, closeDatabase } from './backend/database/index.js';
+import { registerAPIRoutes, registerHealthRoutes } from './backend/routes/index.js';
+import { globalLimiter } from './backend/middleware/rateLimit.js';
+import {
+  createCorsMiddleware,
+  securityHeaders,
+  REQUEST_BODY_LIMIT,
+} from './backend/middleware/security.js';
+import { log } from './backend/logger/index.js';
+import httpLogger from './backend/middleware/requestLogger.js';
+import * as cache from './backend/cache/index.js';
+import { config, logConfigSummary } from './backend/config/index.js';
+import { errorHandler, notFoundHandler } from './backend/middleware/errorHandler.js';
+import {
+  startProcessingQueue,
+  stopProcessingQueue,
+  getProcessingQueue,
+} from './backend/services/processing_queue.js';
+import {
+  metricsMiddleware,
+  startStatsCollection,
+  stopStatsCollection,
+} from './backend/services/metrics/index.js';
+import {
+  validateStartup,
+  printStartupResults,
+  printStartupError,
+  runPendingMigrationsIfNeeded,
+} from './backend/startup/index.js';
+import { initializeProvider } from './backend/services/llm/provider.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// ============================================================
+// Startup Validation
+// ============================================================
+
+async function performStartupValidation(): Promise<void> {
+  try {
+    const result = await validateStartup();
+    printStartupResults(result);
+
+    if (!result.canStart) {
+      log.fatal('Startup validation failed - cannot start server');
+      process.exit(1);
+    }
+
+    if (result.details.database.pendingCount > 0) {
+      log.info('Running pending migrations...');
+      const applied = runPendingMigrationsIfNeeded();
+      log.info(`Applied ${applied.length} migration(s)`, { migrations: applied });
+    }
+
+    if (result.features.aiClassification && config.OPENAI_API_KEY) {
+      log.info('Initializing LLM provider...');
+      initializeProvider({
+        type: 'openai',
+        apiKey: config.OPENAI_API_KEY,
+        model: config.OPENAI_MODEL,
+      });
+      log.info('LLM provider initialized', { model: config.OPENAI_MODEL });
+    }
+
+    log.info('Feature flags', {
+      aiClassification: result.features.aiClassification,
+      aiEnrichment: result.features.aiEnrichment,
+      backgroundQueue: result.features.backgroundQueue,
+      encryption: result.features.encryption,
+    });
+
+    if (result.warnings.length > 0) {
+      result.warnings.forEach(warning => log.warn(warning));
+    }
+  } catch (error) {
+    printStartupError(error instanceof Error ? error : new Error(String(error)));
+    process.exit(1);
+  }
+}
+
+await performStartupValidation();
+logConfigSummary();
+
+const app = express();
+
+// ... rest of server.ts remains unchanged ...
+```
+
+## Verification Checklist
+
+After applying these changes:
+
+- [ ] Imports are added at the top
+- [ ] `performStartupValidation()` function is added before `const app = express()`
+- [ ] Function is called with `await` (top-level await)
+- [ ] `stopStatsCollection()` is added to graceful shutdown
+- [ ] Server still compiles without errors
+- [ ] Run `npm run dev:server` to test
+- [ ] Check console output for validation results
+
+## Testing the Integration
+
+### Test 1: Normal Startup
+
+```bash
+npm run dev:server
+```
+
+Expected output:
+```
+============================================================
+DECANT STARTUP VALIDATION
+============================================================
+
+Environment:
+  ✓ NODE_ENV: development
+  ✓ PORT: 3000
+  ...
+
+✓ READY TO START
+============================================================
+
+[timestamp] INFO: Configuration loaded
+[timestamp] INFO: Decant server running at http://localhost:3000
+```
+
+### Test 2: Missing API Key (should warn but continue)
+
+```bash
+unset OPENAI_API_KEY
+npm run dev:server
+```
+
+Expected: Warning about AI features, but server starts.
+
+### Test 3: Invalid Port (should fail)
+
+```bash
+PORT=99999 npm run dev:server
+```
+
+Expected: Error message and exit code 1.
+
+### Test 4: Validate Without Starting
+
+```bash
+tsx src/backend/startup/cli.ts
+```
+
+Expected: Validation results only, no server start.
+
+## Rollback Instructions
+
+If you need to rollback:
+
+1. Remove the new imports
+2. Remove the `performStartupValidation()` function
+3. Remove the `await performStartupValidation()` call
+4. Move `logConfigSummary()` back before `const app = express()`
+5. Remove `stopStatsCollection()` from graceful shutdown
+
+Or use git:
+
+```bash
+git checkout src/server.ts
+```
+
+## Notes
+
+- The validation runs **before** Express app creation
+- Uses top-level `await` (requires Node.js 14.8+, which you have)
+- LLM check is async but non-blocking
+- Migrations auto-run if pending
+- Feature flags logged to structured logs
+- Graceful degradation for optional features

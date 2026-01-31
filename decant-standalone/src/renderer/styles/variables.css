@@ -1,0 +1,222 @@
+/* ============================================================================
+   DECANT DESIGN SYSTEM - CSS VARIABLES
+   ============================================================================ */
+
+:root {
+  /* -------------------------------------------------------------------------
+     COLORS - Core Palette
+     ------------------------------------------------------------------------- */
+
+  /* Primary Colors - Forest Green Family */
+  --decant-forest-900: #1a3d2f;
+  --decant-forest-800: #234d3c;
+  --decant-forest-700: #2d5b47;
+  --decant-forest: #2d5b47;
+  --decant-forest-600: #3a7058;
+  --decant-forest-500: #478569;
+  --decant-forest-400: #5a9a7d;
+  --decant-forest-300: #7db29a;
+  --decant-forest-200: #a5c9b8;
+  --decant-forest-100: #cde1d7;
+  --decant-forest-50: #e8f0eb;
+
+  /* Secondary Colors - Copper/Bronze Family */
+  --decant-copper-900: #5c3d2a;
+  --decant-copper-800: #7a5138;
+  --decant-copper-700: #8b5d40;
+  --decant-copper: #a4704a;
+  --decant-copper-600: #a4704a;
+  --decant-copper-500: #b8845c;
+  --decant-copper-400: #c9996f;
+  --decant-copper-300: #d9b08c;
+  --decant-copper-200: #e8c7aa;
+  --decant-copper-100: #f4dec8;
+  --decant-copper-50: #faf0e6;
+
+  /* Neutral Colors - Ivory/Warm Gray Family */
+  --decant-ivory: #f5f1ed;
+  --decant-ivory-dark: #ebe5df;
+  --decant-ivory-darker: #e0ddd9;
+  --decant-warm-white: #faf8f6;
+  --decant-gray-50: #f8f6f3;
+  --decant-gray-100: #f0ece8;
+  --decant-gray-200: #e8e4dc;
+  --decant-gray-300: #d5d0c8;
+  --decant-gray-400: #b8b2a8;
+  --decant-gray-500: #9a9388;
+  --decant-gray-600: #7a7468;
+  --decant-gray-700: #5a5549;
+  --decant-gray-800: #3a3632;
+  --decant-gray-900: #2a2a2a;
+
+  /* Semantic Background Colors */
+  --decant-bg-primary: var(--decant-ivory);
+  --decant-bg-secondary: var(--decant-warm-white);
+  --decant-bg-tertiary: var(--decant-gray-50);
+  --decant-bg-surface: white;
+  --decant-bg-elevated: white;
+  --decant-bg-selected: var(--decant-forest-50);
+  --decant-bg-hover: rgba(45, 91, 71, 0.04);
+
+  /* Semantic Text Colors */
+  --decant-text-primary: var(--decant-gray-900);
+  --decant-text-secondary: #666666;
+  --decant-text-tertiary: #999999;
+  --decant-text-muted: var(--decant-gray-400);
+  --decant-text-inverse: white;
+  --decant-text-link: var(--decant-forest);
+  --decant-text-link-hover: var(--decant-forest-800);
+
+  /* Semantic Border Colors */
+  --decant-border-light: var(--decant-ivory-darker);
+  --decant-border-medium: #ccc9c5;
+  --decant-border-dark: var(--decant-gray-400);
+  --decant-border-focus: var(--decant-forest);
+
+  /* -------------------------------------------------------------------------
+     TAG COLORS - Gumroad-inspired pastels
+     ------------------------------------------------------------------------- */
+
+  /* Blue */
+  --decant-tag-blue-bg: #e3f2fd;
+  --decant-tag-blue-text: #1565c0;
+  --decant-tag-blue-border: #90caf9;
+
+  /* Yellow */
+  --decant-tag-yellow-bg: #fff9e6;
+  --decant-tag-yellow-text: #f57f17;
+  --decant-tag-yellow-border: #ffcc80;
+
+  /* Pink */
+  --decant-tag-pink-bg: #fce4ec;
+  --decant-tag-pink-text: #c2185b;
+  --decant-tag-pink-border: #f48fb1;
+
+  /* Green */
+  --decant-tag-green-bg: #e8f5e9;
+  --decant-tag-green-text: #2e7d32;
+  --decant-tag-green-border: #a5d6a7;
+
+  /* Purple */
+  --decant-tag-purple-bg: #f3e5f5;
+  --decant-tag-purple-text: #7b1fa2;
+  --decant-tag-purple-border: #ce93d8;
+
+  /* Gray */
+  --decant-tag-gray-bg: #f5f5f5;
+  --decant-tag-gray-text: #616161;
+  --decant-tag-gray-border: #bdbdbd;
+
+  /* Orange */
+  --decant-tag-orange-bg: #fff3e0;
+  --decant-tag-orange-text: #e65100;
+  --decant-tag-orange-border: #ffb74d;
+
+  /* Teal */
+  --decant-tag-teal-bg: #e0f2f1;
+  --decant-tag-teal-text: #00695c;
+  --decant-tag-teal-border: #80cbc4;
+
+  /* -------------------------------------------------------------------------
+     SPECIAL COLORS
+     ------------------------------------------------------------------------- */
+
+  --decant-star-color: #f5a623;
+  --decant-error: #d32f2f;
+  --decant-warning: #f57c00;
+  --decant-success: #388e3c;
+  --decant-info: #1976d2;
+
+  /* -------------------------------------------------------------------------
+     TYPOGRAPHY
+     ------------------------------------------------------------------------- */
+
+  --decant-font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --decant-font-mono: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
+
+  /* Font Sizes */
+  --decant-text-xs: 11px;
+  --decant-text-sm: 12px;
+  --decant-text-base: 13px;
+  --decant-text-md: 14px;
+  --decant-text-lg: 16px;
+  --decant-text-xl: 18px;
+  --decant-text-2xl: 20px;
+  --decant-text-3xl: 24px;
+
+  /* Font Weights */
+  --decant-font-normal: 400;
+  --decant-font-medium: 500;
+  --decant-font-semibold: 600;
+  --decant-font-bold: 700;
+
+  /* Line Heights */
+  --decant-leading-tight: 1.25;
+  --decant-leading-normal: 1.5;
+  --decant-leading-relaxed: 1.625;
+
+  /* -------------------------------------------------------------------------
+     SPACING
+     ------------------------------------------------------------------------- */
+
+  --decant-space-1: 4px;
+  --decant-space-2: 8px;
+  --decant-space-3: 12px;
+  --decant-space-4: 16px;
+  --decant-space-5: 20px;
+  --decant-space-6: 24px;
+  --decant-space-8: 32px;
+  --decant-space-10: 40px;
+  --decant-space-12: 48px;
+
+  /* -------------------------------------------------------------------------
+     BORDER RADIUS
+     ------------------------------------------------------------------------- */
+
+  --decant-radius-none: 0;
+  --decant-radius-sm: 4px;
+  --decant-radius-md: 6px;
+  --decant-radius-lg: 8px;
+  --decant-radius-xl: 12px;
+  --decant-radius-2xl: 16px;
+  --decant-radius-full: 9999px;
+
+  /* -------------------------------------------------------------------------
+     SHADOWS
+     ------------------------------------------------------------------------- */
+
+  --decant-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --decant-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --decant-shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --decant-shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.12);
+  --decant-shadow-2xl: 0 12px 24px rgba(0, 0, 0, 0.15);
+
+  /* -------------------------------------------------------------------------
+     TRANSITIONS
+     ------------------------------------------------------------------------- */
+
+  --decant-transition-fast: 100ms ease;
+  --decant-transition-normal: 200ms ease;
+  --decant-transition-slow: 300ms ease;
+
+  /* -------------------------------------------------------------------------
+     Z-INDEX
+     ------------------------------------------------------------------------- */
+
+  --decant-z-dropdown: 100;
+  --decant-z-sticky: 200;
+  --decant-z-overlay: 300;
+  --decant-z-modal: 400;
+  --decant-z-popover: 500;
+  --decant-z-tooltip: 600;
+
+  /* -------------------------------------------------------------------------
+     LAYOUT
+     ------------------------------------------------------------------------- */
+
+  --decant-topbar-height: 52px;
+  --decant-sidebar-width: 260px;
+  --decant-sidebar-collapsed-width: 0px;
+  --decant-right-panel-width: 340px;
+  --decant-table-row-height: 44px;
+}

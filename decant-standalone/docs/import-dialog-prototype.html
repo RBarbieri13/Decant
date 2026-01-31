@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Decant Import Dialog - UI Prototype</title>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f3f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* State selector */
+    .state-selector {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+
+    .state-selector h3 {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .state-selector button {
+      display: block;
+      width: 100%;
+      padding: 8px 12px;
+      margin-bottom: 4px;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      background: white;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+    }
+
+    .state-selector button:hover {
+      background: #f5f5f5;
+    }
+
+    .state-selector button.active {
+      background: #2d5b47;
+      color: white;
+      border-color: #2d5b47;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Modal Container */
+    .modal {
+      background: white;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 80vh;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      animation: modalOpen 0.2s ease-out;
+    }
+
+    @keyframes modalOpen {
+      from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    /* Modal Header */
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1f2937;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-title i {
+      color: #22c55e;
+    }
+
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: #6b7280;
+      transition: all 0.15s;
+    }
+
+    .close-btn:hover {
+      background: #f3f4f6;
+      color: #1f2937;
+    }
+
+    .close-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Modal Content */
+    .modal-content {
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    /* Form Group */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 6px;
+    }
+
+    /* Input */
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input {
+      width: 100%;
+      height: 48px;
+      padding: 0 44px 0 16px;
+      border: 2px solid #d4d4d4;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #1f2937;
+      transition: all 0.15s;
+    }
+
+    .input:focus {
+      outline: none;
+      border-color: #2d5b47;
+      box-shadow: 0 0 0 3px rgba(45, 91, 71, 0.1);
+    }
+
+    .input::placeholder {
+      color: #9ca3af;
+    }
+
+    .input.input--valid {
+      border-color: #22c55e;
+    }
+
+    .input.input--error {
+      border-color: #dc2626;
+    }
+
+    .input-icon {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+    }
+
+    .input-icon.valid {
+      color: #22c55e;
+    }
+
+    .input-icon.error {
+      color: #dc2626;
+    }
+
+    /* Validation message */
+    .validation-message {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+
+    .validation-message.success {
+      color: #16a34a;
+    }
+
+    .validation-message.error {
+      color: #dc2626;
+    }
+
+    /* Destination Selector */
+    .destination-selector {
+      display: flex;
+      align-items: center;
+      height: 48px;
+      padding: 0 16px;
+      border: 2px solid #d4d4d4;
+      border-radius: 10px;
+      background: #fafafa;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .destination-selector:hover {
+      border-color: #9ca3af;
+    }
+
+    .destination-selector i {
+      font-size: 18px;
+      color: #f59e0b;
+      margin-right: 10px;
+    }
+
+    .destination-selector span {
+      flex: 1;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .destination-selector .chevron {
+      color: #9ca3af;
+    }
+
+    /* Quick Add Section */
+    .quick-add {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e5e5;
+    }
+
+    .quick-add-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #6b7280;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .quick-add-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .quick-add-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 8px;
+      border: 2px solid #e5e5e5;
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .quick-add-btn:hover {
+      border-color: #2d5b47;
+      background: #f0fdf4;
+    }
+
+    .quick-add-btn i {
+      font-size: 24px;
+    }
+
+    .quick-add-btn span {
+      font-size: 12px;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .quick-add-btn.article i { color: #3b82f6; }
+    .quick-add-btn.tool i { color: #8b5cf6; }
+    .quick-add-btn.video i { color: #ef4444; }
+    .quick-add-btn.package i { color: #f59e0b; }
+
+    /* Modal Footer */
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 16px 24px;
+      border-top: 1px solid #e5e5e5;
+      background: #fafafa;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 44px;
+      padding: 0 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary {
+      background: white;
+      border: 2px solid #d4d4d4;
+      color: #374151;
+    }
+
+    .btn-secondary:hover {
+      background: #f9fafb;
+      border-color: #9ca3af;
+    }
+
+    .btn-primary {
+      background: #22c55e;
+      border: 2px solid #22c55e;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #16a34a;
+      border-color: #16a34a;
+    }
+
+    .btn-primary:disabled {
+      background: #d1d5db;
+      border-color: #d1d5db;
+      cursor: not-allowed;
+    }
+
+    /* Progress State */
+    .progress-container {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .progress-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #e5e5e5;
+      border-top-color: #2d5b47;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .progress-text {
+      font-size: 15px;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .progress-bar-container {
+      height: 6px;
+      background: #e5e5e5;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #2d5b47, #22c55e);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .progress-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .progress-step i {
+      font-size: 16px;
+    }
+
+    .progress-step.completed {
+      color: #16a34a;
+    }
+
+    .progress-step.active {
+      color: #2d5b47;
+      font-weight: 500;
+    }
+
+    .progress-step.active i {
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Success State */
+    .success-card {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .success-preview {
+      display: flex;
+      gap: 16px;
+    }
+
+    .success-logo {
+      width: 64px;
+      height: 64px;
+      background: white;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e5e5e5;
+    }
+
+    .success-logo img {
+      width: 40px;
+      height: 40px;
+    }
+
+    .success-info {
+      flex: 1;
+    }
+
+    .success-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 4px;
+    }
+
+    .success-description {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .success-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .success-tag {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .success-tag.segment {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .success-tag.category {
+      background: #fce7f3;
+      color: #be185d;
+    }
+
+    .success-tag.type {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .success-location {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .success-location i {
+      color: #f59e0b;
+    }
+
+    /* Error State */
+    .error-card {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .error-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .error-header i {
+      font-size: 24px;
+      color: #dc2626;
+    }
+
+    .error-header span {
+      font-size: 15px;
+      font-weight: 600;
+      color: #991b1b;
+    }
+
+    .error-message {
+      font-size: 13px;
+      color: #7f1d1d;
+      margin-bottom: 12px;
+    }
+
+    .error-list {
+      list-style: none;
+      margin-bottom: 16px;
+    }
+
+    .error-list li {
+      font-size: 13px;
+      color: #7f1d1d;
+      padding-left: 16px;
+      position: relative;
+      margin-bottom: 4px;
+    }
+
+    .error-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+    }
+
+    .btn-retry {
+      background: white;
+      border: 1px solid #fca5a5;
+      color: #dc2626;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-retry:hover {
+      background: #fef2f2;
+    }
+
+    /* Tabs for Bulk Import */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      background: #f3f4f6;
+      padding: 4px;
+      border-radius: 10px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tab:hover {
+      color: #374151;
+    }
+
+    .tab.active {
+      background: white;
+      color: #1f2937;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* Textarea for bulk */
+    .textarea {
+      width: 100%;
+      min-height: 160px;
+      padding: 14px 16px;
+      border: 2px solid #d4d4d4;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.6;
+      resize: vertical;
+    }
+
+    .textarea:focus {
+      outline: none;
+      border-color: #2d5b47;
+      box-shadow: 0 0 0 3px rgba(45, 91, 71, 0.1);
+    }
+
+    .url-count {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .url-count strong {
+      color: #2d5b47;
+      font-weight: 600;
+    }
+
+    /* Hidden states */
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- State Selector -->
+  <div class="state-selector">
+    <h3>Preview State</h3>
+    <button class="active" onclick="showState('empty')">1. Empty</button>
+    <button onclick="showState('valid')">2. URL Entered</button>
+    <button onclick="showState('processing')">3. Processing</button>
+    <button onclick="showState('success')">4. Success</button>
+    <button onclick="showState('error')">5. Error</button>
+    <button onclick="showState('bulk')">6. Bulk Import</button>
+  </div>
+
+  <!-- Modal Overlay -->
+  <div class="modal-overlay">
+    <div class="modal">
+      <!-- Header -->
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-title">
+          <span id="title-text">Add Content</span>
+        </h2>
+        <button class="close-btn" id="close-btn">
+          <i class="bx bx-x"></i>
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="modal-content">
+
+        <!-- State: Empty / Valid / Error -->
+        <div id="state-form">
+          <!-- Tabs (hidden by default, shown in bulk mode) -->
+          <div class="tabs hidden" id="tabs">
+            <button class="tab active" onclick="showTab('single')">Single URL</button>
+            <button class="tab" onclick="showTab('bulk')">Bulk Import</button>
+            <button class="tab" onclick="showTab('extension')">Browser Ext</button>
+          </div>
+
+          <!-- Single URL Input -->
+          <div id="single-input">
+            <div class="form-group">
+              <label class="form-label">Enter URL</label>
+              <div class="input-wrapper">
+                <input
+                  type="url"
+                  class="input"
+                  id="url-input"
+                  placeholder="https://"
+                >
+                <i class="bx input-icon hidden" id="input-icon"></i>
+              </div>
+              <div class="validation-message hidden" id="validation-message"></div>
+              <p class="form-hint" id="form-hint">Paste a link to an article, tool, video, or resource</p>
+            </div>
+
+            <!-- Destination (shown when URL is valid) -->
+            <div class="form-group hidden" id="destination-group">
+              <label class="form-label">Destination (optional)</label>
+              <div class="destination-selector">
+                <i class="bx bxs-folder"></i>
+                <span>Frontend > Components</span>
+                <i class="bx bx-chevron-down chevron"></i>
+              </div>
+              <p class="form-hint">AI will suggest the best location if left empty</p>
+            </div>
+          </div>
+
+          <!-- Bulk Import Textarea -->
+          <div id="bulk-input" class="hidden">
+            <div class="form-group">
+              <label class="form-label">Paste URLs (one per line)</label>
+              <textarea class="textarea" placeholder="https://react.dev/learn
+https://tailwindcss.com/docs
+https://nextjs.org/docs/getting-started
+https://vitejs.dev/guide/"></textarea>
+              <div class="url-count">
+                <i class="bx bx-link"></i>
+                <strong>4</strong> URLs detected • AI will classify each automatically
+              </div>
+            </div>
+          </div>
+
+          <!-- Error Card -->
+          <div class="error-card hidden" id="error-card">
+            <div class="error-header">
+              <i class="bx bx-error-circle"></i>
+              <span>Unable to fetch content</span>
+            </div>
+            <p class="error-message">The URL could not be accessed. Please check:</p>
+            <ul class="error-list">
+              <li>The URL is correct and publicly accessible</li>
+              <li>The website allows external access</li>
+              <li>Your internet connection is working</li>
+            </ul>
+            <button class="btn-retry">
+              <i class="bx bx-refresh"></i>
+              Try Again
+            </button>
+          </div>
+
+          <!-- Quick Add Section -->
+          <div class="quick-add" id="quick-add">
+            <div class="quick-add-title">Quick Add</div>
+            <div class="quick-add-grid">
+              <button class="quick-add-btn article">
+                <i class="bx bxs-file-doc"></i>
+                <span>Article</span>
+              </button>
+              <button class="quick-add-btn tool">
+                <i class="bx bxs-wrench"></i>
+                <span>Tool</span>
+              </button>
+              <button class="quick-add-btn video">
+                <i class="bx bxs-videos"></i>
+                <span>Video</span>
+              </button>
+              <button class="quick-add-btn package">
+                <i class="bx bxs-package"></i>
+                <span>Package</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- State: Processing -->
+        <div id="state-processing" class="hidden">
+          <div class="progress-container">
+            <div class="progress-spinner">
+              <div class="spinner"></div>
+              <span class="progress-text">Analyzing content...</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" style="width: 65%"></div>
+            </div>
+            <div class="progress-steps">
+              <div class="progress-step completed">
+                <i class="bx bx-check-circle"></i>
+                <span>Fetching page content</span>
+              </div>
+              <div class="progress-step completed">
+                <i class="bx bx-check-circle"></i>
+                <span>Extracting metadata</span>
+              </div>
+              <div class="progress-step active">
+                <i class="bx bx-loader-alt"></i>
+                <span>Running AI classification...</span>
+              </div>
+              <div class="progress-step">
+                <i class="bx bx-circle"></i>
+                <span>Generating summary</span>
+              </div>
+              <div class="progress-step">
+                <i class="bx bx-circle"></i>
+                <span>Saving to database</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- State: Success -->
+        <div id="state-success" class="hidden">
+          <div class="success-card">
+            <div class="success-preview">
+              <div class="success-logo">
+                <img src="https://tailwindcss.com/favicons/favicon-32x32.png" alt="Tailwind CSS">
+              </div>
+              <div class="success-info">
+                <div class="success-title">Tailwind CSS</div>
+                <p class="success-description">A utility-first CSS framework packed with classes for building modern interfaces directly in your markup.</p>
+                <div class="success-tags">
+                  <span class="success-tag segment">Frontend</span>
+                  <span class="success-tag category">Framework</span>
+                  <span class="success-tag type">CSS Framework</span>
+                </div>
+                <div class="success-location">
+                  <i class="bx bxs-map"></i>
+                  Saved to: Frontend > Styles > CSS Frameworks
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-btn">Cancel</button>
+        <button class="btn btn-primary" id="primary-btn" disabled>
+          <i class="bx bx-import"></i>
+          Import
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const urlInput = document.getElementById('url-input');
+    const inputIcon = document.getElementById('input-icon');
+    const validationMessage = document.getElementById('validation-message');
+    const formHint = document.getElementById('form-hint');
+    const destinationGroup = document.getElementById('destination-group');
+    const primaryBtn = document.getElementById('primary-btn');
+    const closeBtn = document.getElementById('close-btn');
+    const modalTitle = document.getElementById('title-text');
+    const quickAdd = document.getElementById('quick-add');
+    const stateForm = document.getElementById('state-form');
+    const stateProcessing = document.getElementById('state-processing');
+    const stateSuccess = document.getElementById('state-success');
+    const errorCard = document.getElementById('error-card');
+    const tabs = document.getElementById('tabs');
+    const singleInput = document.getElementById('single-input');
+    const bulkInput = document.getElementById('bulk-input');
+
+    function showState(state) {
+      // Reset
+      document.querySelectorAll('.state-selector button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      stateForm.classList.add('hidden');
+      stateProcessing.classList.add('hidden');
+      stateSuccess.classList.add('hidden');
+      errorCard.classList.add('hidden');
+      quickAdd.classList.remove('hidden');
+      tabs.classList.add('hidden');
+      singleInput.classList.remove('hidden');
+      bulkInput.classList.add('hidden');
+
+      urlInput.value = '';
+      urlInput.classList.remove('input--valid', 'input--error');
+      inputIcon.classList.add('hidden');
+      validationMessage.classList.add('hidden');
+      formHint.classList.remove('hidden');
+      destinationGroup.classList.add('hidden');
+      primaryBtn.disabled = true;
+      primaryBtn.innerHTML = '<i class="bx bx-import"></i> Import';
+      closeBtn.disabled = false;
+      modalTitle.textContent = 'Add Content';
+
+      switch(state) {
+        case 'empty':
+          stateForm.classList.remove('hidden');
+          break;
+
+        case 'valid':
+          stateForm.classList.remove('hidden');
+          urlInput.value = 'https://tailwindcss.com/docs/installation';
+          urlInput.classList.add('input--valid');
+          inputIcon.classList.remove('hidden');
+          inputIcon.classList.add('bx-check-circle', 'valid');
+          inputIcon.classList.remove('bx-x-circle', 'error');
+          validationMessage.classList.remove('hidden');
+          validationMessage.classList.add('success');
+          validationMessage.classList.remove('error');
+          validationMessage.innerHTML = '<i class="bx bx-check"></i> Valid URL detected';
+          formHint.classList.add('hidden');
+          destinationGroup.classList.remove('hidden');
+          quickAdd.classList.add('hidden');
+          primaryBtn.disabled = false;
+          break;
+
+        case 'processing':
+          stateProcessing.classList.remove('hidden');
+          primaryBtn.disabled = true;
+          primaryBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Importing...';
+          closeBtn.disabled = true;
+          modalTitle.textContent = 'Importing Content';
+          break;
+
+        case 'success':
+          stateSuccess.classList.remove('hidden');
+          primaryBtn.innerHTML = '<i class="bx bx-show"></i> View Item';
+          primaryBtn.disabled = false;
+          modalTitle.innerHTML = '<i class="bx bx-check-circle"></i> Content Added Successfully';
+          document.querySelector('.btn-secondary').textContent = '+ Add Another';
+          break;
+
+        case 'error':
+          stateForm.classList.remove('hidden');
+          urlInput.value = 'https://invalid-domain-xyz.fake/page';
+          urlInput.classList.add('input--error');
+          inputIcon.classList.remove('hidden');
+          inputIcon.classList.remove('bx-check-circle', 'valid');
+          inputIcon.classList.add('bx-x-circle', 'error');
+          formHint.classList.add('hidden');
+          quickAdd.classList.add('hidden');
+          errorCard.classList.remove('hidden');
+          break;
+
+        case 'bulk':
+          stateForm.classList.remove('hidden');
+          tabs.classList.remove('hidden');
+          singleInput.classList.add('hidden');
+          bulkInput.classList.remove('hidden');
+          quickAdd.classList.add('hidden');
+          primaryBtn.innerHTML = '<i class="bx bx-import"></i> Import All';
+          primaryBtn.disabled = false;
+          break;
+      }
+    }
+
+    function showTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (tab === 'single') {
+        singleInput.classList.remove('hidden');
+        bulkInput.classList.add('hidden');
+        primaryBtn.innerHTML = '<i class="bx bx-import"></i> Import';
+      } else if (tab === 'bulk') {
+        singleInput.classList.add('hidden');
+        bulkInput.classList.remove('hidden');
+        primaryBtn.innerHTML = '<i class="bx bx-import"></i> Import All';
+      }
+    }
+  </script>
+</body>
+</html>
