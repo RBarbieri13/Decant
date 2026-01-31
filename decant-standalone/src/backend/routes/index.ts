@@ -27,6 +27,7 @@ import {
   ImportUrlSchema,
   SetApiKeySchema,
   SearchQuerySchema,
+  FilteredSearchSchema,
   MoveNodeSchema,
   MergeNodesSchema,
   UuidParamSchema,
@@ -123,6 +124,9 @@ export function registerAPIRoutes(app: Express): void {
 
   // GET /api/search/advanced - Advanced search with filters and facets
   app.get('/api/search/advanced', validateQuery(SearchQuerySchema), searchRoutes.searchAdvanced);
+
+  // POST /api/search/filtered - Filtered search with comprehensive filter support
+  app.post('/api/search/filtered', validateBody(FilteredSearchSchema), searchRoutes.searchFiltered);
 
   // ============================================================
   // Import routes (with stricter rate limiting for expensive AI calls)

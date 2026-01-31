@@ -8,6 +8,7 @@ import * as cheerio from 'cheerio';
 import { log } from '../logger/index.js';
 import { config } from '../config/index.js';
 import { SSRFError, AppError } from '../middleware/errorHandler.js';
+import { ErrorCode } from '../errors/index.js';
 import { withRetry, RetryPresets } from './retry/index.js';
 import { getCircuitBreakerRegistry } from './retry/circuit-breaker.js';
 
@@ -96,7 +97,7 @@ function validateUrlForSSRF(url: string): URL {
   try {
     parsedUrl = new URL(url);
   } catch {
-    throw new AppError('Invalid URL format', 400, 'INVALID_URL');
+    throw new AppError('Invalid URL format', 400, ErrorCode.INVALID_URL);
   }
 
   // Only allow http and https protocols
@@ -153,7 +154,7 @@ async function fetchWithLimits(url: string): Promise<string> {
       throw new AppError(
         `Failed to fetch URL: ${response.status} ${response.statusText}`,
         response.status >= 500 ? 502 : 400,
-        'FETCH_FAILED'
+        ErrorCode.FETCH_FAILED
       );
     }
 
@@ -165,7 +166,7 @@ async function fetchWithLimits(url: string): Promise<string> {
         throw new AppError(
           `Response too large: ${size} bytes exceeds limit of ${maxSizeBytes} bytes`,
           413,
-          'CONTENT_TOO_LARGE'
+          ErrorCode.CONTENT_TOO_LARGE
         );
       }
     }
@@ -180,7 +181,7 @@ async function fetchWithLimits(url: string): Promise<string> {
     // Stream body and check size as we receive it
     const reader = response.body?.getReader();
     if (!reader) {
-      throw new AppError('No response body', 502, 'NO_BODY');
+      throw new AppError('No response body', 502, ErrorCode.NO_BODY);
     }
 
     const chunks: Uint8Array[] = [];
@@ -199,7 +200,7 @@ async function fetchWithLimits(url: string): Promise<string> {
         throw new AppError(
           `Response too large: exceeded limit of ${maxSizeBytes} bytes`,
           413,
-          'CONTENT_TOO_LARGE'
+          ErrorCode.CONTENT_TOO_LARGE
         );
       }
 
@@ -216,7 +217,7 @@ async function fetchWithLimits(url: string): Promise<string> {
       throw new AppError(
         `Request timeout after ${timeoutMs}ms`,
         504,
-        'TIMEOUT'
+        ErrorCode.TIMEOUT
       );
     }
     throw error;

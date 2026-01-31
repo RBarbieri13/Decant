@@ -6,7 +6,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SearchView } from './SearchView';
 import { RecentSearches, saveRecentSearch } from './RecentSearches';
-import type { SearchResult } from '../../../shared/types';
+import type { SearchResult, SearchFilters } from '../../../shared/types';
 
 interface EnhancedSearchBarProps {
   onSelectResult?: (result: SearchResult) => void;
@@ -30,6 +30,8 @@ export function EnhancedSearchBar({ onSelectResult }: EnhancedSearchBarProps): R
   const { actions } = useApp();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [currentFilters, setCurrentFilters] = useState<SearchFilters | undefined>(undefined);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showFullView, setShowFullView] = useState(false);
@@ -39,20 +41,35 @@ export function EnhancedSearchBar({ onSelectResult }: EnhancedSearchBarProps): R
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Debounced search
-  const performSearch = useCallback(async (searchQuery: string) => {
+  const performSearch = useCallback(async (searchQuery: string, filters?: SearchFilters) => {
     if (!searchQuery.trim()) {
       setResults([]);
       setShowDropdown(false);
+      setAvailableCategories([]);
       actions.clearSearch();
       return;
     }
 
     setIsSearching(true);
     try {
-      const searchResults = await window.decantAPI.search.query(searchQuery);
+      const searchResults = await window.decantAPI.search.query(searchQuery, filters);
       setResults(searchResults);
       setShowDropdown(true);
       setSelectedIndex(-1);
+
+      // Extract unique categories from results for filter dropdown
+      const categories = new Set<string>();
+      searchResults.forEach(result => {
+        // Extract category from functionCode (format: S-CAT-...)
+        const functionCode = result.node.functionCode;
+        if (functionCode) {
+          const parts = functionCode.split('-');
+          if (parts.length >= 2) {
+            categories.add(parts[1]); // Category is the second part
+          }
+        }
+      });
+      setAvailableCategories(Array.from(categories).sort());
 
       // Update AppContext with search results for tree highlighting
       const resultIds = new Set(searchResults.map(r => r.node.id));
@@ -65,11 +82,21 @@ export function EnhancedSearchBar({ onSelectResult }: EnhancedSearchBarProps): R
     } catch (error) {
       console.error('Search failed:', error);
       setResults([]);
+      setAvailableCategories([]);
       actions.clearSearch();
     } finally {
       setIsSearching(false);
     }
   }, [actions]);
+
+  // Handle filter changes
+  const handleFiltersChange = useCallback((filters: SearchFilters) => {
+    setCurrentFilters(filters);
+    // Trigger new search with current query and new filters
+    if (query) {
+      performSearch(query, filters);
+    }
+  }, [query, performSearch]);
 
   // Handle input change with debouncing
   const handleInputChange = useCallback(
@@ -84,10 +111,10 @@ export function EnhancedSearchBar({ onSelectResult }: EnhancedSearchBarProps): R
 
       // Debounce search
       searchTimeout.current = setTimeout(() => {
-        performSearch(value);
+        performSearch(value, currentFilters);
       }, 300);
     },
-    [performSearch]
+    [performSearch, currentFilters]
   );
 
   // Handle keyboard navigation
@@ -186,8 +213,8 @@ export function EnhancedSearchBar({ onSelectResult }: EnhancedSearchBarProps): R
   // Handle recent search selection
   const handleRecentSearchSelect = useCallback((recentQuery: string) => {
     setQuery(recentQuery);
-    performSearch(recentQuery);
-  }, [performSearch]);
+    performSearch(recentQuery, currentFilters);
+  }, [performSearch, currentFilters]);
 
   // Limit preview results to 5
   const previewResults = results.slice(0, 5);
@@ -299,6 +326,8 @@ export function EnhancedSearchBar({ onSelectResult }: EnhancedSearchBarProps): R
                 isLoading={isSearching}
                 onSelectResult={handleSelectResult}
                 onClearSearch={handleCloseFullView}
+                onFiltersChange={handleFiltersChange}
+                availableCategories={availableCategories}
               />
             </div>
           </div>

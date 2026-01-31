@@ -15,20 +15,32 @@ import {
  * Search filter parameters for advanced search
  */
 export interface SearchFilters {
-  /** Filter by segment code (A, E, R, S, M, etc.) */
-  segment?: string;
-  /** Filter by category code (e.g., LLM, AGT, FND) */
-  category?: string;
-  /** Filter by content type code (T, V, D, G, C, etc.) */
-  contentType?: string;
-  /** Filter by organization/company name */
-  organization?: string;
+  /** Filter by segment codes (A, E, R, S, M, etc.) - supports multiple */
+  segments?: string[];
+  /** Filter by category codes (e.g., LLM, AGT, FND) - supports multiple */
+  categories?: string[];
+  /** Filter by content type codes (T, V, D, G, C, etc.) - supports multiple */
+  contentTypes?: string[];
+  /** Filter by organizations/company names - supports multiple */
+  organizations?: string[];
   /** Date range filter for created_at */
   dateRange?: {
     start?: string; // ISO date string
     end?: string;   // ISO date string
   };
   /** Only show nodes with complete Phase 2 enrichment */
+  hasCompleteMetadata?: boolean;
+
+  // Legacy single-value filters (for backward compatibility)
+  /** @deprecated Use segments array instead */
+  segment?: string;
+  /** @deprecated Use categories array instead */
+  category?: string;
+  /** @deprecated Use contentTypes array instead */
+  contentType?: string;
+  /** @deprecated Use organizations array instead */
+  organization?: string;
+  /** @deprecated Use hasCompleteMetadata instead */
   hasMetadata?: boolean;
 }
 
@@ -93,28 +105,37 @@ function buildFilterConditions(
     return { conditions, params };
   }
 
-  // Segment filter
-  if (filters.segment) {
-    conditions.push('segment_code = ?');
-    params.push(filters.segment);
+  // Segment filter (array or single value for backward compatibility)
+  const segmentFilter = filters.segments || (filters.segment ? [filters.segment] : null);
+  if (segmentFilter && segmentFilter.length > 0) {
+    const placeholders = segmentFilter.map(() => '?').join(',');
+    conditions.push(`segment_code IN (${placeholders})`);
+    params.push(...segmentFilter);
   }
 
-  // Category filter
-  if (filters.category) {
-    conditions.push('category_code = ?');
-    params.push(filters.category);
+  // Category filter (array or single value for backward compatibility)
+  const categoryFilter = filters.categories || (filters.category ? [filters.category] : null);
+  if (categoryFilter && categoryFilter.length > 0) {
+    const placeholders = categoryFilter.map(() => '?').join(',');
+    conditions.push(`category_code IN (${placeholders})`);
+    params.push(...categoryFilter);
   }
 
-  // Content type filter
-  if (filters.contentType) {
-    conditions.push('content_type_code = ?');
-    params.push(filters.contentType);
+  // Content type filter (array or single value for backward compatibility)
+  const contentTypeFilter = filters.contentTypes || (filters.contentType ? [filters.contentType] : null);
+  if (contentTypeFilter && contentTypeFilter.length > 0) {
+    const placeholders = contentTypeFilter.map(() => '?').join(',');
+    conditions.push(`content_type_code IN (${placeholders})`);
+    params.push(...contentTypeFilter);
   }
 
-  // Organization filter (partial match on company field)
-  if (filters.organization) {
-    conditions.push('company LIKE ?');
-    params.push(`%${filters.organization}%`);
+  // Organization filter (array or single value for backward compatibility)
+  const organizationFilter = filters.organizations || (filters.organization ? [filters.organization] : null);
+  if (organizationFilter && organizationFilter.length > 0) {
+    // Use LIKE with OR for partial matching across multiple organizations
+    const orgConditions = organizationFilter.map(() => 'company LIKE ?');
+    conditions.push(`(${orgConditions.join(' OR ')})`);
+    params.push(...organizationFilter.map(org => `%${org}%`));
   }
 
   // Date range filter
@@ -130,7 +151,8 @@ function buildFilterConditions(
   }
 
   // Has metadata filter (Phase 2 completed)
-  if (filters.hasMetadata) {
+  const hasCompleteMetadata = filters.hasCompleteMetadata ?? filters.hasMetadata;
+  if (hasCompleteMetadata) {
     conditions.push("json_extract(extracted_fields, '$.phase2Completed') = 1");
   }
 

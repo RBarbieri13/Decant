@@ -6,6 +6,7 @@
 
 import { log } from '../../logger/index.js';
 import { AppError } from '../../middleware/errorHandler.js';
+import { ErrorCode } from '../../errors/index.js';
 import { scrapeUrl, type ScrapedContent } from '../scraper.js';
 import {
   Phase1Classifier,
@@ -112,13 +113,13 @@ export interface OrchestratorOptions {
  */
 export function validateAndNormalizeUrl(url: string): string {
   if (!url || typeof url !== 'string') {
-    throw new AppError('URL is required', 400, 'URL_REQUIRED');
+    throw new AppError('URL is required', 400, ErrorCode.URL_REQUIRED);
   }
 
   const trimmedUrl = url.trim();
 
   if (!trimmedUrl) {
-    throw new AppError('URL cannot be empty', 400, 'URL_EMPTY');
+    throw new AppError('URL cannot be empty', 400, ErrorCode.URL_EMPTY);
   }
 
   // Parse and validate URL
@@ -126,7 +127,7 @@ export function validateAndNormalizeUrl(url: string): string {
   try {
     parsedUrl = new URL(trimmedUrl);
   } catch {
-    throw new AppError('Invalid URL format', 400, 'URL_INVALID');
+    throw new AppError('Invalid URL format', 400, ErrorCode.URL_INVALID);
   }
 
   // Validate protocol
@@ -134,13 +135,13 @@ export function validateAndNormalizeUrl(url: string): string {
     throw new AppError(
       `Invalid URL protocol: ${parsedUrl.protocol}. Only HTTP and HTTPS are supported.`,
       400,
-      'URL_INVALID_PROTOCOL'
+      ErrorCode.URL_INVALID_PROTOCOL
     );
   }
 
   // Validate hostname exists
   if (!parsedUrl.hostname) {
-    throw new AppError('URL must include a hostname', 400, 'URL_NO_HOSTNAME');
+    throw new AppError('URL must include a hostname', 400, ErrorCode.URL_NO_HOSTNAME);
   }
 
   return trimmedUrl;
@@ -381,7 +382,7 @@ export class ImportOrchestrator {
       throw new AppError(
         'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable or configure via settings.',
         400,
-        'API_KEY_MISSING'
+        ErrorCode.API_KEY_MISSING
       );
     }
 
@@ -403,7 +404,7 @@ export class ImportOrchestrator {
       throw new AppError(
         `Failed to extract content from URL: ${message}`,
         400,
-        'EXTRACTION_FAILED'
+        ErrorCode.EXTRACTION_FAILED
       );
     }
   }

@@ -101,6 +101,26 @@ export const SearchQuerySchema = z.object({
     .pipe(z.number().min(0).optional()),
 });
 
+/**
+ * Schema for filtered search request body (POST /api/search/filtered)
+ */
+export const FilteredSearchSchema = z.object({
+  query: z.string().min(1, 'Query is required').max(500, 'Query must be 500 characters or less'),
+  filters: z.object({
+    segments: z.array(z.string().length(1, 'Segment code must be 1 character')).optional(),
+    categories: z.array(z.string().max(10, 'Category code must be 10 characters or less')).optional(),
+    contentTypes: z.array(z.string().length(1, 'Content type code must be 1 character')).optional(),
+    organizations: z.array(z.string().max(200, 'Organization name must be 200 characters or less')).optional(),
+    dateRange: z.object({
+      start: z.string().datetime({ message: 'Start date must be a valid ISO date string' }).optional(),
+      end: z.string().datetime({ message: 'End date must be a valid ISO date string' }).optional(),
+    }).optional(),
+    hasCompleteMetadata: z.boolean().optional(),
+  }).optional(),
+  page: z.number().int().min(1, 'Page must be at least 1').optional(),
+  limit: z.number().int().min(1, 'Limit must be at least 1').max(100, 'Limit must be at most 100').optional(),
+});
+
 // ============================================================
 // Move & Merge Schemas
 // ============================================================
@@ -160,6 +180,7 @@ export type UpdateNodeInput = z.infer<typeof UpdateNodeSchema>;
 export type ImportUrlInput = z.infer<typeof ImportUrlSchema>;
 export type SetApiKeyInput = z.infer<typeof SetApiKeySchema>;
 export type SearchQueryInput = z.infer<typeof SearchQuerySchema>;
+export type FilteredSearchInput = z.infer<typeof FilteredSearchSchema>;
 export type MoveNodeInput = z.infer<typeof MoveNodeSchema>;
 export type MergeNodesInput = z.infer<typeof MergeNodesSchema>;
 export type UuidParam = z.infer<typeof UuidParamSchema>;

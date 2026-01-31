@@ -173,3 +173,77 @@ export async function searchAdvanced(req: Request, res: Response): Promise<void>
     });
   }
 }
+
+/**
+ * POST /api/search/filtered
+ * Filtered search endpoint with comprehensive filter support
+ *
+ * Request Body:
+ * {
+ *   query: string (required) - Search query string
+ *   filters: {
+ *     segments: string[] - Filter by segment codes (e.g., ['A', 'T'])
+ *     categories: string[] - Filter by category codes (e.g., ['LLM', 'AGT'])
+ *     contentTypes: string[] - Filter by content type codes (e.g., ['T', 'V'])
+ *     organizations: string[] - Filter by organization names (e.g., ['Anthropic', 'OpenAI'])
+ *     dateRange: { start?: string, end?: string } - Filter by date range
+ *     hasCompleteMetadata: boolean - Only show nodes with complete Phase 2 data
+ *   },
+ *   page: number (optional) - Page number (default: 1)
+ *   limit: number (optional) - Results per page (default: 20, max: 100)
+ * }
+ *
+ * Response Format:
+ * {
+ *   results: Array<SearchResultItem>,
+ *   facets: {
+ *     segments: Record<string, number>,
+ *     categories: Record<string, number>,
+ *     contentTypes: Record<string, number>,
+ *     organizations: Array<{ name: string; count: number }>
+ *   },
+ *   total: number,
+ *   page: number,
+ *   pageSize: number
+ * }
+ *
+ * Example:
+ * POST /api/search/filtered
+ * {
+ *   "query": "machine learning",
+ *   "filters": {
+ *     "segments": ["A"],
+ *     "contentTypes": ["T", "V"],
+ *     "hasCompleteMetadata": true
+ *   },
+ *   "page": 1,
+ *   "limit": 20
+ * }
+ */
+export async function searchFiltered(req: Request, res: Response): Promise<void> {
+  try {
+    const { query, filters, page, limit } = req.body;
+
+    if (!query || typeof query !== 'string') {
+      res.status(400).json({ error: 'Query is required' });
+      return;
+    }
+
+    // Validate and normalize pagination parameters
+    const pagination = validatePaginationParams(
+      page?.toString(),
+      limit?.toString()
+    );
+
+    // Execute advanced search with filters and facets
+    const response = searchNodesAdvanced(query, filters, pagination);
+
+    res.json(response);
+  } catch (error) {
+    const err = error as Error;
+    res.status(500).json({
+      error: err.message,
+      details: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    });
+  }
+}

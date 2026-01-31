@@ -6,7 +6,9 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { SearchResultCard } from './SearchResultCard';
 import { SearchPagination } from './SearchPagination';
 import { RecentSearches, saveRecentSearch } from './RecentSearches';
+import { SearchFiltersPanel } from './SearchFiltersPanel';
 import type { SearchResult, SearchFilters } from '../../../shared/types';
+import type { SearchFilterState } from '../../hooks/useSearchFilters';
 
 interface SearchViewProps {
   query: string;
@@ -14,14 +16,41 @@ interface SearchViewProps {
   isLoading: boolean;
   onSelectResult: (result: SearchResult) => void;
   onClearSearch?: () => void;
+  onFiltersChange?: (filters: SearchFilters) => void;
+  availableCategories?: string[];
 }
 
 type SortOption = 'relevance' | 'date' | 'title';
 
 /**
+ * Convert SearchFilterState from useSearchFilters to SearchFilters API format
+ * The hook uses arrays for multiple selections, but API expects single values
+ */
+function convertFiltersToAPIFormat(filterState: SearchFilterState): SearchFilters {
+  const apiFilters: SearchFilters = {};
+
+  // Convert arrays to single values (take first item)
+  if (filterState.segments.length > 0) {
+    apiFilters.segmentCode = filterState.segments;
+  }
+  if (filterState.categories.length > 0) {
+    apiFilters.tags = filterState.categories;
+  }
+  if (filterState.contentTypes.length > 0) {
+    apiFilters.contentType = filterState.contentTypes;
+  }
+  if (filterState.dateRange) {
+    apiFilters.dateRange = filterState.dateRange;
+  }
+
+  return apiFilters;
+}
+
+/**
  * SearchView Component
  *
  * Comprehensive search results display with:
+ * - Advanced filter panel (segments, categories, content types, dates)
  * - Relevance scoring and sorting options
  * - Highlighted matched terms
  * - Enhanced result cards with context
@@ -36,6 +65,7 @@ type SortOption = 'relevance' | 'date' | 'title';
  *   isLoading={false}
  *   onSelectResult={handleSelect}
  *   onClearSearch={clearSearch}
+ *   onFiltersChange={(filters) => performSearch(query, filters)}
  * />
  */
 export function SearchView({
@@ -44,12 +74,15 @@ export function SearchView({
   isLoading,
   onSelectResult,
   onClearSearch,
+  onFiltersChange,
+  availableCategories = [],
 }: SearchViewProps): React.ReactElement {
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [showRecent, setShowRecent] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [showFilters, setShowFilters] = useState(true);
 
   // Extract search terms from query
   const searchTerms = useMemo(() => {
@@ -125,6 +158,15 @@ export function SearchView({
     // This would need to trigger a new search in the parent component
     // For now, we just close the recent searches
   }, []);
+
+  // Handle filter changes from SearchFiltersPanel
+  const handleInternalFiltersChange = useCallback((filterState: SearchFilterState) => {
+    // Convert filter state to API format and notify parent
+    if (onFiltersChange) {
+      const apiFilters = convertFiltersToAPIFormat(filterState);
+      onFiltersChange(apiFilters);
+    }
+  }, [onFiltersChange]);
 
   // Show recent searches when query is empty and not loading
   const shouldShowRecent = !query && !isLoading && showRecent;
@@ -213,7 +255,7 @@ export function SearchView({
     );
   }
 
-  // Results view
+  // Results view with filters
   return (
     <div className="search-view">
       {/* Search Header */}
@@ -227,6 +269,13 @@ export function SearchView({
 
         {/* Sort Controls */}
         <div className="search-controls">
+          <button
+            className="gum-button gum-button--small"
+            onClick={() => setShowFilters(!showFilters)}
+            title={showFilters ? 'Hide Filters' : 'Show Filters'}
+          >
+            {showFilters ? '◀ Hide' : '▶ Show'} Filters
+          </button>
           <label htmlFor="sort-by">Sort by:</label>
           <select
             id="sort-by"
@@ -241,30 +290,48 @@ export function SearchView({
         </div>
       </div>
 
-      {/* Results List */}
-      <div className="search-results-list">
-        {paginatedResults.map((result, index) => (
-          <SearchResultCard
-            key={result.node.id}
-            result={result}
-            searchTerms={searchTerms}
-            onClick={() => handleSelectResult(result)}
-            isSelected={index === selectedIndex}
-          />
-        ))}
-      </div>
+      {/* Main Content Area with Filters */}
+      <div className="search-content">
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="search-filters-sidebar">
+            <SearchFiltersPanel
+              onFiltersChange={handleInternalFiltersChange}
+              resultCount={sortedResults.length}
+              isLoading={isLoading}
+              availableCategories={availableCategories}
+            />
+          </div>
+        )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <SearchPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          totalResults={sortedResults.length}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={handlePageSizeChange}
-        />
-      )}
+        {/* Results Container */}
+        <div className="search-results-container">
+          {/* Results List */}
+          <div className="search-results-list">
+            {paginatedResults.map((result, index) => (
+              <SearchResultCard
+                key={result.node.id}
+                result={result}
+                searchTerms={searchTerms}
+                onClick={() => handleSelectResult(result)}
+                isSelected={index === selectedIndex}
+              />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <SearchPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              totalResults={sortedResults.length}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          )}
+        </div>
+      </div>
 
       <style>{searchViewStyles}</style>
     </div>
@@ -303,6 +370,46 @@ const searchViewStyles = `
     to {
       transform: rotate(360deg);
     }
+  }
+
+  /* Main Content Layout */
+  .search-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    gap: var(--space-md);
+    padding: var(--space-md);
+  }
+
+  .search-filters-sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .search-filters-sidebar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .search-filters-sidebar::-webkit-scrollbar-track {
+    background: var(--gum-gray-100);
+  }
+
+  .search-filters-sidebar::-webkit-scrollbar-thumb {
+    background: var(--gum-gray-300);
+    border-radius: 4px;
+  }
+
+  .search-filters-sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--gum-gray-600);
+  }
+
+  .search-results-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   /* Search Prompt */
@@ -446,7 +553,7 @@ const searchViewStyles = `
   .search-results-list {
     flex: 1;
     overflow-y: auto;
-    padding: var(--space-md);
+    padding: 0;
   }
 
   .search-results-list::-webkit-scrollbar {
@@ -467,6 +574,21 @@ const searchViewStyles = `
   }
 
   /* Responsive Design */
+  @media (max-width: 1024px) {
+    .search-content {
+      flex-direction: column;
+    }
+
+    .search-filters-sidebar {
+      width: 100%;
+      max-height: 400px;
+    }
+
+    .search-results-container {
+      min-height: 400px;
+    }
+  }
+
   @media (max-width: 768px) {
     .search-header {
       flex-direction: column;
@@ -475,7 +597,13 @@ const searchViewStyles = `
     }
 
     .search-controls {
-      justify-content: space-between;
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+
+    .search-content {
+      padding: var(--space-sm);
     }
   }
 `;

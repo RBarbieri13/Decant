@@ -10,7 +10,7 @@ import { TreePanel } from './TreePanel';
 import { DetailPanel } from './DetailPanel';
 import { ImportDialog } from '../import/ImportDialog';
 import { BatchImportModal } from '../import/BatchImportModal';
-import { SearchBar } from '../search/SearchBar';
+import { EnhancedSearchBar } from '../search/EnhancedSearchBar';
 import { SettingsDialog } from '../settings/SettingsDialog';
 import { MergeDialog } from '../dialogs/MergeDialog';
 import { createIntegratedSSEClient } from '../../services/realtimeService';
@@ -133,7 +133,7 @@ export function AppShell(): React.ReactElement {
           </button>
         </div>
         <div className="header-right">
-          <SearchBar onSelectResult={handleSearchSelect} />
+          <EnhancedSearchBar onSelectResult={handleSearchSelect} />
           <button
             className="gum-button gum-button--small gum-button--green"
             onClick={actions.openImportDialog}

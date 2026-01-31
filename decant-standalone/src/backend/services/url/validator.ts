@@ -5,6 +5,7 @@
 
 import { log } from '../../logger/index.js';
 import { AppError, SSRFError } from '../../middleware/errorHandler.js';
+import { ErrorCode } from '../../errors/index.js';
 
 // ============================================================
 // Types
@@ -202,7 +203,7 @@ function parseUrl(url: string): URL {
   const trimmed = url.trim();
 
   if (!trimmed) {
-    throw new AppError('URL cannot be empty', 400, 'INVALID_URL');
+    throw new AppError('URL cannot be empty', 400, ErrorCode.INVALID_URL);
   }
 
   // Check for basic URL format
@@ -211,14 +212,14 @@ function parseUrl(url: string): URL {
     try {
       return new URL(`https://${trimmed}`);
     } catch {
-      throw new AppError('Invalid URL format', 400, 'INVALID_URL');
+      throw new AppError('Invalid URL format', 400, ErrorCode.INVALID_URL);
     }
   }
 
   try {
     return new URL(trimmed);
   } catch {
-    throw new AppError('Invalid URL format', 400, 'INVALID_URL');
+    throw new AppError('Invalid URL format', 400, ErrorCode.INVALID_URL);
   }
 }
 
@@ -232,7 +233,7 @@ function validateProtocol(url: URL, allowHttp: boolean): void {
     throw new AppError(
       `Invalid protocol: ${protocol}. Only HTTP and HTTPS are allowed.`,
       400,
-      'INVALID_PROTOCOL'
+      ErrorCode.INVALID_PROTOCOL
     );
   }
 
@@ -240,7 +241,7 @@ function validateProtocol(url: URL, allowHttp: boolean): void {
     throw new AppError(
       'HTTP URLs are not allowed. Please use HTTPS.',
       400,
-      'HTTP_NOT_ALLOWED'
+      ErrorCode.HTTP_NOT_ALLOWED
     );
   }
 }

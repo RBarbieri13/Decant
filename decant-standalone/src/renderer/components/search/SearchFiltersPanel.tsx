@@ -5,10 +5,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FilterChips } from './FilterChips';
 import { useSearchFilters } from '../../hooks/useSearchFilters';
+import type { SearchFilterState } from '../../hooks/useSearchFilters';
 import type { ContentTypeCode, SegmentCode } from '../../../shared/types';
 
 interface SearchFiltersPanelProps {
-  onFiltersChange?: (filters: any) => void;
+  onFiltersChange?: (filters: SearchFilterState) => void;
   resultCount?: number;
   isLoading?: boolean;
   availableCategories?: string[];
