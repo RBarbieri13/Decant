@@ -85,18 +85,27 @@ export function BatchImportModal({
         <div className="batch-import-header">
           <div className="batch-import-header-left">
             <h2 className="batch-import-title">Batch Import</h2>
-            <span className="batch-import-subtitle">
-              Import multiple URLs at once
-            </span>
           </div>
-          <button
-            type="button"
-            className="batch-import-close"
-            onClick={handleClose}
-            aria-label="Close"
-          >
-            <CloseIcon />
-          </button>
+          <div className="batch-import-header-right">
+            <label className="batch-import-details-toggle">
+              <span className="batch-import-toggle-label">Show details</span>
+              <input
+                type="checkbox"
+                checked={showDetails}
+                onChange={toggleDetails}
+                className="batch-import-toggle-checkbox"
+              />
+              <span className="batch-import-toggle-slider"></span>
+            </label>
+            <button
+              type="button"
+              className="batch-import-close"
+              onClick={handleClose}
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {/* Main Content - Split View */}
@@ -213,13 +222,22 @@ export function BatchImportModal({
           </button>
 
           {isActive ? (
-            <button
-              type="button"
-              className="batch-import-btn batch-import-btn--danger"
-              onClick={handleCancel}
-            >
-              Stop Import
-            </button>
+            <>
+              <button
+                type="button"
+                className="batch-import-btn batch-import-btn--secondary"
+                onClick={handleCancel}
+              >
+                Stop
+              </button>
+              <button
+                type="button"
+                className="batch-import-btn batch-import-btn--primary"
+                disabled
+              >
+                Importing {stats.imported + stats.processing}/{stats.total}...
+              </button>
+            </>
           ) : isComplete ? (
             <button
               type="button"
@@ -235,7 +253,7 @@ export function BatchImportModal({
               onClick={handleStartImport}
               disabled={!canStart}
             >
-              Import {validUrlCount > 0 ? `${validUrlCount} URL${validUrlCount !== 1 ? 's' : ''}` : ''}
+              Import{validUrlCount > 0 ? ` (${validUrlCount})` : ''}
             </button>
           )}
         </div>
@@ -249,15 +267,6 @@ export function BatchImportModal({
 // ============================================================
 // Icons
 // ============================================================
-
-function CloseIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  );
-}
 
 function ChevronIcon({ direction }: { direction: 'left' | 'right' }) {
   return (
@@ -335,25 +344,83 @@ const modalStyles = `
     gap: var(--space-xs);
   }
 
+  .batch-import-header-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
   .batch-import-title {
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-bold);
     margin: 0;
   }
 
-  .batch-import-subtitle {
+  .batch-import-details-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .batch-import-toggle-label {
     font-size: var(--font-size-sm);
-    color: var(--gum-gray-500);
+    color: var(--gum-gray-700);
+  }
+
+  .batch-import-toggle-checkbox {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .batch-import-toggle-slider {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+    background: var(--gum-gray-300);
+    border-radius: 10px;
+    transition: background 0.2s ease;
+  }
+
+  .batch-import-toggle-slider::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--gum-white);
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s ease;
+  }
+
+  .batch-import-toggle-checkbox:checked + .batch-import-toggle-slider {
+    background: var(--gum-green);
+  }
+
+  .batch-import-toggle-checkbox:checked + .batch-import-toggle-slider::after {
+    transform: translateX(16px);
   }
 
   .batch-import-close {
-    padding: var(--space-xs);
+    width: 32px;
+    height: 32px;
+    padding: 0;
     background: none;
     border: none;
     cursor: pointer;
     color: var(--gum-gray-500);
     border-radius: var(--border-radius);
     transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    line-height: 1;
   }
 
   .batch-import-close:hover {

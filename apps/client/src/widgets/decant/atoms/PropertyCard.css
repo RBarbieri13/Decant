@@ -1,0 +1,100 @@
+/* PropertyCard - White card with property fields */
+
+.decant-property-card {
+    background-color: white;
+    border: 1px solid var(--decant-border-light, #e0ddd9);
+    border-radius: var(--decant-radius-lg, 8px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.decant-property-card__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--decant-border-light, #e0ddd9);
+    background-color: #fafafa;
+}
+
+.decant-property-card__header--clickable {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.1s ease;
+}
+
+.decant-property-card__header--clickable:hover {
+    background-color: #f5f5f5;
+}
+
+.decant-property-card__title {
+    flex: 1;
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--decant-text-primary, #2a2a2a);
+}
+
+.decant-property-card__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background-color: var(--decant-border-light, #e0ddd9);
+    color: var(--decant-text-secondary, #666666);
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 100px;
+}
+
+.decant-property-card__chevron {
+    color: var(--decant-text-secondary, #666666);
+    font-size: 18px;
+}
+
+.decant-property-card__content {
+    padding: 10px 14px;
+}
+
+.decant-property-card__field {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.decant-property-card__field:last-child {
+    border-bottom: none;
+}
+
+.decant-property-card__label {
+    font-size: 12px;
+    color: var(--decant-text-secondary, #666666);
+}
+
+.decant-property-card__value {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--decant-text-primary, #2a2a2a);
+    text-align: right;
+}
+
+.decant-property-card__value i {
+    font-size: 14px;
+    color: var(--decant-star-color, #f5a623);
+}
+
+.decant-property-card__value--link {
+    color: var(--decant-forest-green, #2d5b47);
+    text-decoration: none;
+}
+
+.decant-property-card__value--link:hover {
+    text-decoration: underline;
+}

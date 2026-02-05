@@ -37,12 +37,12 @@ const serializers = {
       // Don't log sensitive headers
     },
   }),
-  res: (res: Response) => ({
+  res: (res: any) => ({
     statusCode: res.statusCode,
-    headers: {
-      'content-type': res.getHeader('content-type'),
-      'content-length': res.getHeader('content-length'),
-    },
+    headers: res.getHeaders ? {
+      'content-type': res.getHeader?.('content-type'),
+      'content-length': res.getHeader?.('content-length'),
+    } : {},
   }),
 };
 

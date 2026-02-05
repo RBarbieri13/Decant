@@ -1,0 +1,64 @@
+/* Decant UI CSS Variables - Design 3 Hybrid Warm Palette */
+
+:root {
+    /* Primary colors */
+    --decant-bg-ivory: #f5f1ed;
+    --decant-forest-green: #2d5b47;
+    --decant-copper: #a4704a;
+
+    /* Selected state */
+    --decant-selected-bg: #e8f0eb;
+
+    /* Pastel tag colors */
+    --decant-tag-blue: #e3f2fd;
+    --decant-tag-blue-text: #1565c0;
+    --decant-tag-yellow: #fff9e6;
+    --decant-tag-yellow-text: #f57f17;
+    --decant-tag-pink: #fce4ec;
+    --decant-tag-pink-text: #c2185b;
+    --decant-tag-green: #e8f5e9;
+    --decant-tag-green-text: #2e7d32;
+    --decant-tag-purple: #f3e5f5;
+    --decant-tag-purple-text: #7b1fa2;
+
+    /* Text colors */
+    --decant-text-primary: #2a2a2a;
+    --decant-text-secondary: #666666;
+
+    /* Borders */
+    --decant-border-light: #e0ddd9;
+    --decant-border-medium: #ccc9c5;
+
+    /* View toggle bar */
+    --decant-view-toggle-bg: #e8e4dc;
+
+    /* Star color */
+    --decant-star-color: #f5a623;
+    --decant-star-color-hover: #e09100;
+
+    /* Shadows */
+    --decant-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --decant-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.08);
+
+    /* Typography */
+    --decant-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    --decant-font-size-sm: 12px;
+    --decant-font-size-md: 14px;
+    --decant-font-size-lg: 16px;
+
+    /* Spacing */
+    --decant-spacing-xs: 4px;
+    --decant-spacing-sm: 8px;
+    --decant-spacing-md: 12px;
+    --decant-spacing-lg: 16px;
+    --decant-spacing-xl: 24px;
+
+    /* Border radius */
+    --decant-radius-sm: 4px;
+    --decant-radius-md: 6px;
+    --decant-radius-lg: 8px;
+
+    /* Transitions */
+    --decant-transition-fast: 0.1s ease;
+    --decant-transition-normal: 0.15s ease;
+}

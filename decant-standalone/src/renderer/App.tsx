@@ -6,27 +6,10 @@ import React from 'react';
 import DecantDemo from './decant-demo/DecantDemo';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastProvider } from './context/ToastContext';
-import { ToastContainer } from './components/notifications/ToastContainer';
-import { useToast } from './context/ToastContext';
-
-/**
- * App Shell with Toast Container
- * Wraps the demo with toast notifications
- */
-function AppShell(): React.ReactElement {
-  const { toasts } = useToast();
-
-  return (
-    <>
-      <DecantDemo />
-      <ToastContainer toasts={toasts} position="bottom-right" maxToasts={5} />
-    </>
-  );
-}
 
 /**
  * Main App Component
- * Shows the Decant UI Demo with error boundary and toast notifications
+ * Full Decant application with colorful table UI and batch import functionality
  */
 function App(): React.ReactElement {
   return (
@@ -37,7 +20,7 @@ function App(): React.ReactElement {
       }}
     >
       <ToastProvider>
-        <AppShell />
+        <DecantDemo />
       </ToastProvider>
     </ErrorBoundary>
   );

@@ -1,0 +1,77 @@
+/* TabBar - Three-tab navigation with copper underline */
+
+.decant-tab-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 16px;
+    background-color: var(--decant-view-toggle-bg, #e8e4dc);
+    border-bottom: 1px solid var(--decant-border-light, #e0ddd9);
+}
+
+.decant-tab-bar__tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px;
+    border: none;
+    background: transparent;
+    color: var(--decant-forest-green, #2d5b47);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.15s ease;
+}
+
+.decant-tab-bar__tab:hover {
+    color: var(--decant-text-primary, #2a2a2a);
+}
+
+.decant-tab-bar__tab:focus {
+    outline: none;
+}
+
+.decant-tab-bar__tab:focus-visible {
+    outline: 2px solid var(--decant-forest-green, #2d5b47);
+    outline-offset: -2px;
+    border-radius: var(--decant-radius-sm, 4px);
+}
+
+/* Active tab with copper underline */
+.decant-tab-bar__tab--active {
+    font-weight: 600;
+    color: var(--decant-text-primary, #2a2a2a);
+}
+
+.decant-tab-bar__tab--active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 16px;
+    right: 16px;
+    height: 2px;
+    background-color: var(--decant-copper, #a4704a);
+    border-radius: 1px 1px 0 0;
+}
+
+/* Count badge */
+.decant-tab-bar__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background-color: var(--decant-border-light, #e0ddd9);
+    color: var(--decant-text-secondary, #666666);
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 100px;
+}
+
+.decant-tab-bar__tab--active .decant-tab-bar__count {
+    background-color: var(--decant-forest-green, #2d5b47);
+    color: white;
+}

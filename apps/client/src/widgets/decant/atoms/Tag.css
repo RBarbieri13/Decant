@@ -1,0 +1,69 @@
+/* Tag - Pastel colored tag badges */
+
+.decant-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 100px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: opacity 0.1s ease;
+}
+
+/* Sizes */
+.decant-tag--sm {
+    padding: 2px 8px;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.decant-tag--md {
+    padding: 4px 10px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* Colors - Pastel backgrounds with darker text */
+.decant-tag--blue {
+    background-color: var(--decant-tag-blue, #e3f2fd);
+    color: var(--decant-tag-blue-text, #1565c0);
+}
+
+.decant-tag--yellow {
+    background-color: var(--decant-tag-yellow, #fff9e6);
+    color: var(--decant-tag-yellow-text, #f57f17);
+}
+
+.decant-tag--pink {
+    background-color: var(--decant-tag-pink, #fce4ec);
+    color: var(--decant-tag-pink-text, #c2185b);
+}
+
+.decant-tag--green {
+    background-color: var(--decant-tag-green, #e8f5e9);
+    color: var(--decant-tag-green-text, #2e7d32);
+}
+
+.decant-tag--purple {
+    background-color: var(--decant-tag-purple, #f3e5f5);
+    color: var(--decant-tag-purple-text, #7b1fa2);
+}
+
+.decant-tag--gray {
+    background-color: #f0f0f0;
+    color: #666666;
+}
+
+/* Clickable state */
+.decant-tag--clickable {
+    cursor: pointer;
+}
+
+.decant-tag--clickable:hover {
+    opacity: 0.85;
+}
+
+.decant-tag--clickable:focus {
+    outline: 2px solid var(--decant-forest-green, #2d5b47);
+    outline-offset: 1px;
+}

@@ -94,12 +94,21 @@ function BatchResultItem({ item, index }: BatchResultItemProps): React.ReactElem
         {/* Classification Tags */}
         {item.classification && item.status === 'imported' && (
           <div className="batch-result-tags">
-            <span className="batch-result-tag batch-result-tag--segment">
-              {item.classification.segment}
-            </span>
-            <span className="batch-result-tag batch-result-tag--category">
-              {item.classification.category}
-            </span>
+            {item.classification.segment && (
+              <span className="batch-result-tag batch-result-tag--segment">
+                {item.classification.segment}
+              </span>
+            )}
+            {item.classification.category && (
+              <span className="batch-result-tag batch-result-tag--category">
+                {item.classification.category}
+              </span>
+            )}
+            {item.classification.contentType && (
+              <span className="batch-result-tag batch-result-tag--content">
+                {item.classification.contentType}
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -261,27 +270,44 @@ const resultStyles = `
     display: flex;
     align-items: center;
     gap: var(--space-sm);
-    padding: var(--space-sm);
+    padding: 10px;
     margin-bottom: var(--space-xs);
     background: var(--gum-white);
     border: 1px solid var(--gum-gray-200);
-    border-radius: var(--border-radius);
+    border-radius: 6px;
     transition: all var(--transition-fast);
   }
 
+  .batch-result-item:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-color: var(--gum-gray-300);
+  }
+
   .batch-result-item--imported {
+    border-color: #D4F4E6;
+    background: #F9FDFC;
+  }
+
+  .batch-result-item--imported:hover {
     border-color: var(--gum-green);
-    background: rgba(35, 198, 107, 0.05);
   }
 
   .batch-result-item--duplicate {
+    border-color: #E0E8F8;
+    background: #F9FBFE;
+  }
+
+  .batch-result-item--duplicate:hover {
     border-color: var(--gum-blue);
-    background: rgba(144, 168, 237, 0.05);
   }
 
   .batch-result-item--failed {
+    border-color: #F8D7DA;
+    background: #FEF5F5;
+  }
+
+  .batch-result-item--failed:hover {
     border-color: #E74C3C;
-    background: rgba(231, 76, 60, 0.05);
   }
 
   .batch-result-index {
@@ -345,59 +371,65 @@ const resultStyles = `
   }
 
   .batch-result-tag {
-    padding: 2px 6px;
+    padding: 3px 8px;
     font-size: 10px;
-    font-weight: var(--font-weight-medium);
-    border-radius: 3px;
+    font-weight: var(--font-weight-bold);
+    border-radius: 4px;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   .batch-result-tag--segment {
-    background: var(--gum-pink);
-    color: var(--gum-black);
+    background: #FF6B9D;
+    color: white;
   }
 
   .batch-result-tag--category {
     background: var(--gum-blue);
-    color: var(--gum-black);
+    color: white;
+  }
+
+  .batch-result-tag--content {
+    background: var(--gum-gray-300);
+    color: var(--gum-gray-700);
   }
 
   .batch-result-status {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
-    font-size: var(--font-size-xs);
+    gap: 5px;
+    padding: 5px 10px;
+    font-size: 11px;
     font-weight: var(--font-weight-medium);
-    border-radius: var(--border-radius);
+    border-radius: 12px;
     white-space: nowrap;
   }
 
   .batch-result-status--imported {
-    background: var(--gum-green);
-    color: var(--gum-black);
+    background: #E8F8F0;
+    color: #1B8C57;
   }
 
   .batch-result-status--duplicate {
-    background: var(--gum-blue);
-    color: var(--gum-black);
+    background: #E8EFFC;
+    color: #4A6FA5;
   }
 
   .batch-result-status--failed {
-    background: #E74C3C;
-    color: white;
+    background: #FDEEEE;
+    color: #C0392B;
   }
 
   .batch-result-status--validating,
   .batch-result-status--fetching,
   .batch-result-status--classifying,
   .batch-result-status--saving {
-    background: var(--gum-yellow);
-    color: var(--gum-black);
+    background: #FFF7E6;
+    color: #D4A800;
   }
 
   .batch-result-status--queued {
-    background: var(--gum-gray-200);
+    background: var(--gum-gray-100);
     color: var(--gum-gray-600);
   }
 

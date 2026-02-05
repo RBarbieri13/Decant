@@ -1,0 +1,133 @@
+/* DataTable - Full data table with header, rows, and status bar */
+
+.decant-data-table {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: var(--decant-bg-ivory, #f5f1ed);
+    overflow: hidden;
+}
+
+/* Toolbar - Tan background with view toggles */
+.decant-data-table__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background-color: var(--decant-view-toggle-bg, #e8e4dc);
+    border-bottom: 1px solid var(--decant-border-light, #e0ddd9);
+    flex-shrink: 0;
+}
+
+.decant-data-table__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--decant-forest-green, #2d5b47);
+    font-weight: 500;
+}
+
+.decant-data-table__breadcrumb i {
+    font-size: 14px;
+    opacity: 0.6;
+}
+
+/* Column headers - Dark green background with white text */
+.decant-data-table__header {
+    display: grid;
+    grid-template-columns:
+        36px    /* expand */
+        40px    /* logo */
+        1fr     /* title */
+        36px    /* type */
+        100px   /* segment */
+        100px   /* category */
+        180px   /* hierarchy */
+        1fr     /* quick phrase */
+        140px   /* tags */
+        90px    /* date */
+        80px    /* company */
+        40px;   /* star */
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background-color: var(--decant-forest-green, #2d5b47);
+    flex-shrink: 0;
+}
+
+.decant-data-table__header-cell {
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.decant-data-table__header-cell--sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.decant-data-table__header-cell--sortable:hover {
+    opacity: 0.85;
+}
+
+.decant-data-table__header-cell--sorted {
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: -10px -4px;
+    padding: 10px 4px;
+    border-radius: 2px;
+}
+
+.decant-data-table__header-cell i {
+    font-size: 14px;
+}
+
+/* Specific header cell alignments */
+.decant-data-table__header-cell--expand,
+.decant-data-table__header-cell--logo,
+.decant-data-table__header-cell--type,
+.decant-data-table__header-cell--star {
+    justify-content: center;
+}
+
+/* Body - scrollable */
+.decant-data-table__body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Scrollbar styling */
+.decant-data-table__body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.decant-data-table__body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.decant-data-table__body::-webkit-scrollbar-thumb {
+    background-color: var(--decant-border-medium, #ccc9c5);
+    border-radius: 4px;
+}
+
+.decant-data-table__body::-webkit-scrollbar-thumb:hover {
+    background-color: var(--decant-text-secondary, #666666);
+}
+
+/* Status bar - Dark green background */
+.decant-data-table__status {
+    padding: 8px 16px;
+    background-color: var(--decant-forest-green, #2d5b47);
+    color: white;
+    font-size: 12px;
+    flex-shrink: 0;
+}

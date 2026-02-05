@@ -5,7 +5,7 @@
 
 import type Database from 'better-sqlite3';
 import { v4 as uuidv4 } from 'uuid';
-import { getDb } from './connection.js';
+import { getDatabase } from './connection.js';
 
 // ============================================================
 // Types
@@ -72,7 +72,7 @@ export interface GetNodeHistoryOptions {
  * ```
  */
 export function logCodeChange(params: LogCodeChangeParams, db?: Database.Database): string {
-  const database = db || getDb();
+  const database = db || getDatabase();
   const id = uuidv4();
 
   const stmt = database.prepare(`
@@ -133,7 +133,7 @@ export function getNodeHistory(
   options: GetNodeHistoryOptions = {},
   db?: Database.Database
 ): CodeChangeRecord[] {
-  const database = db || getDb();
+  const database = db || getDatabase();
   const { hierarchyType, limit, offset = 0 } = options;
 
   let query = `
@@ -191,7 +191,7 @@ export function getNodeHistory(
  * ```
  */
 export function getRecentChanges(limit = 50, db?: Database.Database): CodeChangeRecord[] {
-  const database = db || getDb();
+  const database = db || getDatabase();
 
   const stmt = database.prepare(`
     SELECT
@@ -242,7 +242,7 @@ export function getChangesByType(
   limit = 50,
   db?: Database.Database
 ): CodeChangeRecord[] {
-  const database = db || getDb();
+  const database = db || getDatabase();
 
   const stmt = database.prepare(`
     SELECT
@@ -287,7 +287,7 @@ export function getChangesByType(
  * ```
  */
 export function getBatchChanges(batchId: string, db?: Database.Database): CodeChangeRecord[] {
-  const database = db || getDb();
+  const database = db || getDatabase();
 
   // SQLite doesn't have native JSON query support in all versions,
   // so we'll use LIKE pattern matching on the metadata JSON
@@ -342,7 +342,7 @@ export function getChangesByTrigger(
   limit = 50,
   db?: Database.Database
 ): CodeChangeRecord[] {
-  const database = db || getDb();
+  const database = db || getDatabase();
 
   const stmt = database.prepare(`
     SELECT
@@ -391,7 +391,7 @@ export function getChangeStatistics(db?: Database.Database): {
   byTrigger: Record<TriggeredBy, number>;
   byHierarchy: Record<HierarchyType, number>;
 } {
-  const database = db || getDb();
+  const database = db || getDatabase();
 
   // Total changes
   const totalStmt = database.prepare('SELECT COUNT(*) as count FROM hierarchy_code_changes');

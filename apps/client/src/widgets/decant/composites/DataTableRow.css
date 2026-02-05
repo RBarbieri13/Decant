@@ -1,0 +1,178 @@
+/* DataTableRow - Single row in the data table */
+
+.decant-data-row {
+    display: grid;
+    grid-template-columns:
+        36px    /* expand */
+        40px    /* logo */
+        1fr     /* title */
+        36px    /* type */
+        100px   /* segment */
+        100px   /* category */
+        180px   /* hierarchy */
+        1fr     /* quick phrase */
+        140px   /* tags */
+        90px    /* date */
+        80px    /* company */
+        40px;   /* star */
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    min-height: 36px;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+    border-bottom: 1px solid var(--decant-border-light, #e0ddd9);
+}
+
+/* Alternating row colors */
+.decant-data-row:nth-child(odd) {
+    background-color: var(--decant-bg-ivory, #f5f1ed);
+}
+
+.decant-data-row:nth-child(even) {
+    background-color: #f8f6f3;
+}
+
+.decant-data-row:hover {
+    background-color: rgba(45, 91, 71, 0.04);
+}
+
+.decant-data-row:focus {
+    outline: none;
+}
+
+.decant-data-row:focus-visible {
+    outline: 2px solid var(--decant-forest-green, #2d5b47);
+    outline-offset: -2px;
+}
+
+/* Selected state */
+.decant-data-row--selected {
+    background-color: var(--decant-selected-bg, #e8f0eb) !important;
+    border-left: 3px solid var(--decant-forest-green, #2d5b47);
+    padding-left: 9px;
+}
+
+/* Expanded state */
+.decant-data-row--expanded {
+    background-color: var(--decant-selected-bg, #e8f0eb) !important;
+    border-bottom: none;
+}
+
+/* Cell base styles */
+.decant-data-row__cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    color: var(--decant-text-primary, #2a2a2a);
+}
+
+/* Expand button */
+.decant-data-row__cell--expand {
+    display: flex;
+    justify-content: center;
+}
+
+.decant-data-row__expand-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--decant-text-secondary, #666666);
+    cursor: pointer;
+    border-radius: var(--decant-radius-sm, 4px);
+    transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.decant-data-row__expand-btn:hover {
+    background-color: rgba(0, 0, 0, 0.06);
+    color: var(--decant-text-primary, #2a2a2a);
+}
+
+.decant-data-row__expand-btn i {
+    font-size: 16px;
+}
+
+/* Logo cell */
+.decant-data-row__cell--logo {
+    display: flex;
+    justify-content: center;
+}
+
+/* Title cell */
+.decant-data-row__cell--title {
+    font-weight: 500;
+}
+
+.decant-data-row__title-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Type symbol */
+.decant-data-row__cell--type {
+    text-align: center;
+    color: var(--decant-text-secondary, #666666);
+}
+
+.decant-data-row__type-symbol {
+    font-size: 14px;
+}
+
+/* Hierarchy */
+.decant-data-row__cell--hierarchy {
+    color: var(--decant-text-secondary, #666666);
+    font-size: 12px;
+}
+
+.decant-data-row__hierarchy-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Quick phrase */
+.decant-data-row__cell--phrase {
+    color: var(--decant-text-secondary, #666666);
+    font-size: 12px;
+}
+
+.decant-data-row__phrase-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Tags */
+.decant-data-row__cell--tags {
+    overflow: visible;
+}
+
+.decant-data-row__tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: nowrap;
+}
+
+/* Date */
+.decant-data-row__cell--date {
+    font-size: 12px;
+    color: var(--decant-text-secondary, #666666);
+}
+
+/* Company */
+.decant-data-row__cell--company {
+    font-size: 12px;
+}
+
+/* Star */
+.decant-data-row__cell--star {
+    display: flex;
+    justify-content: center;
+}

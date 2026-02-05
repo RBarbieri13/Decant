@@ -218,6 +218,13 @@ const defaultOptions: DefaultOption[] = [
     { name: "aiSystemPrompt", value: "", isSynced: true },
     { name: "aiSelectedProvider", value: "openai", isSynced: true },
 
+    // Phase 2 Content Extractor API Keys
+    { name: "firecrawlApiKey", value: "", isSynced: false },
+    { name: "geminiApiKey", value: "", isSynced: false },
+    { name: "youtubeApiKey", value: "", isSynced: false },
+    { name: "githubAccessToken", value: "", isSynced: false },
+    { name: "geminiTier", value: "auto", isSynced: true }, // 'pro', 'flash', or 'auto'
+
     {
         name: "seenCallToActions",
         value: JSON.stringify([

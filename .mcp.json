@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "nanobanana": {
+      "command": "uvx",
+      "args": [
+        "nanobanana-mcp-server@latest"
+      ],
+      "env": {
+        "GEMINI_API_KEY": "AIzaSyDKhhoq96GkZQzQaWQe_DVmyvdiORlwH60",
+        "NANOBANANA_MODEL": "pro"
+      }
+    }
+  }
+}

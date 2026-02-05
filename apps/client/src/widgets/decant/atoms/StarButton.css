@@ -1,0 +1,61 @@
+/* StarButton - Favorite toggle */
+
+.decant-star-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: var(--decant-radius-sm, 4px);
+    transition: color 0.15s ease, transform 0.1s ease;
+    color: var(--decant-border-medium, #ccc9c5);
+}
+
+.decant-star-button:hover {
+    color: var(--decant-star-color, #f5a623);
+    transform: scale(1.1);
+}
+
+.decant-star-button:focus {
+    outline: none;
+}
+
+.decant-star-button:focus-visible {
+    outline: 2px solid var(--decant-forest-green, #2d5b47);
+    outline-offset: 1px;
+}
+
+/* Starred state */
+.decant-star-button--starred {
+    color: var(--decant-star-color, #f5a623);
+}
+
+.decant-star-button--starred:hover {
+    color: var(--decant-star-color-hover, #e09100);
+}
+
+/* Sizes */
+.decant-star-button--sm {
+    padding: 2px;
+}
+
+.decant-star-button--md {
+    padding: 4px;
+}
+
+.decant-star-button--lg {
+    padding: 6px;
+}
+
+/* Animation on toggle */
+@keyframes star-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+.decant-star-button--starred {
+    animation: star-pop 0.2s ease;
+}

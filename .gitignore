@@ -63,3 +63,15 @@ scripts/translation/.language*.json
 .worktrees/
 .security-key
 logs/security/
+
+# API keys and secrets
+scripts/configure-api-keys.ts
+
+# Test and temporary files
+.nanobanana-test/
+.playwright-mcp/
+.vibe-kanban-workspaces/
+console-errors.log
+*.log
+Logos/
+decant-*.png

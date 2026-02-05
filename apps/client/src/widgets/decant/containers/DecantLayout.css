@@ -1,0 +1,172 @@
+/* DecantLayout - Main application layout with three-column structure */
+
+.decant-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+    background-color: var(--decant-bg-ivory, #f5f1ed);
+    overflow: hidden;
+}
+
+/* Body - contains sidebar, main, and right panel */
+.decant-layout__body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Sidebar */
+.decant-layout__sidebar {
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+    background-color: var(--decant-bg-ivory, #f5f1ed);
+    border-right: 1px solid var(--decant-border-light, #e0ddd9);
+    transition: width 0.2s ease;
+    overflow: hidden;
+}
+
+.decant-layout__sidebar--collapsed {
+    border-right: none;
+}
+
+.decant-layout__sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Sidebar scrollbar */
+.decant-layout__sidebar-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.decant-layout__sidebar-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.decant-layout__sidebar-content::-webkit-scrollbar-thumb {
+    background-color: var(--decant-border-medium, #ccc9c5);
+    border-radius: 3px;
+}
+
+.decant-layout__sidebar-content::-webkit-scrollbar-thumb:hover {
+    background-color: var(--decant-text-secondary, #666666);
+}
+
+/* Sidebar toggle button */
+.decant-layout__sidebar-toggle {
+    position: absolute;
+    top: 50%;
+    right: -12px;
+    transform: translateY(-50%);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 48px;
+    padding: 0;
+    border: 1px solid var(--decant-border-light, #e0ddd9);
+    background-color: white;
+    color: var(--decant-text-secondary, #666666);
+    cursor: pointer;
+    border-radius: 0 6px 6px 0;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.decant-layout__sidebar-toggle:hover {
+    background-color: var(--decant-bg-ivory, #f5f1ed);
+    color: var(--decant-forest-green, #2d5b47);
+}
+
+.decant-layout__sidebar-toggle:focus {
+    outline: none;
+}
+
+.decant-layout__sidebar-toggle:focus-visible {
+    outline: 2px solid var(--decant-forest-green, #2d5b47);
+    outline-offset: 2px;
+}
+
+.decant-layout__sidebar-toggle i {
+    font-size: 16px;
+}
+
+/* Collapsed sidebar toggle repositioning */
+.decant-layout__sidebar--collapsed .decant-layout__sidebar-toggle {
+    right: -24px;
+}
+
+/* Main content */
+.decant-layout__main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0; /* Prevent flex item from overflowing */
+}
+
+/* Right panel */
+.decant-layout__right-panel {
+    flex-shrink: 0;
+    background-color: var(--decant-bg-ivory, #f5f1ed);
+    border-left: 1px solid var(--decant-border-light, #e0ddd9);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Right panel scrollbar */
+.decant-layout__right-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.decant-layout__right-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.decant-layout__right-panel::-webkit-scrollbar-thumb {
+    background-color: var(--decant-border-medium, #ccc9c5);
+    border-radius: 3px;
+}
+
+.decant-layout__right-panel::-webkit-scrollbar-thumb:hover {
+    background-color: var(--decant-text-secondary, #666666);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .decant-layout__sidebar {
+        width: 220px !important;
+    }
+
+    .decant-layout__right-panel {
+        width: 280px !important;
+    }
+}
+
+@media (max-width: 900px) {
+    .decant-layout__sidebar {
+        position: absolute;
+        left: 0;
+        top: 52px;
+        height: calc(100vh - 52px);
+        z-index: 100;
+        box-shadow: 4px 0 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .decant-layout__sidebar--collapsed {
+        left: -260px;
+    }
+
+    .decant-layout__right-panel {
+        position: absolute;
+        right: 0;
+        top: 52px;
+        height: calc(100vh - 52px);
+        z-index: 100;
+        box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
+    }
+}

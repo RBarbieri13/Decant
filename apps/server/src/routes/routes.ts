@@ -16,6 +16,7 @@ import auth from "../services/auth.js";
 import openID from '../services/open_id.js';
 import { isElectron } from "../services/utils.js";
 import shareRoutes from "../share/routes.js";
+import aiImportRoute from "./api/ai_import.js";
 import anthropicRoute from "./api/anthropic.js";
 import appInfoRoute from "./api/app_info.js";
 import attachmentsApiRoute from "./api/attachments.js";
@@ -391,6 +392,10 @@ function register(app: express.Application) {
     asyncApiRoute(GET, "/api/llm/providers/ollama/models", ollamaRoute.listModels);
     asyncApiRoute(GET, "/api/llm/providers/openai/models", openaiRoute.listModels);
     asyncApiRoute(GET, "/api/llm/providers/anthropic/models", anthropicRoute.listModels);
+
+    // AI Import API (Decant)
+    asyncApiRoute(PST, "/api/ai-import", aiImportRoute.importUrl);
+    apiRoute(GET, "/api/ai-import/status", aiImportRoute.getStatus);
 
     app.use("", router);
 }
