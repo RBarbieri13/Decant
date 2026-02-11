@@ -38,6 +38,14 @@ export interface EnrichmentCompleteEvent {
   success: boolean;
   timestamp: string;
   errorMessage?: string;
+  hierarchyUpdates?: {
+    segmentCode?: string;
+    categoryCode?: string;
+    contentTypeCode?: string;
+    title?: string;
+    functionCode?: string;
+    organizationCode?: string;
+  };
 }
 
 export interface QueueStatusEvent {
@@ -475,7 +483,7 @@ export function initializeSSEClient(options: SSEClientOptions): SSEClient {
  * Create and connect an SSE client that integrates with the EnrichmentTracker
  */
 export function createIntegratedSSEClient(
-  onNodeRefresh: (nodeId: string) => void,
+  onNodeRefresh: (nodeId: string, hierarchyUpdates?: EnrichmentCompleteEvent['hierarchyUpdates']) => void,
   onEnrichmentComplete?: (event: EnrichmentCompleteEvent) => void,
   onConnectionChange?: (state: SSEConnectionState) => void
 ): SSEClient {
@@ -489,8 +497,8 @@ export function createIntegratedSSEClient(
       // Notify any direct subscribers
       tracker.notify(event.nodeId, null);
 
-      // Trigger node refresh callback
-      onNodeRefresh(event.nodeId);
+      // Trigger node refresh callback with hierarchy updates
+      onNodeRefresh(event.nodeId, event.hierarchyUpdates);
 
       // Call external enrichment complete handler (for toasts)
       if (onEnrichmentComplete) {
@@ -498,7 +506,8 @@ export function createIntegratedSSEClient(
       }
 
       console.log(
-        `Enrichment ${event.success ? 'completed' : 'failed'} for node ${event.nodeId}`
+        `Enrichment ${event.success ? 'completed' : 'failed'} for node ${event.nodeId}`,
+        event.hierarchyUpdates ? 'with hierarchy updates' : ''
       );
     },
     onConnectionChange: onConnectionChange,

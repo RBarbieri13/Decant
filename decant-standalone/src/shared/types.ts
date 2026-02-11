@@ -85,6 +85,17 @@ export interface Node {
 
   // Metadata
   contentTypeCode: ContentTypeCode | null;
+  metadataCodes?: {
+    ORG?: string[];
+    FNC?: string[];
+    TEC?: string[];
+    CON?: string[];
+    IND?: string[];
+    AUD?: string[];
+    PRC?: string[];
+    PLT?: string[];
+    DOM?: string[];
+  };
   createdAt: string;
   updatedAt: string;
   isDeleted: boolean;

@@ -15,6 +15,14 @@ export interface EnrichmentCompleteEvent {
   success: boolean;
   timestamp: string;
   errorMessage?: string;
+  hierarchyUpdates?: {
+    segmentCode?: string;
+    categoryCode?: string;
+    contentTypeCode?: string;
+    title?: string;
+    functionCode?: string;
+    organizationCode?: string;
+  };
 }
 
 export interface QueueStatusEvent {
@@ -196,6 +204,14 @@ export function getNotificationService(): NotificationService {
 export function emitEnrichmentComplete(
   nodeId: string,
   success: boolean,
+  hierarchyUpdates?: {
+    segmentCode?: string;
+    categoryCode?: string;
+    contentTypeCode?: string;
+    title?: string;
+    functionCode?: string;
+    organizationCode?: string;
+  },
   errorMessage?: string
 ): void {
   const service = getNotificationService();
@@ -204,6 +220,7 @@ export function emitEnrichmentComplete(
     nodeId,
     success,
     timestamp: new Date().toISOString(),
+    hierarchyUpdates,
     errorMessage,
   });
 }

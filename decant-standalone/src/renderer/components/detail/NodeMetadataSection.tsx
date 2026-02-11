@@ -4,6 +4,7 @@
 
 import React from 'react';
 import type { Node } from '../../services/api';
+import { formatCodesForDisplay, groupCodesByType } from '../../utils/metadataCodeColors';
 
 interface NodeMetadataSectionProps {
   node: Node;
@@ -192,6 +193,58 @@ export function NodeMetadataSection({ node }: NodeMetadataSectionProps): React.R
         </div>
       )}
 
+      {/* Metadata Codes Section - Colored by Type */}
+      {node.extracted_fields?.metadata_codes &&
+       Object.keys(node.extracted_fields.metadata_codes).length > 0 && (
+        <div className="metadata-group">
+          <h3 className="metadata-group-title">Metadata Codes</h3>
+          {(() => {
+            // Flatten all metadata codes into a single array
+            const allCodes: string[] = [];
+            Object.entries(node.extracted_fields.metadata_codes).forEach(([_type, codes]) => {
+              if (Array.isArray(codes)) {
+                allCodes.push(...codes);
+              }
+            });
+
+            // Format codes with colors
+            const formattedCodes = formatCodesForDisplay(allCodes);
+
+            // Group by type for organized display
+            const grouped = groupCodesByType(allCodes);
+            const typeOrder = ['ORG', 'FNC', 'TEC', 'DOM', 'CON', 'IND', 'AUD', 'PRC', 'PLT'];
+
+            return (
+              <div className="metadata-codes-container">
+                {typeOrder.map(type => {
+                  const codesForType = grouped[type];
+                  if (!codesForType || codesForType.length === 0) return null;
+
+                  const formattedForType = formattedCodes.filter(fc => fc.type === type);
+
+                  return (
+                    <div key={type} className="metadata-code-group">
+                      <div className="metadata-code-type-label">{type}</div>
+                      <div className="metadata-tags">
+                        {formattedForType.map((fc, idx) => (
+                          <span
+                            key={idx}
+                            className={`metadata-tag metadata-tag--${fc.color}`}
+                            title={fc.code}
+                          >
+                            {fc.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
       {/* Tags & Concepts Section */}
       {((node.metadata_tags && node.metadata_tags.length > 0) ||
         (node.key_concepts && node.key_concepts.length > 0)) && (
@@ -203,7 +256,7 @@ export function NodeMetadataSection({ node }: NodeMetadataSectionProps): React.R
               <div className="metadata-label">Metadata Tags</div>
               <div className="metadata-tags">
                 {node.metadata_tags.map((tag: string, index: number) => (
-                  <span key={index} className="metadata-tag">{tag}</span>
+                  <span key={index} className="metadata-tag metadata-tag--gray">{tag}</span>
                 ))}
               </div>
             </div>

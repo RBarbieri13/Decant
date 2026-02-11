@@ -16,7 +16,9 @@ import decantLogoLight from '../assets/decant-logo-light.png';
 // Import Batch Import Modal
 import { BatchImportModal } from '../components/import/BatchImportModal';
 // API imports for backend integration
-import { nodesAPI } from '../services/api';
+import { nodesAPI, hierarchyAPI } from '../services/api';
+// Real-time service for hierarchy updates
+import { createIntegratedSSEClient } from '../services/realtimeService';
 
 // ============================================================================
 // TYPES
@@ -1202,7 +1204,8 @@ export default function DecantDemo() {
   const [rightPanelVisible, setRightPanelVisible] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [tableData, setTableData] = useState<TableRow[]>(SAMPLE_TABLE_DATA);
-  const [treeData] = useState<TreeNodeData[]>(SAMPLE_TREE_DATA);
+  const [treeData, setTreeData] = useState<TreeNodeData[]>(SAMPLE_TREE_DATA);
+  const [hierarchyView, setHierarchyView] = useState<'function' | 'organization'>('function');
   const [currentCategoryTitle] = useState('Frontend'); // Current category title for title bar
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([
     { label: 'Workspace', id: 'workspace' },
@@ -1246,6 +1249,111 @@ export default function DecantDemo() {
     };
     loadNodes();
   }, []);
+
+  // Load hierarchy tree from API
+  const loadTree = useCallback(async () => {
+    try {
+      const result = await hierarchyAPI.getTree(hierarchyView);
+      if (result && result.tree) {
+        // Transform API tree nodes to frontend TreeNodeData format
+        const transformNode = (node: any): TreeNodeData => ({
+          id: node.id,
+          name: node.title,
+          iconType: getIconTypeForNode(node),
+          children: (node.children || []).map(transformNode),
+          isExpanded: false,
+        });
+
+        const transformedTree = result.tree.map(transformNode);
+        setTreeData(transformedTree);
+        console.log(`Loaded ${result.tree.length} root nodes in hierarchy tree (${hierarchyView} view)`);
+      }
+    } catch (error) {
+      console.error('Failed to load hierarchy tree from API:', error);
+    }
+  }, [hierarchyView]);
+
+  useEffect(() => {
+    loadTree();
+  }, [loadTree]);
+
+  // Set up SSE client for real-time hierarchy updates
+  useEffect(() => {
+    const sseClient = createIntegratedSSEClient(
+      (nodeId, hierarchyUpdates) => {
+        console.log('Node enrichment complete:', nodeId, hierarchyUpdates);
+
+        // Reload tree when hierarchy updates are received
+        if (hierarchyUpdates) {
+          console.log('Reloading hierarchy tree due to enrichment update');
+          loadTree();
+        }
+
+        // Reload table data to show updated node
+        loadNodes();
+      },
+      (event) => {
+        // Show toast notification for enrichment complete
+        console.log('Enrichment complete event:', event);
+      }
+    );
+
+    // Cleanup on unmount
+    return () => {
+      sseClient.disconnect();
+    };
+  }, [loadTree]);
+
+  // Helper function to reload nodes
+  const loadNodes = async () => {
+    try {
+      const nodes = await nodesAPI.getAll();
+      if (nodes && nodes.length > 0) {
+        const mappedData: TableRow[] = nodes.map((node) => ({
+          id: node.id,
+          logo: node.logo_url || 'https://via.placeholder.com/32',
+          title: node.title || 'Untitled',
+          type: 'Document',
+          typeSymbol: '📄',
+          segment: node.extracted_fields?.segment_code || 'Uncategorized',
+          category: node.extracted_fields?.category_code || 'General',
+          hierarchy: 'Workspace > Development',
+          quickPhrase: node.phrase_description || '',
+          tags: (node.metadata_tags || []).map((tag: string) => ({
+            label: tag,
+            color: 'blue' as TagColor
+          })),
+          date: node.date_added || new Date().toISOString().split('T')[0],
+          company: node.company || 'Unknown',
+          starred: false,
+          rowColor: 'default' as RowColor,
+        }));
+        setTableData(mappedData);
+        console.log(`Reloaded ${mappedData.length} nodes from API`);
+      }
+    } catch (error) {
+      console.error('Failed to load nodes from API:', error);
+    }
+  };
+
+  // Helper function to determine icon type based on node properties
+  const getIconTypeForNode = (node: any): TreeIconType => {
+    // Map based on node type or segment
+    if (node.nodeType === 'segment') return 'folder';
+    if (node.nodeType === 'category') return 'folder';
+    if (node.nodeType === 'content_type') return 'folder';
+    if (node.nodeType === 'organization') return 'person';
+
+    // For items, use content type or segment to determine icon
+    const contentType = node.contentTypeCode;
+    if (contentType === 'T') return 'link';      // Tool/Website
+    if (contentType === 'A') return 'document';  // Article
+    if (contentType === 'V') return 'link';      // Video
+    if (contentType === 'G') return 'backend';   // Repository
+    if (contentType === 'C') return 'book';      // Course
+
+    return 'document'; // Default
+  };
 
   // Selected item for properties panel
   const selectedItem = useMemo(

@@ -169,12 +169,23 @@ ${Object.entries(METADATA_CODE_CATEGORIES)
 
 4. **Short Description**: Write 1-3 clear sentences explaining what this content is and why someone would find it valuable. Max 500 characters.
 
-5. **AI Summary**: Write a comprehensive summary (3-5 paragraphs) covering:
-   - What the content is about
-   - Key insights or takeaways
-   - Who would benefit from it
-   - Notable features or unique aspects
-   Max 2000 characters.
+5. **AI Summary**: Write a DETAILED, comprehensive analysis (4-6 substantial paragraphs) covering:
+   - **WHAT**: Detailed explanation with SPECIFIC features, capabilities, and technical details (not generic "powerful" or "flexible")
+   - **WHY**: The SPECIFIC problem this solves and WHO has this problem (with concrete user personas)
+   - **HOW**: Key features with CONCRETE examples, actual APIs, specific methodologies (not "useful for many applications")
+   - **WHO**: Ideal user personas with SPECIFIC use cases, company sizes, roles, and industries
+   - **UNIQUE**: Comparative analysis vs alternatives - what makes this distinctive (mention specific competitors or alternatives)
+   - **CONTEXT**: Market positioning, ecosystem fit, adoption indicators, pricing tiers, constraints, and limitations
+
+   DEPTH REQUIREMENTS:
+   - Use SPECIFIC numbers (user counts, limits, pricing, version numbers)
+   - Include CONCRETE features (API endpoints, specific capabilities, actual examples)
+   - Mention PRICING details if available (free tier limits, paid plans, enterprise options)
+   - Reference SPECIFIC industries, company sizes, job roles, and use cases
+   - Include TECHNICAL constraints (rate limits, platform requirements, dependencies)
+   - Avoid generic adjectives like "powerful," "flexible," "easy-to-use" without concrete examples
+
+   Max 5000 characters (significantly expanded from previous 2000 limit).
 
 6. **Key Concepts**: Extract 10-20 lowercase tags covering:
    - Primary topics and themes
@@ -189,6 +200,17 @@ ${Object.entries(METADATA_CODE_CATEGORIES)
 9. **Metadata Codes**: Classify using UPPERCASE codes following the format rules above.
 
 10. **Code Confidence**: Provide a confidence score (0-1) for how certain you are about the metadata codes. Use 0.9+ for very clear cases, 0.7-0.9 for moderate confidence, below 0.7 for uncertain.
+
+11. **Quality Standards for Metadata Codes**: When generating metadata codes, ensure:
+   - **ORG codes**: Include the actual company/project name (e.g., "ORG:OpenAI", not generic "ORG:AI_Company")
+   - **FNC codes**: Be specific about the function (e.g., "FNC:Text_to_Speech", not "FNC:AI")
+   - **TEC codes**: List actual technologies/languages (e.g., "TEC:Python", "TEC:React", "TEC:PostgreSQL")
+   - **IND codes**: Specify actual industries (e.g., "IND:Healthcare", "IND:Finance", not "IND:Business")
+   - **AUD codes**: Define clear user personas (e.g., "AUD:Data_Scientists", "AUD:Frontend_Developers")
+   - **PRC codes**: Include actual pricing info if available (e.g., "PRC:Freemium", "PRC:Enterprise_Only", "PRC:Open_Source")
+   - **CON codes**: Extract specific concepts from content (e.g., "CON:Neural_Networks", "CON:API_Design")
+   - Aim for 8-15 total metadata codes covering all relevant categories
+   - Prioritize specificity and accuracy over quantity
 
 ## Output Format
 

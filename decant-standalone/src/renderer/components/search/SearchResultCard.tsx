@@ -5,6 +5,7 @@
 import React from 'react';
 import { HighlightedText } from './HighlightedText';
 import type { SearchResult, ContentTypeCode } from '../../../shared/types';
+import { formatCodesForDisplay } from '../../utils/metadataCodeColors';
 
 interface SearchResultCardProps {
   result: SearchResult;
@@ -139,18 +140,50 @@ export function SearchResultCard({
             Match: <strong>{matchedField}</strong>
           </span>
 
-          {/* Badges */}
+          {/* Badges - Show top metadata codes with colors */}
           <div className="result-badges">
             {node.contentTypeCode && (
               <span className="gum-badge gum-badge--small gum-badge--blue">
                 {formatContentType(node.contentTypeCode)}
               </span>
             )}
-            {node.functionCode && (
-              <span className="gum-badge gum-badge--small gum-badge--pink">
-                {node.functionCode}
-              </span>
-            )}
+            {(() => {
+              // Extract metadata codes
+              const metadataCodes = node.metadataCodes;
+              if (!metadataCodes) return null;
+
+              // Flatten all codes into single array
+              const allCodes: string[] = [];
+              Object.values(metadataCodes).forEach(codes => {
+                if (Array.isArray(codes)) {
+                  allCodes.push(...codes);
+                }
+              });
+
+              if (allCodes.length === 0) return null;
+
+              // Format and show top 3 codes (prioritize ORG, FNC, TEC)
+              const formatted = formatCodesForDisplay(allCodes);
+              const priorityTypes = ['ORG', 'FNC', 'TEC'];
+              const sorted = formatted.sort((a, b) => {
+                const aIdx = priorityTypes.indexOf(a.type);
+                const bIdx = priorityTypes.indexOf(b.type);
+                if (aIdx === -1 && bIdx === -1) return 0;
+                if (aIdx === -1) return 1;
+                if (bIdx === -1) return -1;
+                return aIdx - bIdx;
+              });
+
+              return sorted.slice(0, 3).map((fc, idx) => (
+                <span
+                  key={idx}
+                  className={`gum-badge gum-badge--small gum-badge--${fc.color}`}
+                  title={fc.code}
+                >
+                  {fc.label}
+                </span>
+              ));
+            })()}
           </div>
         </div>
       </div>

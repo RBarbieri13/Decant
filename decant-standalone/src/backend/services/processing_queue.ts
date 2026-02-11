@@ -10,6 +10,7 @@ import { log } from '../logger/index.js';
 import { enrichNode, type EnrichmentResult } from './phase2_enricher.js';
 import { emitEnrichmentComplete } from './notifications/index.js';
 import { withRetry, RetryPresets } from './retry/index.js';
+import { readNode } from '../database/nodes.js';
 
 /**
  * Job status values
@@ -257,8 +258,20 @@ export class ProcessingQueue {
           module: 'processing-queue',
         });
 
-        // Emit notification for successful enrichment
-        emitEnrichmentComplete(job.node_id, true);
+        // Read updated node to get hierarchy codes
+        const updatedNode = readNode(job.node_id) as any;
+
+        // Emit notification for successful enrichment with hierarchy updates
+        const hierarchyUpdates = updatedNode ? {
+          segmentCode: updatedNode.extracted_fields?.segment_code,
+          categoryCode: updatedNode.extracted_fields?.category_code,
+          contentTypeCode: updatedNode.extracted_fields?.content_type_code,
+          title: updatedNode.title,
+          functionCode: updatedNode.function_parent_id,
+          organizationCode: updatedNode.organization_parent_id,
+        } : undefined;
+
+        emitEnrichmentComplete(job.node_id, true, hierarchyUpdates);
       } else {
         // Handle failure
         await this.handleJobFailure(job, result.error || 'Unknown error');
