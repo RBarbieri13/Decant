@@ -84,9 +84,9 @@ export const Phase2EnrichmentSchema = z.object({
     .describe('1-3 sentence summary, max 500 characters'),
   aiSummary: z
     .string()
-    .max(2000)
+    .max(5000)
     .optional()
-    .describe('Longer AI-generated summary with key insights, max 2000 characters'),
+    .describe('Comprehensive AI-generated summary with detailed analysis, max 5000 characters'),
   keyConcepts: z
     .array(z.string().toLowerCase())
     .max(20)
@@ -169,23 +169,47 @@ ${Object.entries(METADATA_CODE_CATEGORIES)
 
 4. **Short Description**: Write 1-3 clear sentences explaining what this content is and why someone would find it valuable. Max 500 characters.
 
-5. **AI Summary**: Write a DETAILED, comprehensive analysis (4-6 substantial paragraphs) covering:
-   - **WHAT**: Detailed explanation with SPECIFIC features, capabilities, and technical details (not generic "powerful" or "flexible")
-   - **WHY**: The SPECIFIC problem this solves and WHO has this problem (with concrete user personas)
-   - **HOW**: Key features with CONCRETE examples, actual APIs, specific methodologies (not "useful for many applications")
-   - **WHO**: Ideal user personas with SPECIFIC use cases, company sizes, roles, and industries
-   - **UNIQUE**: Comparative analysis vs alternatives - what makes this distinctive (mention specific competitors or alternatives)
-   - **CONTEXT**: Market positioning, ecosystem fit, adoption indicators, pricing tiers, constraints, and limitations
+5. **AI Summary**: Write a DETAILED, comprehensive analysis (5-8 substantial paragraphs) covering:
+   - **WHAT IT IS**: Detailed explanation with SPECIFIC features, capabilities, technical architecture, and implementation details (NEVER use generic words like "powerful", "flexible", "robust" without specific examples)
 
-   DEPTH REQUIREMENTS:
-   - Use SPECIFIC numbers (user counts, limits, pricing, version numbers)
-   - Include CONCRETE features (API endpoints, specific capabilities, actual examples)
-   - Mention PRICING details if available (free tier limits, paid plans, enterprise options)
-   - Reference SPECIFIC industries, company sizes, job roles, and use cases
-   - Include TECHNICAL constraints (rate limits, platform requirements, dependencies)
-   - Avoid generic adjectives like "powerful," "flexible," "easy-to-use" without concrete examples
+   - **WHY IT EXISTS**: The SPECIFIC problem this solves, WHO faces this problem (concrete user personas with job titles, company sizes, industries), and WHAT the pain points are (with real-world examples)
 
-   Max 5000 characters (significantly expanded from previous 2000 limit).
+   - **HOW IT WORKS**: Key features with CONCRETE examples:
+     * Actual API endpoints and methods (e.g., "POST /v1/chat/completions")
+     * Specific technical capabilities (e.g., "supports 128k context window")
+     * Real implementation examples (e.g., "integrates via REST API or Python SDK")
+     * NOT "useful for many applications" - instead: "enables X by doing Y"
+
+   - **WHO SHOULD USE IT**: Ideal user personas with SPECIFICS:
+     * Job titles (e.g., "ML Engineers at Series B-C startups")
+     * Company characteristics (e.g., "teams of 10-50 with <$5M ARR")
+     * Technical skill level (e.g., "requires Python 3.8+ and API experience")
+     * Use case categories (e.g., "RAG systems, customer support chatbots, document Q&A")
+
+   - **WHAT MAKES IT UNIQUE**: Comparative analysis:
+     * Mention 2-3 specific alternatives/competitors by name
+     * State quantitative differences (e.g., "3x faster than GPT-3.5", "$0.002 per 1K tokens vs $0.004")
+     * Unique features competitors lack (with specifics)
+     * Trade-offs vs alternatives (what you gain and what you lose)
+
+   - **MARKET CONTEXT & ADOPTION**:
+     * Pricing tiers with SPECIFIC numbers (e.g., "Free: 1M tokens/month, Pro: $20/month for 10M tokens")
+     * Technical constraints (e.g., "100 requests/minute rate limit, requires HTTPS")
+     * Platform requirements (e.g., "Node.js 16+, Python 3.8+, or REST API")
+     * Adoption indicators (e.g., "10,000+ GitHub stars", "Used by Airbnb, Stripe")
+     * Limitations and gotchas (e.g., "no streaming for batch jobs", "24hr data retention")
+
+   CRITICAL DEPTH REQUIREMENTS - VIOLATIONS WILL BE REJECTED:
+   ✅ DO: "Claude 3 Opus supports 200k token context window, costs $15 per 1M input tokens, and achieves 88.7% on MMLU"
+   ❌ DON'T: "Claude is a powerful AI that can handle many tasks"
+
+   ✅ DO: "Ideal for ML engineers at mid-stage startups (Series B-C, 10-100 employees) building RAG systems"
+   ❌ DON'T: "Great for developers who need AI capabilities"
+
+   ✅ DO: "Compared to GPT-4, Claude 3 Opus is 2x more expensive but excels at complex reasoning and longer documents"
+   ❌ DON'T: "Better than alternatives for various use cases"
+
+   Max 5000 characters (approximately 700-900 words of dense, specific analysis).
 
 6. **Key Concepts**: Extract 10-20 lowercase tags covering:
    - Primary topics and themes

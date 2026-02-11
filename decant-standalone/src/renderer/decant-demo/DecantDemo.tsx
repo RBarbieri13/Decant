@@ -19,6 +19,8 @@ import { BatchImportModal } from '../components/import/BatchImportModal';
 import { nodesAPI, hierarchyAPI } from '../services/api';
 // Real-time service for hierarchy updates
 import { createIntegratedSSEClient } from '../services/realtimeService';
+// Metadata code colors utility
+import { getMetadataCodeColor, formatMetadataCodesForDisplay } from '../utils/metadataCodeColors';
 
 // ============================================================================
 // TYPES
@@ -1231,10 +1233,19 @@ export default function DecantDemo() {
             category: node.extracted_fields?.category_code || 'General',
             hierarchy: 'Workspace > Development',
             quickPhrase: node.phrase_description || '',
-            tags: (node.metadata_tags || []).map((tag: string) => ({
-              label: tag,
-              color: 'blue' as TagColor
-            })),
+            tags: node.metadataCodes ?
+              formatMetadataCodesForDisplay(
+                Object.entries(node.metadataCodes).flatMap(([type, codes]) =>
+                  codes.map(code => ({ type, code, confidence: 0.9 }))
+                )
+              ).slice(0, 3).map((badge) => ({
+                label: badge.label,
+                color: badge.color as TagColor
+              })) :
+              (node.metadata_tags || []).slice(0, 3).map((tag: string) => ({
+                label: tag,
+                color: 'blue' as TagColor
+              })),
             date: node.date_added || new Date().toISOString().split('T')[0],
             company: node.company || 'Unknown',
             starred: false,
@@ -1319,10 +1330,19 @@ export default function DecantDemo() {
           category: node.extracted_fields?.category_code || 'General',
           hierarchy: 'Workspace > Development',
           quickPhrase: node.phrase_description || '',
-          tags: (node.metadata_tags || []).map((tag: string) => ({
-            label: tag,
-            color: 'blue' as TagColor
-          })),
+          tags: node.metadataCodes ?
+            formatMetadataCodesForDisplay(
+              Object.entries(node.metadataCodes).flatMap(([type, codes]) =>
+                codes.map(code => ({ type, code, confidence: 0.9 }))
+              )
+            ).slice(0, 3).map((badge) => ({
+              label: badge.label,
+              color: badge.color as TagColor
+            })) :
+            (node.metadata_tags || []).slice(0, 3).map((tag: string) => ({
+              label: tag,
+              color: 'blue' as TagColor
+            })),
           date: node.date_added || new Date().toISOString().split('T')[0],
           company: node.company || 'Unknown',
           starred: false,
