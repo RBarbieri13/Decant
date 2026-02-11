@@ -18,7 +18,9 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
-        changeOrigin: true,
+        changeOrigin: false, // Keep original origin for CORS
+        secure: false,
+        ws: true, // Support WebSocket/SSE
       },
     },
   },

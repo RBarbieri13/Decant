@@ -15,8 +15,8 @@ import '../styles/app.css';
 import decantLogoLight from '../assets/decant-logo-light.png';
 // Import Batch Import Modal
 import { BatchImportModal } from '../components/import/BatchImportModal';
-// API imports available for future use when connecting to backend
-// import { nodesAPI, hierarchyAPI, searchAPI, importAPI, Node } from '../services/api';
+// API imports for backend integration
+import { nodesAPI } from '../services/api';
 
 // ============================================================================
 // TYPES
@@ -1211,6 +1211,41 @@ export default function DecantDemo() {
   ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBatchImportOpen, setIsBatchImportOpen] = useState(false);
+
+  // Load real nodes from API
+  useEffect(() => {
+    const loadNodes = async () => {
+      try {
+        const nodes = await nodesAPI.getAll();
+        if (nodes && nodes.length > 0) {
+          const mappedData: TableRow[] = nodes.map((node) => ({
+            id: node.id,
+            logo: node.logo_url || 'https://via.placeholder.com/32',
+            title: node.title || 'Untitled',
+            type: 'Document',
+            typeSymbol: '📄',
+            segment: node.extracted_fields?.segment_code || 'Uncategorized',
+            category: node.extracted_fields?.category_code || 'General',
+            hierarchy: 'Workspace > Development',
+            quickPhrase: node.phrase_description || '',
+            tags: (node.metadata_tags || []).map((tag: string) => ({
+              label: tag,
+              color: 'blue' as TagColor
+            })),
+            date: node.date_added || new Date().toISOString().split('T')[0],
+            company: node.company || 'Unknown',
+            starred: false,
+            rowColor: 'default' as RowColor,
+          }));
+          setTableData(mappedData);
+          console.log(`Loaded ${mappedData.length} nodes from API`);
+        }
+      } catch (error) {
+        console.error('Failed to load nodes from API:', error);
+      }
+    };
+    loadNodes();
+  }, []);
 
   // Selected item for properties panel
   const selectedItem = useMemo(

@@ -5,6 +5,7 @@
 
 import React, { useCallback } from 'react';
 import { useBatchImport } from '../../hooks/useBatchImport';
+import { useApp } from '../../context/AppContext';
 import { BatchUrlInput } from './BatchUrlInput';
 import { BatchImportResults } from './BatchImportResults';
 
@@ -19,14 +20,17 @@ export function BatchImportModal({
   onClose,
   onImportComplete,
 }: BatchImportModalProps): React.ReactElement | null {
+  const { actions: appActions } = useApp();
   const {
     state,
     urlText,
-    parsedUrls,
     options,
     showDetails,
     isActive,
     isComplete,
+    hasApiKey,
+    isCheckingApiKey,
+    startError,
     setUrlText,
     setOptions,
     toggleDetails,
@@ -37,6 +41,13 @@ export function BatchImportModal({
     progressPercent,
     validUrlCount,
   } = useBatchImport();
+
+  // Handler to open settings
+  const handleOpenSettings = useCallback(() => {
+    // Close this modal and open settings dialog
+    onClose();
+    appActions.openSettingsDialog();
+  }, [onClose, appActions]);
 
   // Handle modal close
   const handleClose = useCallback(() => {
@@ -76,7 +87,7 @@ export function BatchImportModal({
   if (!isOpen) return null;
 
   const hasStarted = state !== null;
-  const canStart = validUrlCount > 0 && !isActive;
+  const canStart = validUrlCount > 0 && !isActive && hasApiKey && !isCheckingApiKey;
 
   return (
     <div className="batch-import-overlay" onClick={handleClose}>
@@ -107,6 +118,38 @@ export function BatchImportModal({
             </button>
           </div>
         </div>
+
+        {/* API Key Warning Banner */}
+        {!isCheckingApiKey && !hasApiKey && (
+          <div className="batch-import-warning">
+            <div className="warning-icon">⚠️</div>
+            <div className="warning-content">
+              <div className="warning-title">OpenAI API Key Required</div>
+              <div className="warning-message">
+                Batch import requires an OpenAI API key for AI-powered classification.
+                Please configure your API key in Settings before importing.
+              </div>
+            </div>
+            <button
+              type="button"
+              className="batch-import-btn batch-import-btn--secondary"
+              onClick={handleOpenSettings}
+            >
+              Open Settings
+            </button>
+          </div>
+        )}
+
+        {/* Start Error Banner */}
+        {startError && !isActive && (
+          <div className="batch-import-error-banner">
+            <div className="error-icon">❌</div>
+            <div className="error-content">
+              <div className="error-title">Import Failed to Start</div>
+              <div className="error-message">{startError}</div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content - Split View */}
         <div className="batch-import-content">
@@ -252,8 +295,17 @@ export function BatchImportModal({
               className="batch-import-btn batch-import-btn--primary"
               onClick={handleStartImport}
               disabled={!canStart}
+              title={
+                !hasApiKey
+                  ? 'API key required. Please configure in Settings.'
+                  : validUrlCount === 0
+                  ? 'Please add valid URLs to import'
+                  : ''
+              }
             >
-              Import{validUrlCount > 0 ? ` (${validUrlCount})` : ''}
+              {isCheckingApiKey
+                ? 'Checking...'
+                : `Import${validUrlCount > 0 ? ` (${validUrlCount})` : ''}`}
             </button>
           )}
         </div>
@@ -336,6 +388,70 @@ const modalStyles = `
     align-items: flex-start;
     padding: var(--space-md) var(--space-lg);
     border-bottom: 1px solid var(--gum-gray-200);
+  }
+
+  /* Warning Banner */
+  .batch-import-warning {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    background: #FFF9E6;
+    border-bottom: 2px solid #FFD700;
+  }
+
+  .warning-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .warning-content {
+    flex: 1;
+  }
+
+  .warning-title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: #B8860B;
+    margin-bottom: var(--space-xs);
+  }
+
+  .warning-message {
+    font-size: var(--font-size-sm);
+    color: #8B7500;
+    line-height: 1.5;
+  }
+
+  /* Error Banner */
+  .batch-import-error-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    background: #FFF0F0;
+    border-bottom: 2px solid #E74C3C;
+  }
+
+  .error-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .error-content {
+    flex: 1;
+  }
+
+  .error-title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: #C0392B;
+    margin-bottom: var(--space-xs);
+  }
+
+  .error-message {
+    font-size: var(--font-size-sm);
+    color: #A93226;
+    line-height: 1.5;
   }
 
   .batch-import-header-left {

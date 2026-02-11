@@ -63,8 +63,10 @@ interface BatchResultItemProps {
 }
 
 function BatchResultItem({ item, index }: BatchResultItemProps): React.ReactElement {
+  const [showErrorDetails, setShowErrorDetails] = React.useState(false);
   const statusConfig = getStatusConfig(item.status);
   const domain = extractDomain(item.url);
+  const hasError = item.status === 'failed' && item.error;
 
   return (
     <div className={`batch-result-item batch-result-item--${item.status}`}>
@@ -108,6 +110,27 @@ function BatchResultItem({ item, index }: BatchResultItemProps): React.ReactElem
               <span className="batch-result-tag batch-result-tag--content">
                 {item.classification.contentType}
               </span>
+            )}
+          </div>
+        )}
+
+        {/* Error Message */}
+        {hasError && (
+          <div className="batch-result-error">
+            <button
+              type="button"
+              className="batch-result-error-toggle"
+              onClick={() => setShowErrorDetails(!showErrorDetails)}
+            >
+              <span className="error-toggle-icon">{showErrorDetails ? '▼' : '▶'}</span>
+              <span className="error-toggle-text">
+                {showErrorDetails ? 'Hide' : 'Show'} error details
+              </span>
+            </button>
+            {showErrorDetails && (
+              <div className="batch-result-error-details">
+                {item.error}
+              </div>
             )}
           </div>
         )}
@@ -392,6 +415,50 @@ const resultStyles = `
   .batch-result-tag--content {
     background: var(--gum-gray-300);
     color: var(--gum-gray-700);
+  }
+
+  .batch-result-error {
+    margin-top: var(--space-sm);
+    padding: var(--space-xs) 0;
+  }
+
+  .batch-result-error-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background: #FFF0F0;
+    border: 1px solid #FFCCCC;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: var(--font-size-xs);
+    color: #C0392B;
+    transition: all var(--transition-fast);
+  }
+
+  .batch-result-error-toggle:hover {
+    background: #FFE5E5;
+  }
+
+  .error-toggle-icon {
+    font-size: 10px;
+    line-height: 1;
+  }
+
+  .error-toggle-text {
+    font-weight: var(--font-weight-medium);
+  }
+
+  .batch-result-error-details {
+    margin-top: var(--space-xs);
+    padding: var(--space-sm);
+    background: #FFF5F5;
+    border: 1px solid #FFDDDD;
+    border-radius: 4px;
+    font-size: var(--font-size-xs);
+    color: #A93226;
+    line-height: 1.5;
+    word-break: break-word;
   }
 
   .batch-result-status {

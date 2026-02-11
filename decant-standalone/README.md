@@ -12,17 +12,25 @@ Decant is now a full-stack web application:
 
 ## Quick Start
 
+> **⚠️ Important**: You need an OpenAI API key for AI import features. See [SETUP.md](SETUP.md) for detailed configuration instructions.
+
 ### Development
 
 ```bash
 # Install dependencies
 npm install
 
+# Configure your OpenAI API key (required for AI features)
+# Edit .env file and add: OPENAI_API_KEY=sk-proj-your-key-here
+# See SETUP.md for detailed instructions
+
 # Start dev server with hot reload
 npm run dev
 ```
 
 Server runs on **http://localhost:3000**
+
+**First time setup?** Check out [SETUP.md](SETUP.md) for a complete setup guide including API key configuration.
 
 ### Production
 

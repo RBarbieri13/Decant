@@ -39,6 +39,7 @@ export function createCorsMiddleware(): RequestHandler {
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile apps, curl, etc.)
       if (!origin) {
+        log.debug('CORS: Allowing request with no origin', { module: 'security' });
         callback(null, true);
         return;
       }
@@ -52,9 +53,14 @@ export function createCorsMiddleware(): RequestHandler {
       });
 
       if (isAllowed) {
+        log.debug('CORS: Allowing request from origin', { origin, module: 'security' });
         callback(null, true);
       } else {
-        log.warn('CORS blocked request from origin', { origin, module: 'security' });
+        log.warn('CORS blocked request from origin', {
+          origin,
+          allowedOrigins,
+          module: 'security'
+        });
         callback(new Error('Not allowed by CORS'));
       }
     },

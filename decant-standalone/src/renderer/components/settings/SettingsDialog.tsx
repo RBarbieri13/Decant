@@ -11,6 +11,7 @@ import {
   showImportDataSuccess,
   showGenericError,
 } from '../../utils/toasts';
+import { settingsAPI } from '../../services/api';
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -121,9 +122,9 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps): React.
 
   const loadSettings = async () => {
     try {
-      // Load API key status
-      const existingKey = await window.decantAPI.settings.getApiKey();
-      setHasApiKey(!!existingKey);
+      // Load API key status using the correct REST API
+      const keyStatus = await settingsAPI.getApiKeyStatus();
+      setHasApiKey(keyStatus.configured);
       setApiKey(''); // Don't show existing key for security
 
       // Load theme preference
@@ -180,7 +181,7 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps): React.
     setIsSaving(true);
     setTestResult(null);
     try {
-      await window.decantAPI.settings.setApiKey(apiKey.trim());
+      await settingsAPI.setApiKey(apiKey.trim());
       setHasApiKey(true);
       setApiKey('');
       showApiKeyConfigured(toast);
@@ -196,7 +197,7 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps): React.
     setIsSaving(true);
     setTestResult(null);
     try {
-      await window.decantAPI.settings.setApiKey('');
+      await settingsAPI.setApiKey('');
       setHasApiKey(false);
       showSettingsSaved(toast, 'API key cleared');
     } catch (err) {

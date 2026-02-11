@@ -4,7 +4,7 @@
 // ============================================================
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { batchImportAPI } from '../services/api';
+import { batchImportAPI, settingsAPI } from '../services/api';
 import {
   getSSEClient,
   type BatchImportProgressEvent,
@@ -41,6 +41,9 @@ export interface UseBatchImportReturn {
   showDetails: boolean;
   isActive: boolean;
   isComplete: boolean;
+  hasApiKey: boolean;
+  isCheckingApiKey: boolean;
+  startError: string | null;
 
   // Actions
   setUrlText: (text: string) => void;
@@ -88,6 +91,9 @@ export function useBatchImport(): UseBatchImportReturn {
   const [urlText, setUrlText] = useState<string>('');
   const [options, setOptionsState] = useState<BatchImportOptions>(DEFAULT_OPTIONS);
   const [showDetails, setShowDetails] = useState<boolean>(true);
+  const [hasApiKey, setHasApiKey] = useState<boolean>(false);
+  const [isCheckingApiKey, setIsCheckingApiKey] = useState<boolean>(true);
+  const [startError, setStartError] = useState<string | null>(null);
 
   // Track active batch ID for SSE filtering
   const batchIdRef = useRef<string | null>(null);
@@ -144,6 +150,26 @@ export function useBatchImport(): UseBatchImportReturn {
   }, []);
 
   // ----------------------------------------
+  // Check API Key on Mount
+  // ----------------------------------------
+
+  useEffect(() => {
+    const checkApiKey = async () => {
+      setIsCheckingApiKey(true);
+      try {
+        const keyStatus = await settingsAPI.getApiKeyStatus();
+        setHasApiKey(keyStatus.configured);
+      } catch (error) {
+        console.error('Failed to check API key:', error);
+        setHasApiKey(false);
+      } finally {
+        setIsCheckingApiKey(false);
+      }
+    };
+    checkApiKey();
+  }, []);
+
+  // ----------------------------------------
   // SSE Subscription
   // ----------------------------------------
 
@@ -178,7 +204,19 @@ export function useBatchImport(): UseBatchImportReturn {
   }, []);
 
   const startImport = useCallback(async () => {
-    if (parsedUrls.length === 0) return;
+    // Clear previous error
+    setStartError(null);
+
+    // Validate API key
+    if (!hasApiKey) {
+      setStartError('OpenAI API key is not configured. Please add your API key in Settings.');
+      return;
+    }
+
+    if (parsedUrls.length === 0) {
+      setStartError('No valid URLs to import.');
+      return;
+    }
 
     const urls = parsedUrls.map((p) => p.url);
 
@@ -186,6 +224,8 @@ export function useBatchImport(): UseBatchImportReturn {
       const result = await batchImportAPI.start(urls, options);
 
       if (!result.success || !result.batchId) {
+        const errorMessage = result.error || 'Failed to start batch import';
+        setStartError(errorMessage);
         console.error('Failed to start batch import:', result.error);
         return;
       }
@@ -219,9 +259,11 @@ export function useBatchImport(): UseBatchImportReturn {
         }));
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setStartError(errorMessage);
       console.error('Failed to start batch import:', error);
     }
-  }, [parsedUrls, options]);
+  }, [parsedUrls, options, hasApiKey]);
 
   const cancelImport = useCallback(async () => {
     if (!batchIdRef.current) return;
@@ -246,6 +288,7 @@ export function useBatchImport(): UseBatchImportReturn {
     setState(null);
     setUrlText('');
     setOptionsState(DEFAULT_OPTIONS);
+    setStartError(null);
   }, []);
 
   // ----------------------------------------
@@ -330,6 +373,9 @@ export function useBatchImport(): UseBatchImportReturn {
     showDetails,
     isActive,
     isComplete,
+    hasApiKey,
+    isCheckingApiKey,
+    startError,
     setUrlText,
     setOptions,
     toggleDetails,

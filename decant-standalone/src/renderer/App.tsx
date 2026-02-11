@@ -6,6 +6,7 @@ import React from 'react';
 import DecantDemo from './decant-demo/DecantDemo';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastProvider } from './context/ToastContext';
+import { AppProvider } from './context/AppContext';
 
 /**
  * Main App Component
@@ -19,9 +20,11 @@ function App(): React.ReactElement {
         // In production, send to error tracking service
       }}
     >
-      <ToastProvider>
-        <DecantDemo />
-      </ToastProvider>
+      <AppProvider>
+        <ToastProvider>
+          <DecantDemo />
+        </ToastProvider>
+      </AppProvider>
     </ErrorBoundary>
   );
 }

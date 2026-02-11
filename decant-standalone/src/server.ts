@@ -2,6 +2,9 @@
 // Decant Express Server
 // ============================================================
 
+// Load environment variables from .env file (must be first)
+import 'dotenv/config';
+
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';

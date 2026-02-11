@@ -452,6 +452,9 @@ export class Phase2Enricher {
     key_concepts?: string[];
     metadata_tags?: string[];
     extracted_fields?: Record<string, unknown>;
+    segment_code?: string;
+    category_code?: string;
+    content_type_code?: string;
   } {
     // Build the update object with all spec-required fields
     const update: {
@@ -464,6 +467,9 @@ export class Phase2Enricher {
       key_concepts?: string[];
       metadata_tags?: string[];
       extracted_fields?: Record<string, unknown>;
+      segment_code?: string;
+      category_code?: string;
+      content_type_code?: string;
     } = {};
 
     // 1. Title - Cleaned/improved title (max 500 chars)
@@ -528,6 +534,22 @@ export class Phase2Enricher {
       phase2CompletedAt: new Date().toISOString(),
       phase2Version: '2.1', // Version with metadata registry integration
     };
+
+    // 10. Classification Codes - Set primary codes from metadata for UI filtering
+    if (enrichment.metadataCodes) {
+      // Set segment_code from first SEG code
+      if (enrichment.metadataCodes.SEG && enrichment.metadataCodes.SEG.length > 0) {
+        update.segment_code = enrichment.metadataCodes.SEG[0];
+      }
+      // Set category_code from first CAT code
+      if (enrichment.metadataCodes.CAT && enrichment.metadataCodes.CAT.length > 0) {
+        update.category_code = enrichment.metadataCodes.CAT[0];
+      }
+      // Set content_type_code from first TYP code
+      if (enrichment.metadataCodes.TYP && enrichment.metadataCodes.TYP.length > 0) {
+        update.content_type_code = enrichment.metadataCodes.TYP[0];
+      }
+    }
 
     return update;
   }
