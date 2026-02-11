@@ -15,6 +15,8 @@ import {
   invalidateTreeCaches,
 } from '../database/taxonomy.js';
 import * as hierarchyCache from '../cache/hierarchy_cache.js';
+import { buildHierarchyTree } from '../services/hierarchy/tree_builder.js';
+import { HierarchyView } from '../../shared/types.js';
 
 // ============================================================
 // Existing Endpoints
@@ -31,8 +33,10 @@ export async function getHierarchyTree(req: Request, res: Response): Promise<voi
       res.status(400).json({ error: 'Invalid view. Must be "function" or "organization"' });
       return;
     }
-    const tree = getTree(view);
-    res.json(tree);
+
+    // Use new tree builder
+    const tree = buildHierarchyTree(view as HierarchyView);
+    res.json({ tree, viewType: view });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

@@ -163,11 +163,14 @@ export function readNode(id: string): Record<string, unknown> | null {
     SELECT concept FROM key_concepts WHERE node_id = ?
   `).all(id) as Array<{ concept: string }>;
 
+  const extractedFields = JSON.parse((node.extracted_fields as string) || '{}');
+
   return {
     ...node,
-    extracted_fields: JSON.parse((node.extracted_fields as string) || '{}'),
+    extracted_fields: extractedFields,
     metadata_tags: JSON.parse((node.metadata_tags as string) || '[]'),
     key_concepts: concepts.map(c => c.concept),
+    metadataCodes: extractedFields.metadataCodes || null,
   };
 }
 
@@ -400,12 +403,16 @@ export function getAllNodes(): unknown[] {
   const conceptsMap = batchLoadKeyConcepts(nodeIds);
 
   // Step 4: Map over nodes and attach concepts from the Map
-  return nodes.map(node => ({
-    ...node,
-    extracted_fields: JSON.parse((node.extracted_fields as string) || '{}'),
-    metadata_tags: JSON.parse((node.metadata_tags as string) || '[]'),
-    key_concepts: conceptsMap.get(node.id as string) || [],
-  }));
+  return nodes.map(node => {
+    const extractedFields = JSON.parse((node.extracted_fields as string) || '{}');
+    return {
+      ...node,
+      extracted_fields: extractedFields,
+      metadata_tags: JSON.parse((node.metadata_tags as string) || '[]'),
+      key_concepts: conceptsMap.get(node.id as string) || [],
+      metadataCodes: extractedFields.metadataCodes || null,
+    };
+  });
 }
 
 /**
@@ -512,12 +519,16 @@ export function getNodesPaginated(options?: Partial<PaginationParams>): unknown[
   const conceptsMap = batchLoadKeyConcepts(nodeIds);
 
   // Step 4: Map over nodes and attach concepts from the Map
-  return nodes.map(node => ({
-    ...node,
-    extracted_fields: JSON.parse((node.extracted_fields as string) || '{}'),
-    metadata_tags: JSON.parse((node.metadata_tags as string) || '[]'),
-    key_concepts: conceptsMap.get(node.id as string) || [],
-  }));
+  return nodes.map(node => {
+    const extractedFields = JSON.parse((node.extracted_fields as string) || '{}');
+    return {
+      ...node,
+      extracted_fields: extractedFields,
+      metadata_tags: JSON.parse((node.metadata_tags as string) || '[]'),
+      key_concepts: conceptsMap.get(node.id as string) || [],
+      metadataCodes: extractedFields.metadataCodes || null,
+    };
+  });
 }
 
 /**

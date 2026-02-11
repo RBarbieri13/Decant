@@ -9,19 +9,17 @@ import { HierarchyView, TreeNode, NodeType, GumroadColor, ContentTypeCode } from
 interface DatabaseNode {
   id: string;
   title: string;
-  node_type: string;
-  function_code: string | null;
-  organization_code: string | null;
-  function_parent_id: string | null;
-  organization_parent_id: string | null;
+  function_hierarchy_code: string | null;
+  organization_hierarchy_code: string | null;
   content_type_code: string | null;
-  source_url: string | null;
-  favicon_path: string | null;
+  url: string | null;
+  logo_url: string | null;
   segment_code: string | null;
 }
 
 /**
  * Build hierarchy tree from database nodes
+ * For now, returns a flat list since we don't have true hierarchical parent-child relationships yet
  * @param viewType - 'function' or 'organization' view
  * @returns Nested tree structure for UI rendering
  */
@@ -33,75 +31,30 @@ export function buildHierarchyTree(viewType: HierarchyView): TreeNode[] {
     SELECT
       id,
       title,
-      node_type,
-      function_code,
-      organization_code,
-      function_parent_id,
-      organization_parent_id,
+      function_hierarchy_code,
+      organization_hierarchy_code,
       content_type_code,
-      source_url,
-      favicon_path,
+      url,
+      logo_url,
       segment_code
     FROM nodes
     WHERE is_deleted = 0
-    ORDER BY
-      CASE
-        WHEN ? = 'function' THEN function_position
-        ELSE organization_position
-      END ASC
-  `).all(viewType) as DatabaseNode[];
+    ORDER BY date_added DESC
+  `).all() as DatabaseNode[];
 
-  // Create lookup map for fast access
-  const nodeMap = new Map<string, TreeNode>();
-
-  // First pass: Create all tree nodes
-  for (const node of nodes) {
-    const treeNode: TreeNode = {
-      id: node.id,
-      title: node.title,
-      nodeType: node.node_type as NodeType,
-      color: getNodeColor(node),
-      children: [],
-      isExpanded: false,
-      contentTypeCode: node.content_type_code as ContentTypeCode | null,
-      sourceUrl: node.source_url,
-      faviconPath: node.favicon_path,
-    };
-    nodeMap.set(node.id, treeNode);
-  }
-
-  // Second pass: Build parent-child relationships
-  const rootNodes: TreeNode[] = [];
-
-  for (const node of nodes) {
-    const treeNode = nodeMap.get(node.id);
-    if (!treeNode) continue;
-
-    const parentId = viewType === 'function'
-      ? node.function_parent_id
-      : node.organization_parent_id;
-
-    if (parentId) {
-      // Has parent - add to parent's children
-      const parent = nodeMap.get(parentId);
-      if (parent) {
-        parent.children.push(treeNode);
-      } else {
-        // Parent not found (orphaned node) - add to root
-        rootNodes.push(treeNode);
-      }
-    } else {
-      // No parent - this is a root node
-      rootNodes.push(treeNode);
-    }
-  }
-
-  // Sort children within each node by title
-  for (const node of nodeMap.values()) {
-    node.children.sort((a, b) => a.title.localeCompare(b.title));
-  }
-
-  return rootNodes;
+  // For now, return flat list of all nodes as root nodes
+  // In future, we can group by hierarchy codes to create nested structure
+  return nodes.map(node => ({
+    id: node.id,
+    title: node.title,
+    nodeType: 'item' as NodeType,
+    color: getNodeColor(node),
+    children: [],
+    isExpanded: false,
+    contentTypeCode: node.content_type_code as ContentTypeCode | null,
+    sourceUrl: node.url,
+    faviconPath: node.logo_url,
+  }));
 }
 
 /**
