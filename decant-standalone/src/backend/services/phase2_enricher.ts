@@ -83,7 +83,7 @@ export class Phase2Enricher {
     });
     this.model = config.model || 'gpt-4o-mini';
     this.temperature = config.temperature ?? 0.3;
-    this.maxTokens = config.maxTokens || 2000;
+    this.maxTokens = config.maxTokens || 4000;
     this.timeout = config.timeout || 60000;
   }
 
@@ -587,7 +587,7 @@ export class Phase2Enricher {
       apiKey,
       model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
       temperature: parseFloat(process.env.OPENAI_TEMPERATURE || '0.3'),
-      maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS || '2000', 10),
+      maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS || '4000', 10),
       timeout: parseInt(process.env.OPENAI_TIMEOUT || '60000', 10),
     });
   }
