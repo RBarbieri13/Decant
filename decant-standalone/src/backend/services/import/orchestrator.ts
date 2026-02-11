@@ -476,6 +476,9 @@ export class ImportOrchestrator {
       short_description: scraped.description ?? undefined,
       logo_url: scraped.favicon ?? undefined,
       ai_summary: scraped.description ?? undefined,
+      segment_code: classification.segment,
+      category_code: classification.category,
+      content_type_code: classification.contentType,
       extracted_fields: {
         author: scraped.author,
         siteName: scraped.siteName,

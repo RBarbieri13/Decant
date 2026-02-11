@@ -1640,6 +1640,52 @@ body {
   color: #ffffff;
 }
 
+.decant-segment-badge--pink {
+  background-color: #ff90e8;
+  color: #1a1a1a;
+}
+
+.decant-segment-badge--blue {
+  background-color: #90a8ed;
+  color: #1a1a1a;
+}
+
+.decant-segment-badge--green {
+  background-color: #23a094;
+  color: #ffffff;
+}
+
+.decant-segment-badge--yellow {
+  background-color: #f1c40f;
+  color: #1a1a1a;
+}
+
+/* Metadata tag color variants */
+.metadata-tag--pink {
+  background-color: #fce4f6;
+  color: #9d174d;
+}
+
+.metadata-tag--blue {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.metadata-tag--green {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.metadata-tag--yellow {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.metadata-tag--gray {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
 /* Expanded Row - Matching Screenshot */
 .decant-expanded-row {
   background-color: #f5f0e8;

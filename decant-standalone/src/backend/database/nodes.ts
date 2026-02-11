@@ -27,6 +27,9 @@ export interface CreateNodeInput {
   key_concepts?: string[];
   function_parent_id?: string | null;
   organization_parent_id?: string | null;
+  segment_code?: string | null;
+  category_code?: string | null;
+  content_type_code?: string | null;
 }
 
 export interface UpdateNodeInput {
@@ -111,8 +114,9 @@ export function createNode(data: CreateNodeInput): unknown {
       INSERT INTO nodes (
         id, title, url, source_domain, company, phrase_description,
         short_description, logo_url, ai_summary, extracted_fields,
-        metadata_tags, function_parent_id, organization_parent_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        metadata_tags, function_parent_id, organization_parent_id,
+        segment_code, category_code, content_type_code
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -128,7 +132,10 @@ export function createNode(data: CreateNodeInput): unknown {
       JSON.stringify(data.extracted_fields || {}),
       JSON.stringify(data.metadata_tags || []),
       data.function_parent_id || null,
-      data.organization_parent_id || null
+      data.organization_parent_id || null,
+      data.segment_code || null,
+      data.category_code || null,
+      data.content_type_code || null
     );
 
     // Insert key concepts (within same transaction)
