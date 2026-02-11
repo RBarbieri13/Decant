@@ -15,6 +15,8 @@ import '../styles/app.css';
 import decantLogoLight from '../assets/decant-logo-light.png';
 // Import Batch Import Modal
 import { BatchImportModal } from '../components/import/BatchImportModal';
+// Import Quick Add Modal
+import { QuickAddModal } from '../components/import/QuickAddModal';
 // API imports for backend integration
 import { nodesAPI, hierarchyAPI } from '../services/api';
 // Real-time service for hierarchy updates
@@ -128,6 +130,7 @@ interface TopBarProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   onBatchImportClick?: () => void;
+  onQuickAddClick?: () => void;
   onSettingsClick?: () => void;
   onUserClick?: () => void;
   userName?: string;
@@ -141,6 +144,7 @@ const TopBar: React.FC<TopBarProps> = ({
   // viewMode available for future use - moved to title bar
   // onViewModeChange available for future use - moved to title bar
   onBatchImportClick,
+  onQuickAddClick,
   onSettingsClick,
   onUserClick,
   // userName available for future use
@@ -201,10 +205,18 @@ const TopBar: React.FC<TopBarProps> = ({
       {/* Right side icons */}
       <div className="decant-topbar__actions">
         <button
+          className="quick-add-trigger"
+          onClick={onQuickAddClick}
+          title="Quick Add (⌘N)"
+        >
+          +
+        </button>
+
+        <button
           className="gum-button gum-button--small gum-button--blue"
           onClick={onBatchImportClick}
           title="Batch Import URLs"
-          style={{ marginRight: '12px' }}
+          style={{ marginLeft: '8px', marginRight: '12px' }}
         >
           Batch
         </button>
@@ -1216,6 +1228,7 @@ export default function DecantDemo() {
   ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBatchImportOpen, setIsBatchImportOpen] = useState(false);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
   // Load real nodes from API
   useEffect(() => {
@@ -1314,6 +1327,18 @@ export default function DecantDemo() {
       sseClient.disconnect();
     };
   }, [loadTree]);
+
+  // Global keyboard shortcut: Cmd+N / Ctrl+N opens Quick Add
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+        e.preventDefault();
+        setIsQuickAddOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
 
   // Helper function to reload nodes
   const loadNodes = async () => {
@@ -1459,6 +1484,7 @@ export default function DecantDemo() {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onBatchImportClick={() => setIsBatchImportOpen(true)}
+        onQuickAddClick={() => setIsQuickAddOpen(true)}
         onSettingsClick={handleSettingsClick}
         onUserClick={handleUserClick}
       />
@@ -1501,6 +1527,21 @@ export default function DecantDemo() {
         item={selectedItem}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+      />
+
+      {/* Quick Add Modal */}
+      <QuickAddModal
+        isOpen={isQuickAddOpen}
+        onClose={() => setIsQuickAddOpen(false)}
+        onImported={(nodeId) => {
+          console.log('Quick Add imported node:', nodeId);
+          loadNodes();
+          loadTree();
+        }}
+        onSwitchToBatch={() => {
+          setIsQuickAddOpen(false);
+          setIsBatchImportOpen(true);
+        }}
       />
 
       {/* Batch Import Modal */}
