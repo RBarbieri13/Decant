@@ -17,6 +17,7 @@ export interface Node {
   ai_summary?: string;
   extracted_fields?: Record<string, any>;
   metadata_tags?: string[];
+  metadata_codes?: Array<{ type: string; code: string; confidence?: number }>;
   key_concepts?: string[];
   function_parent_id?: string | null;
   organization_parent_id?: string | null;
