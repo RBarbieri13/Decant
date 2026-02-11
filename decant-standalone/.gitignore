@@ -90,3 +90,8 @@ typings/
 
 # Electron-Forge
 out/
+
+# SQLite Database Files
+data/*.db
+data/*.db-wal
+data/*.db-shm
