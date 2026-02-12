@@ -256,7 +256,7 @@ export class Phase1Classifier {
   private validateAndFixClassification(
     classification: Phase1Classification
   ): Phase1Classification {
-    const { segment, category, contentType, organization, confidence, reasoning } = classification;
+    const { segment, category, contentType, organization, confidence, quickPhrase, reasoning } = classification;
 
     // Validate segment
     const validSegment = segment in SEGMENTS ? segment : 'T';
@@ -285,6 +285,7 @@ export class Phase1Classifier {
       contentType: validContentType,
       organization: validOrganization,
       confidence: validConfidence,
+      quickPhrase: (quickPhrase || '').slice(0, 100),
       reasoning: reasoning?.slice(0, 200),
     };
   }
