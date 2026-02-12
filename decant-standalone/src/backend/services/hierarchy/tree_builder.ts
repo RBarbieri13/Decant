@@ -19,6 +19,7 @@ interface DatabaseNode {
   logo_url: string | null;
   segment_code: string | null;
   company: string | null;
+  extracted_fields: string | null;
 }
 
 const SEGMENT_LABELS: Record<string, string> = {
@@ -164,7 +165,8 @@ export function buildHierarchyTree(viewType: HierarchyView): TreeNode[] {
   const nodes = db.prepare(`
     SELECT
       id, title, function_hierarchy_code, organization_hierarchy_code,
-      content_type_code, category_code, url, logo_url, segment_code, company
+      content_type_code, category_code, url, logo_url, segment_code, company,
+      extracted_fields
     FROM nodes
     WHERE is_deleted = 0
     ORDER BY date_added DESC
@@ -178,12 +180,34 @@ export function buildHierarchyTree(viewType: HierarchyView): TreeNode[] {
   return buildOrganizationTree(nodes);
 }
 
+function resolveClassification(node: DatabaseNode): { seg: string; cat: string; ct: string } {
+  let seg = node.segment_code || '';
+  let cat = node.category_code || '';
+  let ct = node.content_type_code || '';
+
+  if (!seg && node.extracted_fields) {
+    try {
+      const fields = JSON.parse(node.extracted_fields);
+      if (fields.segment) seg = fields.segment;
+      if (fields.category) cat = fields.category;
+      if (fields.contentType) ct = fields.contentType;
+    } catch {
+      // ignore parse errors
+    }
+  }
+
+  return {
+    seg: seg || 'T',
+    cat: cat || 'OTH',
+    ct: ct || 'A',
+  };
+}
+
 function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
   const segmentMap = new Map<string, Map<string, DatabaseNode[]>>();
 
   for (const node of nodes) {
-    const seg = node.segment_code || 'X';
-    const cat = node.category_code || 'OTH';
+    const { seg, cat } = resolveClassification(node);
 
     if (!segmentMap.has(seg)) {
       segmentMap.set(seg, new Map());
@@ -252,7 +276,7 @@ function buildOrganizationTree(nodes: DatabaseNode[]): TreeNode[] {
 
   for (const node of nodes) {
     const org = node.company || 'Unknown';
-    const cat = node.category_code || 'OTH';
+    const { cat } = resolveClassification(node);
 
     if (!orgMap.has(org)) {
       orgMap.set(org, new Map());

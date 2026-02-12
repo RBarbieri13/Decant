@@ -465,6 +465,38 @@ export const batchImportAPI = {
   },
 };
 
+export interface ReclassifyResult {
+  message: string;
+  durationMs: number;
+  totalNodes: number;
+  changedNodes: number;
+  segmentDistribution: Record<string, number>;
+  results: Array<{
+    nodeId: string;
+    title: string;
+    oldSegment: string | null;
+    newSegment: string;
+    oldCategory: string | null;
+    newCategory: string;
+    changed: boolean;
+    confidence: number;
+  }>;
+}
+
+export const reclassifyAPI = {
+  async reclassifyAll(): Promise<ReclassifyResult> {
+    const res = await fetch(`${API_BASE}/nodes/reclassify`, { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to reclassify nodes');
+    return res.json();
+  },
+
+  async reclassifyNode(id: string): Promise<{ message: string; classification: Record<string, unknown>; node: Node }> {
+    const res = await fetch(`${API_BASE}/nodes/${id}/reclassify`, { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to reclassify node');
+    return res.json();
+  },
+};
+
 export const auditAPI = {
   /**
    * Get audit history for a specific node

@@ -18,11 +18,11 @@ import { BatchImportModal } from '../components/import/BatchImportModal';
 // Import Quick Add Modal
 import { QuickAddModal } from '../components/import/QuickAddModal';
 // API imports for backend integration
-import { nodesAPI, hierarchyAPI } from '../services/api';
+import { nodesAPI, hierarchyAPI, reclassifyAPI } from '../services/api';
 // Real-time service for hierarchy updates
 import { createIntegratedSSEClient } from '../services/realtimeService';
 // Metadata code colors utility
-import { getMetadataCodeColor, getSegmentColor, formatMetadataCodesForDisplay } from '../utils/metadataCodeColors';
+import { getMetadataCodeColor, getSegmentColor, formatMetadataCodesForDisplay, parseRawTag } from '../utils/metadataCodeColors';
 
 const SEGMENT_LABELS: Record<string, string> = {
   A: 'AI & ML', T: 'Technology', F: 'Finance', S: 'Sports',
@@ -141,6 +141,8 @@ interface TopBarProps {
   onViewModeChange: (mode: ViewMode) => void;
   onBatchImportClick?: () => void;
   onQuickAddClick?: () => void;
+  onReclassifyClick?: () => void;
+  isReclassifying?: boolean;
   onSettingsClick?: () => void;
   onUserClick?: () => void;
   userName?: string;
@@ -155,6 +157,8 @@ const TopBar: React.FC<TopBarProps> = ({
   // onViewModeChange available for future use - moved to title bar
   onBatchImportClick,
   onQuickAddClick,
+  onReclassifyClick,
+  isReclassifying: isReclassifyingProp,
   onSettingsClick,
   onUserClick,
   // userName available for future use
@@ -226,9 +230,19 @@ const TopBar: React.FC<TopBarProps> = ({
           className="gum-button gum-button--small gum-button--blue"
           onClick={onBatchImportClick}
           title="Batch Import URLs"
-          style={{ marginLeft: '8px', marginRight: '12px' }}
+          style={{ marginLeft: '8px', marginRight: '4px' }}
         >
           Batch
+        </button>
+
+        <button
+          className="gum-button gum-button--small gum-button--pink"
+          onClick={onReclassifyClick}
+          disabled={isReclassifyingProp}
+          title="Reclassify all nodes with AI"
+          style={{ marginRight: '12px' }}
+        >
+          {isReclassifyingProp ? 'Classifying...' : 'Reclassify'}
         </button>
 
         <button className="decant-topbar__icon-btn" title="Notifications">
@@ -1210,6 +1224,7 @@ export default function DecantDemo() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBatchImportOpen, setIsBatchImportOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [isReclassifying, setIsReclassifying] = useState(false);
 
   // Load real nodes from API
   useEffect(() => {
@@ -1242,10 +1257,10 @@ export default function DecantDemo() {
                   label: badge.label,
                   color: badge.color as TagColor
                 })) :
-                (node.metadata_tags || []).slice(0, 3).map((tag: string) => ({
-                  label: tag,
-                  color: (getSegmentColor(segCode) || 'blue') as TagColor
-                })),
+                (node.metadata_tags || []).slice(0, 3).map((tag: string) => {
+                  const parsed = parseRawTag(tag, segCode);
+                  return { label: parsed.label, color: parsed.color as TagColor };
+                }),
               date: node.date_added || new Date().toISOString().split('T')[0],
               company: node.company || 'Unknown',
               starred: false,
@@ -1359,10 +1374,10 @@ export default function DecantDemo() {
                 label: badge.label,
                 color: badge.color as TagColor
               })) :
-              (node.metadata_tags || []).slice(0, 3).map((tag: string) => ({
-                label: tag,
-                color: (getSegmentColor(segCode) || 'blue') as TagColor
-              })),
+              (node.metadata_tags || []).slice(0, 3).map((tag: string) => {
+                const parsed = parseRawTag(tag, segCode);
+                return { label: parsed.label, color: parsed.color as TagColor };
+              }),
             date: node.date_added || new Date().toISOString().split('T')[0],
             company: node.company || 'Unknown',
             starred: false,
@@ -1452,6 +1467,21 @@ export default function DecantDemo() {
     setIsModalOpen(false);
   }, []);
 
+  const handleReclassifyAll = useCallback(async () => {
+    if (isReclassifying) return;
+    setIsReclassifying(true);
+    try {
+      const result = await reclassifyAPI.reclassifyAll();
+      console.log('Reclassification complete:', result.message, result.segmentDistribution);
+      await loadNodes();
+      await loadTree();
+    } catch (error) {
+      console.error('Reclassification failed:', error);
+    } finally {
+      setIsReclassifying(false);
+    }
+  }, [isReclassifying, loadTree]);
+
   return (
     <div className="decant-app">
       <TopBar
@@ -1463,6 +1493,8 @@ export default function DecantDemo() {
         onViewModeChange={setViewMode}
         onBatchImportClick={() => setIsBatchImportOpen(true)}
         onQuickAddClick={() => setIsQuickAddOpen(true)}
+        onReclassifyClick={handleReclassifyAll}
+        isReclassifying={isReclassifying}
         onSettingsClick={handleSettingsClick}
         onUserClick={handleUserClick}
       />
