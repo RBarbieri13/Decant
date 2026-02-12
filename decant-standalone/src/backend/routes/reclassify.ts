@@ -67,6 +67,7 @@ export async function reclassifyAll(_req: Request, res: Response): Promise<void>
           category_code: cls.category,
           content_type_code: cls.contentType,
           company: cls.organization !== 'UNKN' ? cls.organization : (node.company as string) || undefined,
+          phrase_description: cls.quickPhrase || undefined,
           metadata_tags: [
             `segment:${cls.segment}`,
             `category:${cls.category}`,
@@ -161,6 +162,7 @@ export async function reclassifyNode(req: Request, res: Response): Promise<void>
       category_code: cls.category,
       content_type_code: cls.contentType,
       company: cls.organization !== 'UNKN' ? cls.organization : (node.company as string) || undefined,
+      phrase_description: cls.quickPhrase || undefined,
       metadata_tags: [
         `segment:${cls.segment}`,
         `category:${cls.category}`,
