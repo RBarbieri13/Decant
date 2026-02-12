@@ -62,6 +62,97 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
   U: 'Other',
 };
 
+const SEGMENT_ICONS: Record<string, string> = {
+  A: 'bxs-brain',
+  T: 'bxs-chip',
+  F: 'bxs-bank',
+  S: 'bxs-trophy',
+  H: 'bxs-heart',
+  B: 'bxs-briefcase',
+  E: 'bxs-movie-play',
+  L: 'bxs-home-heart',
+  X: 'bxs-flask',
+  C: 'bxs-palette',
+};
+
+const CATEGORY_ICONS: Record<string, Record<string, string>> = {
+  A: {
+    LLM: 'bxs-conversation', AGT: 'bxs-bot', FND: 'bxs-cube-alt',
+    MLO: 'bxs-server', NLP: 'bxs-message-rounded-dots', CVS: 'bxs-camera',
+    GEN: 'bxs-magic-wand', ETH: 'bxs-shield-alt-2', RES: 'bxs-book-content',
+    OTH: 'bxs-category',
+  },
+  T: {
+    WEB: 'bxs-globe', MOB: 'bxs-mobile', DEV: 'bxs-terminal',
+    CLD: 'bxs-cloud', SEC: 'bxs-lock-alt', DAT: 'bxs-data',
+    API: 'bxs-plug', OPS: 'bxs-cog', HRD: 'bxs-microchip',
+    OTH: 'bxs-category',
+  },
+  F: {
+    INV: 'bxs-bar-chart-alt-2', CRY: 'bxl-bitcoin', FPA: 'bxs-spreadsheet',
+    BNK: 'bxs-bank', TAX: 'bxs-receipt', PFN: 'bxs-wallet',
+    MKT: 'bxs-trending-up', REL: 'bxs-building-house', ECN: 'bxs-analyse',
+    OTH: 'bxs-category',
+  },
+  S: {
+    NFL: 'bx-football', FAN: 'bxs-star', FIT: 'bxs-heart-circle',
+    RUN: 'bx-run', GYM: 'bxs-dumbbell', NBA: 'bx-basketball',
+    MLB: 'bx-baseball', SOC: 'bx-football', OLY: 'bxs-medal',
+    OTH: 'bxs-category',
+  },
+  H: {
+    MED: 'bxs-first-aid', MNT: 'bxs-brain', NUT: 'bxs-leaf',
+    SLP: 'bxs-moon', ACC: 'bxs-universal-access', WEL: 'bxs-spa',
+    FRT: 'bxs-baby-carriage', AGE: 'bxs-hourglass', DIS: 'bxs-virus',
+    OTH: 'bxs-category',
+  },
+  B: {
+    STR: 'bxs-chess', MNG: 'bxs-user-badge', PRD: 'bxs-box',
+    MKT: 'bxs-megaphone', SAL: 'bxs-dollar-circle', OPS: 'bxs-cog',
+    HRS: 'bxs-group', STP: 'bxs-rocket', ENT: 'bxs-buildings',
+    OTH: 'bxs-category',
+  },
+  E: {
+    GAM: 'bxs-joystick', MUS: 'bxs-music', MOV: 'bxs-film',
+    STR: 'bxs-tv', SOC: 'bxs-chat', POP: 'bxs-star',
+    POD: 'bxs-microphone', CEL: 'bxs-crown', EVT: 'bxs-calendar-event',
+    OTH: 'bxs-category',
+  },
+  L: {
+    HOM: 'bxs-home', FAS: 'bxs-t-shirt', FOD: 'bxs-bowl-hot',
+    TRV: 'bxs-plane-alt', REL: 'bxs-heart', PAR: 'bxs-baby-carriage',
+    PET: 'bxs-dog', HOB: 'bxs-paint', GAR: 'bxs-tree',
+    OTH: 'bxs-category',
+  },
+  X: {
+    PHY: 'bxs-atom', BIO: 'bxs-vial', CHM: 'bxs-flask',
+    AST: 'bxs-planet', ENV: 'bxs-leaf', MAT: 'bxs-calculator',
+    ENG: 'bxs-wrench', SOC: 'bxs-group', PSY: 'bxs-brain',
+    OTH: 'bxs-category',
+  },
+  C: {
+    UXD: 'bxs-layout', GRD: 'bxs-brush', WRT: 'bxs-pencil',
+    PHO: 'bxs-camera', VID: 'bxs-video', AUD: 'bxs-music',
+    ART: 'bxs-palette', ANI: 'bxs-ghost', TYP: 'bxs-font-family',
+    OTH: 'bxs-category',
+  },
+};
+
+const CONTENT_TYPE_ICONS: Record<string, string> = {
+  T: 'bxs-wrench',
+  A: 'bxs-file',
+  V: 'bxs-video',
+  P: 'bxs-book-content',
+  R: 'bxl-github',
+  G: 'bxs-book-reader',
+  S: 'bxs-cloud',
+  C: 'bxs-graduation',
+  I: 'bxs-image',
+  N: 'bxs-news',
+  K: 'bxs-book-bookmark',
+  U: 'bxs-file-blank',
+};
+
 /**
  * Build hierarchy tree from database nodes
  * Groups nodes into: Segment > Category > Items (function view)
@@ -127,6 +218,7 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
         contentTypeCode: node.content_type_code as ContentTypeCode | null,
         sourceUrl: node.url,
         faviconPath: node.logo_url,
+        iconHint: CONTENT_TYPE_ICONS[node.content_type_code || 'A'] || 'bxs-file',
       }));
 
       categoryChildren.push({
@@ -136,6 +228,7 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
         color: segColor,
         children: itemChildren,
         isExpanded: false,
+        iconHint: CATEGORY_ICONS[segCode]?.[catCode] || 'bxs-folder',
       });
     }
 
@@ -147,6 +240,7 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
       color: segColor,
       children: categoryChildren,
       isExpanded: false,
+      iconHint: SEGMENT_ICONS[segCode] || 'bxs-folder',
     });
   }
 
@@ -191,6 +285,7 @@ function buildOrganizationTree(nodes: DatabaseNode[]): TreeNode[] {
         contentTypeCode: node.content_type_code as ContentTypeCode | null,
         sourceUrl: node.url,
         faviconPath: node.logo_url,
+        iconHint: CONTENT_TYPE_ICONS[node.content_type_code || 'A'] || 'bxs-file',
       }));
 
       categoryChildren.push({
@@ -199,6 +294,7 @@ function buildOrganizationTree(nodes: DatabaseNode[]): TreeNode[] {
         nodeType: 'category' as NodeType,
         children: itemChildren,
         isExpanded: false,
+        iconHint: CATEGORY_ICONS[segCode]?.[catCode] || 'bxs-folder',
       });
     }
 
@@ -209,6 +305,7 @@ function buildOrganizationTree(nodes: DatabaseNode[]): TreeNode[] {
       nodeType: 'organization' as NodeType,
       children: categoryChildren,
       isExpanded: false,
+      iconHint: 'bxs-buildings',
     });
   }
 
