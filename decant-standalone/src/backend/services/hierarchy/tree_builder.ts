@@ -19,6 +19,52 @@ interface DatabaseNode {
   logo_url: string | null;
   segment_code: string | null;
   company: string | null;
+  extracted_fields: string | null;
+}
+
+/**
+ * Resolve segment code from either the dedicated column or extracted_fields JSON
+ */
+function resolveSegment(node: DatabaseNode): string {
+  if (node.segment_code) return node.segment_code;
+  if (node.extracted_fields) {
+    try {
+      const fields = JSON.parse(node.extracted_fields);
+      if (fields.segment) return fields.segment;
+      if (fields.segment_code) return fields.segment_code;
+    } catch {}
+  }
+  return 'X'; // fallback to Science & Research
+}
+
+/**
+ * Resolve category code from either the dedicated column or extracted_fields JSON
+ */
+function resolveCategory(node: DatabaseNode): string {
+  if (node.category_code) return node.category_code;
+  if (node.extracted_fields) {
+    try {
+      const fields = JSON.parse(node.extracted_fields);
+      if (fields.category) return fields.category;
+      if (fields.category_code) return fields.category_code;
+    } catch {}
+  }
+  return 'OTH'; // fallback to Other
+}
+
+/**
+ * Resolve content type code from either the dedicated column or extracted_fields JSON
+ */
+function resolveContentType(node: DatabaseNode): string | null {
+  if (node.content_type_code) return node.content_type_code;
+  if (node.extracted_fields) {
+    try {
+      const fields = JSON.parse(node.extracted_fields);
+      if (fields.contentType) return fields.contentType;
+      if (fields.content_type_code) return fields.content_type_code;
+    } catch {}
+  }
+  return null;
 }
 
 const SEGMENT_LABELS: Record<string, string> = {
@@ -73,7 +119,8 @@ export function buildHierarchyTree(viewType: HierarchyView): TreeNode[] {
   const nodes = db.prepare(`
     SELECT
       id, title, function_hierarchy_code, organization_hierarchy_code,
-      content_type_code, category_code, url, logo_url, segment_code, company
+      content_type_code, category_code, url, logo_url, segment_code, company,
+      extracted_fields
     FROM nodes
     WHERE is_deleted = 0
     ORDER BY date_added DESC
@@ -91,8 +138,8 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
   const segmentMap = new Map<string, Map<string, DatabaseNode[]>>();
 
   for (const node of nodes) {
-    const seg = node.segment_code || 'X';
-    const cat = node.category_code || 'OTH';
+    const seg = resolveSegment(node);
+    const cat = resolveCategory(node);
 
     if (!segmentMap.has(seg)) {
       segmentMap.set(seg, new Map());
@@ -158,7 +205,7 @@ function buildOrganizationTree(nodes: DatabaseNode[]): TreeNode[] {
 
   for (const node of nodes) {
     const org = node.company || 'Unknown';
-    const cat = node.category_code || 'OTH';
+    const cat = resolveCategory(node);
 
     if (!orgMap.has(org)) {
       orgMap.set(org, new Map());
@@ -178,14 +225,14 @@ function buildOrganizationTree(nodes: DatabaseNode[]): TreeNode[] {
     const sortedCategories = [...catMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
     for (const [catCode, catNodes] of sortedCategories) {
-      const segCode = catNodes[0]?.segment_code || 'T';
+      const segCode = resolveSegment(catNodes[0]);
       const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode;
 
       const itemChildren: TreeNode[] = catNodes.map(node => ({
         id: node.id,
         title: node.title,
         nodeType: 'item' as NodeType,
-        color: getSegmentColor(node.segment_code),
+        color: getSegmentColor(resolveSegment(node)),
         children: [],
         isExpanded: false,
         contentTypeCode: node.content_type_code as ContentTypeCode | null,

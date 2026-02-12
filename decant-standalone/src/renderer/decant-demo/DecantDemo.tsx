@@ -22,7 +22,7 @@ import { nodesAPI, hierarchyAPI } from '../services/api';
 // Real-time service for hierarchy updates
 import { createIntegratedSSEClient } from '../services/realtimeService';
 // Metadata code colors utility
-import { getMetadataCodeColor, getSegmentColor, formatMetadataCodesForDisplay } from '../utils/metadataCodeColors';
+import { getSegmentColor } from '../utils/metadataCodeColors';
 
 const SEGMENT_LABELS: Record<string, string> = {
   A: 'AI & ML', T: 'Technology', F: 'Finance', S: 'Sports',
@@ -1274,19 +1274,19 @@ export default function DecantDemo() {
               category: catLabel,
               hierarchy: segCode && catCode ? `${segLabel} > ${catLabel}` : '',
               quickPhrase: node.phrase_description || '',
-              tags: node.metadataCodes ?
-                formatMetadataCodesForDisplay(
-                  Object.entries(node.metadataCodes).flatMap(([type, codes]) =>
-                    (codes as string[]).map(code => ({ type, code, confidence: 0.9 }))
-                  )
-                ).slice(0, 3).map((badge) => ({
-                  label: badge.label,
-                  color: badge.color as TagColor
-                })) :
-                (node.metadata_tags || []).slice(0, 3).map((tag: string) => ({
+              tags: (node.metadata_tags || []).slice(0, 3).map((tag: string) => {
+                const tagColorMap: Record<string, TagColor> = {
+                  'segment': getSegmentColor(segCode) as TagColor,
+                  'category': 'green' as TagColor,
+                  'type': 'yellow' as TagColor,
+                  'org': 'pink' as TagColor,
+                };
+                const prefix = tag.split(':')[0] || '';
+                return {
                   label: tag,
-                  color: (getSegmentColor(segCode) || 'blue') as TagColor
-                })),
+                  color: tagColorMap[prefix] || 'blue' as TagColor,
+                };
+              }),
               date: node.date_added || new Date().toISOString().split('T')[0],
               company: node.company || 'Unknown',
               starred: false,
@@ -1390,19 +1390,19 @@ export default function DecantDemo() {
             category: catLabel,
             hierarchy: segCode && catCode ? `${segLabel} > ${catLabel}` : '',
             quickPhrase: node.phrase_description || '',
-            tags: node.metadataCodes ?
-              formatMetadataCodesForDisplay(
-                Object.entries(node.metadataCodes).flatMap(([type, codes]) =>
-                  (codes as string[]).map(code => ({ type, code, confidence: 0.9 }))
-                )
-              ).slice(0, 3).map((badge) => ({
-                label: badge.label,
-                color: badge.color as TagColor
-              })) :
-              (node.metadata_tags || []).slice(0, 3).map((tag: string) => ({
+            tags: (node.metadata_tags || []).slice(0, 3).map((tag: string) => {
+              const tagColorMap: Record<string, TagColor> = {
+                'segment': getSegmentColor(segCode) as TagColor,
+                'category': 'green' as TagColor,
+                'type': 'yellow' as TagColor,
+                'org': 'pink' as TagColor,
+              };
+              const prefix = tag.split(':')[0] || '';
+              return {
                 label: tag,
-                color: (getSegmentColor(segCode) || 'blue') as TagColor
-              })),
+                color: tagColorMap[prefix] || 'blue' as TagColor,
+              };
+            }),
             date: node.date_added || new Date().toISOString().split('T')[0],
             company: node.company || 'Unknown',
             starred: false,
