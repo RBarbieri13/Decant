@@ -1298,25 +1298,33 @@ body {
   font-size: 14px;
 }
 
+.decant-tree-node__toggle svg {
+  display: block;
+}
+
 .decant-tree-node__toggle-spacer {
   width: 18px;
   flex-shrink: 0;
 }
 
 .decant-tree-node__icon {
-  font-size: 18px;
   flex-shrink: 0;
-  /* Color is set inline via style prop */
+  color: var(--decant-forest-green);
+  margin-right: 6px;
 }
 
 .decant-tree-node__label {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   color: #1f2937;
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.decant-tree-node__row--selected .decant-tree-node__icon {
+  color: #166534;
 }
 
 .decant-tree-node__row--selected .decant-tree-node__label {
@@ -1427,6 +1435,49 @@ body {
 .decant-table__body {
   flex: 1;
   overflow-y: auto;
+}
+
+/* Subcategory group header row */
+.decant-table__group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: linear-gradient(to right, #f0ece4, #f5f1ed);
+  border-bottom: 1px solid #d8d4cc;
+  border-top: 1px solid #d8d4cc;
+  cursor: pointer;
+  user-select: none;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.decant-table__group-header:hover {
+  background: linear-gradient(to right, #e8e4dc, #ece8e0);
+}
+
+.decant-table__group-icon {
+  color: var(--decant-forest-green);
+  flex-shrink: 0;
+}
+
+.decant-table__group-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--decant-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.decant-table__group-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--decant-text-secondary);
+  background: rgba(0, 0, 0, 0.06);
+  padding: 1px 8px;
+  border-radius: 10px;
+  margin-left: 4px;
 }
 
 .decant-table__row {
@@ -2107,8 +2158,10 @@ body {
 .decant-card__row {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
   padding: 6px 0;
   border-bottom: 1px solid #e0ddd9;
+  gap: 8px;
 }
 
 .decant-card__row:last-child {
@@ -2118,16 +2171,26 @@ body {
 .decant-card__label {
   font-size: 12px;
   color: #666666;
+  flex-shrink: 0;
+  min-width: 60px;
 }
 
 .decant-card__value {
   font-size: 13px;
   font-weight: 500;
   color: #2a2a2a;
+  text-align: right;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .decant-card__value--link {
   color: #2d5b47;
+  text-decoration: none;
+}
+
+.decant-card__value--link:hover {
+  text-decoration: underline;
 }
 
 /* ============================================================================

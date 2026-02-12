@@ -23,6 +23,9 @@ import { nodesAPI, hierarchyAPI } from '../services/api';
 import { createIntegratedSSEClient } from '../services/realtimeService';
 // Metadata code colors utility
 import { getSegmentColor } from '../utils/metadataCodeColors';
+// Hierarchy icons
+import { getTreeNodeIcon, getIconProps, getCategoryIcon } from '../utils/hierarchyIcons';
+import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 
 const SEGMENT_LABELS: Record<string, string> = {
   A: 'AI & ML', T: 'Technology', F: 'Finance', S: 'Sports',
@@ -47,6 +50,12 @@ const CONTENT_TYPE_SYMBOLS: Record<string, string> = {
   T: '\u{1F527}', A: '\u{1F4C4}', V: '\u{1F3AC}', P: '\u{1F4DA}', R: '\u{1F4E6}',
   G: '\u{1F4D6}', S: '\u{2601}', C: '\u{1F393}', I: '\u{1F5BC}', N: '\u{1F4F0}',
   K: '\u{1F4DA}', U: '\u{2753}',
+};
+
+const CONTENT_TYPE_LABELS: Record<string, string> = {
+  T: 'Tool', A: 'Article', V: 'Video', P: 'Tutorial',
+  R: 'Repository', G: 'Guide', S: 'SaaS/Service', C: 'Course',
+  I: 'Image', N: 'News', K: 'Knowledge Base', U: 'Unknown',
 };
 
 // ============================================================================
@@ -96,8 +105,16 @@ interface TreeNodeData {
 
 type RowColor = 'pink' | 'yellow' | 'blue' | 'green' | 'red' | 'cream' | 'default';
 
+interface HierarchyFilter {
+  type: 'all' | 'segment' | 'category';
+  segmentCode?: string;
+  categoryCode?: string;
+}
+
 interface TableRow {
   id: string;
+  segmentCode: string;
+  categoryCode: string;
   logo: string;
   title: string;
   type: string;
@@ -113,6 +130,11 @@ interface TableRow {
   rowColor?: RowColor;
   checked?: boolean;
   // Extended data for panel
+  url?: string;
+  sourceDomain?: string;
+  aiSummary?: string;
+  shortDescription?: string;
+  keyConcepts?: string[];
   version?: string;
   license?: string;
   author?: string;
@@ -353,31 +375,6 @@ interface TreeNodeProps {
   onToggle: (id: string) => void;
 }
 
-// Icon configuration matching the mockup colors exactly
-const ICON_CONFIG: Record<TreeIconType, { icon: string; color: string }> = {
-  folder: { icon: 'bxs-folder', color: '#a67c52' },           // Brown folder
-  document: { icon: 'bxs-file', color: '#3b82f6' },           // Blue document
-  link: { icon: 'bx-link', color: '#22c55e' },                // Green link
-  ui: { icon: 'bx-layout', color: '#8b5cf6' },                // Purple UI
-  book: { icon: 'bxs-book', color: '#22c55e' },               // Green book
-  component: { icon: 'bx-extension', color: '#ec4899' },      // Pink puzzle
-  button: { icon: 'bx-extension', color: '#ec4899' },         // Pink
-  form: { icon: 'bx-extension', color: '#ec4899' },           // Pink
-  modal: { icon: 'bx-extension', color: '#ec4899' },          // Pink
-  layout: { icon: 'bxs-folder', color: '#a67c52' },           // Brown folder
-  style: { icon: 'bxs-palette', color: '#ec4899' },           // Pink palette
-  image: { icon: 'bxs-image', color: '#ec4899' },             // Pink image
-  backend: { icon: 'bxs-folder', color: '#a67c52' },          // Brown folder
-  test: { icon: 'bxs-flask', color: '#22c55e' },              // Green flask
-  settings: { icon: 'bx-cog', color: '#6b7280' },             // Gray gear
-  guidelines: { icon: 'bxs-file', color: '#3b82f6' },         // Blue document
-  brand: { icon: 'bxs-image', color: '#ec4899' },             // Pink image
-  tools: { icon: 'bx-link', color: '#22c55e' },               // Green link
-  person: { icon: 'bxs-user', color: '#f97316' },             // Orange person
-  notes: { icon: 'bxs-note', color: '#22c55e' },              // Green notes
-  default: { icon: 'bx-file', color: '#6b7280' },             // Gray default
-};
-
 const TreeNode: React.FC<TreeNodeProps> = ({
   node,
   level,
@@ -390,7 +387,9 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   const isExpanded = expandedIds.has(node.id);
   const isSelected = selectedId === node.id;
 
-  const iconConfig = ICON_CONFIG[node.iconType] || ICON_CONFIG.default;
+  // Get the appropriate Tabler icon based on node ID pattern
+  const NodeIcon = getTreeNodeIcon(node.id, node.iconType);
+  const iconProps = getIconProps({ size: 16, stroke: 1.5 });
 
   return (
     <div className="decant-tree-node">
@@ -407,15 +406,12 @@ const TreeNode: React.FC<TreeNodeProps> = ({
               onToggle(node.id);
             }}
           >
-            <i className={`bx ${isExpanded ? 'bx-chevron-down' : 'bx-chevron-right'}`} />
+            {isExpanded ? <IconChevronDown size={14} stroke={1.5} /> : <IconChevronRight size={14} stroke={1.5} />}
           </button>
         ) : (
           <span className="decant-tree-node__toggle-spacer" />
         )}
-        <i
-          className={`bx ${iconConfig.icon} decant-tree-node__icon`}
-          style={{ color: iconConfig.color }}
-        />
+        <NodeIcon {...iconProps} className="decant-tree-node__icon" />
         <span className="decant-tree-node__label">{node.name}</span>
       </div>
       {hasChildren && isExpanded && (
@@ -704,6 +700,9 @@ interface DataTableProps {
   statusText?: string;
   totalCount?: number;
   categoryName?: string;
+  groupedData?: { label: string; catCode: string; items: TableRow[] }[] | null;
+  segmentCode?: string;
+  onCategoryClick?: (segCode: string, catCode: string) => void;
 }
 
 const DataTable: React.FC<DataTableProps> = ({
@@ -713,7 +712,10 @@ const DataTable: React.FC<DataTableProps> = ({
   onToggleStar,
   statusText,
   totalCount = 5433,
-  categoryName = 'Phoenix > Frontend',
+  categoryName = 'All Items',
+  groupedData,
+  segmentCode,
+  onCategoryClick,
 }) => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(['tailwind-css']));
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
@@ -746,7 +748,7 @@ const DataTable: React.FC<DataTableProps> = ({
     <div className="decant-table">
       {/* Title bar with view toggles */}
       <div className="decant-table__title-bar">
-        <h2 className="decant-table__title">Frontend</h2>
+        <h2 className="decant-table__title">{categoryName}</h2>
         <div className="decant-table__title-actions">
           <button className="decant-table__view-btn decant-table__view-btn--active" title="Table view">
             <i className="bx bx-table" />
@@ -790,19 +792,56 @@ const DataTable: React.FC<DataTableProps> = ({
         <div className="decant-table__header-cell"></div>
       </div>
       <div className="decant-table__body">
-        {data.map((row) => (
-          <DataTableRow
-            key={row.id}
-            data={row}
-            isSelected={selectedId === row.id}
-            isExpanded={expandedIds.has(row.id)}
-            isChecked={checkedIds.has(row.id)}
-            onSelect={onSelect}
-            onToggleExpand={handleToggleExpand}
-            onToggleStar={onToggleStar}
-            onToggleCheck={handleToggleCheck}
-          />
-        ))}
+        {groupedData ? (
+          // Render with subcategory group headers
+          groupedData.map((group) => {
+            const GroupIcon = segmentCode
+              ? getCategoryIcon(segmentCode, group.catCode)
+              : null;
+            return (
+              <React.Fragment key={`group-${group.catCode}`}>
+                <div
+                  className="decant-table__group-header"
+                  onClick={() => segmentCode && onCategoryClick?.(segmentCode, group.catCode)}
+                  role="button"
+                  tabIndex={0}
+                >
+                  {GroupIcon && <GroupIcon size={14} stroke={1.5} className="decant-table__group-icon" />}
+                  <span className="decant-table__group-label">{group.label}</span>
+                  <span className="decant-table__group-count">{group.items.length}</span>
+                </div>
+                {group.items.map((row) => (
+                  <DataTableRow
+                    key={row.id}
+                    data={row}
+                    isSelected={selectedId === row.id}
+                    isExpanded={expandedIds.has(row.id)}
+                    isChecked={checkedIds.has(row.id)}
+                    onSelect={onSelect}
+                    onToggleExpand={handleToggleExpand}
+                    onToggleStar={onToggleStar}
+                    onToggleCheck={handleToggleCheck}
+                  />
+                ))}
+              </React.Fragment>
+            );
+          })
+        ) : (
+          // Render flat list
+          data.map((row) => (
+            <DataTableRow
+              key={row.id}
+              data={row}
+              isSelected={selectedId === row.id}
+              isExpanded={expandedIds.has(row.id)}
+              isChecked={checkedIds.has(row.id)}
+              onSelect={onSelect}
+              onToggleExpand={handleToggleExpand}
+              onToggleStar={onToggleStar}
+              onToggleCheck={handleToggleCheck}
+            />
+          ))
+        )}
       </div>
       <div className="decant-table__status">
         {statusText || `Showing ${data.length} items in "${categoryName}" | ${data.length} total in category | ${totalCount.toLocaleString()} total in database`}
@@ -1114,56 +1153,46 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ item, onClose }) => {
       <div className="decant-panel__content">
         {activeTab === 'properties' && (
           <>
+            {/* Description */}
+            {(item.shortDescription || item.quickPhrase) && (
+              <div className="decant-card">
+                <h3 className="decant-card__title">Description</h3>
+                <p style={{ fontSize: '13px', lineHeight: 1.5, color: 'var(--decant-text-primary)', margin: 0 }}>
+                  {item.shortDescription || item.quickPhrase}
+                </p>
+              </div>
+            )}
+
+            {/* Source Info */}
             <div className="decant-card">
-              <h3 className="decant-card__title">General</h3>
-              {item.version && (
+              <h3 className="decant-card__title">Source</h3>
+              {item.url && (
                 <div className="decant-card__row">
-                  <span className="decant-card__label">Version</span>
-                  <span className="decant-card__value">{item.version}</span>
+                  <span className="decant-card__label">URL</span>
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="decant-card__value decant-card__value--link"
+                    style={{ fontSize: '12px', wordBreak: 'break-all' }}
+                  >
+                    {item.sourceDomain || item.url}
+                  </a>
                 </div>
               )}
-              {item.license && (
+              {item.company && item.company !== 'Unknown' && (
                 <div className="decant-card__row">
-                  <span className="decant-card__label">License</span>
-                  <span className="decant-card__value">{item.license}</span>
+                  <span className="decant-card__label">Company</span>
+                  <span className="decant-card__value">{item.company}</span>
                 </div>
               )}
-              {item.author && (
-                <div className="decant-card__row">
-                  <span className="decant-card__label">Author</span>
-                  <span className="decant-card__value">{item.author}</span>
-                </div>
-              )}
-              {item.repository && (
-                <div className="decant-card__row">
-                  <span className="decant-card__label">Repository</span>
-                  <span className="decant-card__value decant-card__value--link">{item.repository}</span>
-                </div>
-              )}
+              <div className="decant-card__row">
+                <span className="decant-card__label">Added</span>
+                <span className="decant-card__value">{item.date}</span>
+              </div>
             </div>
 
-            <div className="decant-card">
-              <h3 className="decant-card__title">Statistics</h3>
-              {item.stars && (
-                <div className="decant-card__row">
-                  <span className="decant-card__label">Stars</span>
-                  <span className="decant-card__value">★ {item.stars}</span>
-                </div>
-              )}
-              {item.forks && (
-                <div className="decant-card__row">
-                  <span className="decant-card__label">Forks</span>
-                  <span className="decant-card__value">🍴 {item.forks}</span>
-                </div>
-              )}
-              {item.downloads && (
-                <div className="decant-card__row">
-                  <span className="decant-card__label">Downloads</span>
-                  <span className="decant-card__value">{item.downloads}</span>
-                </div>
-              )}
-            </div>
-
+            {/* Classification */}
             <div className="decant-card">
               <h3 className="decant-card__title">Classification</h3>
               <div className="decant-card__row">
@@ -1176,15 +1205,33 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ item, onClose }) => {
               </div>
               <div className="decant-card__row">
                 <span className="decant-card__label">Type</span>
-                <span className="decant-card__value">{item.type}</span>
+                <span className="decant-card__value">{item.typeSymbol} {item.type}</span>
               </div>
             </div>
 
-            <div className="decant-panel__tags">
-              {item.tags.map((tag, i) => (
-                <Tag key={i} label={tag.label} color={tag.color} />
-              ))}
-            </div>
+            {/* Key Concepts */}
+            {item.keyConcepts && item.keyConcepts.length > 0 && (
+              <div className="decant-card">
+                <h3 className="decant-card__title">Key Concepts</h3>
+                <div className="decant-panel__tags">
+                  {item.keyConcepts.map((concept, i) => (
+                    <Tag key={i} label={concept.replace(/_/g, ' ')} color="purple" />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tags */}
+            {item.tags.length > 0 && (
+              <div className="decant-card">
+                <h3 className="decant-card__title">Tags</h3>
+                <div className="decant-panel__tags">
+                  {item.tags.map((tag, i) => (
+                    <Tag key={i} label={tag.label} color={tag.color} />
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -1242,11 +1289,10 @@ export default function DecantDemo() {
   const [tableData, setTableData] = useState<TableRow[]>(SAMPLE_TABLE_DATA);
   const [treeData, setTreeData] = useState<TreeNodeData[]>(SAMPLE_TREE_DATA);
   const [hierarchyView, setHierarchyView] = useState<'function' | 'organization'>('function');
-  const [currentCategoryTitle] = useState('Frontend'); // Current category title for title bar
+  const [hierarchyFilter, setHierarchyFilter] = useState<HierarchyFilter>({ type: 'all' });
+  const [currentCategoryTitle, setCurrentCategoryTitle] = useState('All Items');
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([
-    { label: 'Workspace', id: 'workspace' },
-    { label: 'Development', id: 'development' },
-    { label: 'Tools', id: 'tools' },
+    { label: 'All Items', id: 'all' },
   ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBatchImportOpen, setIsBatchImportOpen] = useState(false);
@@ -1266,31 +1312,47 @@ export default function DecantDemo() {
             const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode || 'General';
             return {
               id: node.id,
+              segmentCode: segCode,
+              categoryCode: catCode,
               logo: node.logo_url || 'https://via.placeholder.com/32',
               title: node.title || 'Untitled',
-              type: 'Document',
+              type: CONTENT_TYPE_LABELS[ctCode] || 'Document',
               typeSymbol: CONTENT_TYPE_SYMBOLS[ctCode] || '\u{1F4C4}',
               segment: segLabel,
               category: catLabel,
               hierarchy: segCode && catCode ? `${segLabel} > ${catLabel}` : '',
               quickPhrase: node.phrase_description || '',
-              tags: (node.metadata_tags || []).slice(0, 3).map((tag: string) => {
-                const tagColorMap: Record<string, TagColor> = {
+              tags: (node.metadata_tags || []).slice(0, 3).map((tag: string, i: number) => {
+                // Structured tags (segment:A, category:AGT, type:S, org:COMP)
+                const prefix = tag.split(':')[0] || '';
+                const structuredColorMap: Record<string, TagColor> = {
                   'segment': getSegmentColor(segCode) as TagColor,
                   'category': 'green' as TagColor,
                   'type': 'yellow' as TagColor,
                   'org': 'pink' as TagColor,
                 };
-                const prefix = tag.split(':')[0] || '';
-                return {
-                  label: tag,
-                  color: tagColorMap[prefix] || 'blue' as TagColor,
-                };
+                if (structuredColorMap[prefix] && tag.includes(':')) {
+                  return { label: tag, color: structuredColorMap[prefix] };
+                }
+                // Plain word tags: cycle through colors based on position
+                const plainColors: TagColor[] = [
+                  getSegmentColor(segCode) as TagColor,
+                  'green',
+                  'yellow',
+                  'pink',
+                ];
+                return { label: tag, color: plainColors[i % plainColors.length] };
               }),
               date: node.date_added || new Date().toISOString().split('T')[0],
               company: node.company || 'Unknown',
               starred: false,
               rowColor: 'default' as RowColor,
+              // Extended panel data
+              url: node.url || '',
+              sourceDomain: node.source_domain || '',
+              aiSummary: node.ai_summary || '',
+              shortDescription: node.short_description || '',
+              keyConcepts: node.key_concepts || [],
             };
           });
           setTableData(mappedData);
@@ -1382,31 +1444,45 @@ export default function DecantDemo() {
           const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode || 'General';
           return {
             id: node.id,
+            segmentCode: segCode,
+            categoryCode: catCode,
             logo: node.logo_url || 'https://via.placeholder.com/32',
             title: node.title || 'Untitled',
-            type: 'Document',
+            type: CONTENT_TYPE_LABELS[ctCode] || 'Document',
             typeSymbol: CONTENT_TYPE_SYMBOLS[ctCode] || '\u{1F4C4}',
             segment: segLabel,
             category: catLabel,
             hierarchy: segCode && catCode ? `${segLabel} > ${catLabel}` : '',
             quickPhrase: node.phrase_description || '',
-            tags: (node.metadata_tags || []).slice(0, 3).map((tag: string) => {
-              const tagColorMap: Record<string, TagColor> = {
+            tags: (node.metadata_tags || []).slice(0, 3).map((tag: string, i: number) => {
+              const prefix = tag.split(':')[0] || '';
+              const structuredColorMap: Record<string, TagColor> = {
                 'segment': getSegmentColor(segCode) as TagColor,
                 'category': 'green' as TagColor,
                 'type': 'yellow' as TagColor,
                 'org': 'pink' as TagColor,
               };
-              const prefix = tag.split(':')[0] || '';
-              return {
-                label: tag,
-                color: tagColorMap[prefix] || 'blue' as TagColor,
-              };
+              if (structuredColorMap[prefix] && tag.includes(':')) {
+                return { label: tag, color: structuredColorMap[prefix] };
+              }
+              const plainColors: TagColor[] = [
+                getSegmentColor(segCode) as TagColor,
+                'green',
+                'yellow',
+                'pink',
+              ];
+              return { label: tag, color: plainColors[i % plainColors.length] };
             }),
             date: node.date_added || new Date().toISOString().split('T')[0],
             company: node.company || 'Unknown',
             starred: false,
             rowColor: 'default' as RowColor,
+            // Extended panel data
+            url: node.url || '',
+            sourceDomain: node.source_domain || '',
+            aiSummary: node.ai_summary || '',
+            shortDescription: node.short_description || '',
+            keyConcepts: node.key_concepts || [],
           };
         });
         setTableData(mappedData);
@@ -1442,31 +1518,90 @@ export default function DecantDemo() {
     [tableData, selectedRowId]
   );
 
-  // Filter table data based on search
+  // Filter table data based on hierarchy selection then search
   const filteredTableData = useMemo(() => {
-    if (!searchQuery) return tableData;
-    const query = searchQuery.toLowerCase();
-    return tableData.filter(
-      (item) =>
-        item.title.toLowerCase().includes(query) ||
-        item.company.toLowerCase().includes(query) ||
-        item.quickPhrase.toLowerCase().includes(query) ||
-        item.segment.toLowerCase().includes(query) ||
-        item.category.toLowerCase().includes(query) ||
-        item.tags.some((tag) => tag.label.toLowerCase().includes(query))
-    );
-  }, [tableData, searchQuery]);
+    // Step 1: Apply hierarchy filter
+    let filtered = tableData;
+    if (hierarchyFilter.type === 'segment' && hierarchyFilter.segmentCode) {
+      filtered = tableData.filter(item => item.segmentCode === hierarchyFilter.segmentCode);
+    } else if (hierarchyFilter.type === 'category' && hierarchyFilter.segmentCode && hierarchyFilter.categoryCode) {
+      filtered = tableData.filter(
+        item => item.segmentCode === hierarchyFilter.segmentCode && item.categoryCode === hierarchyFilter.categoryCode
+      );
+    }
+
+    // Step 2: Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          item.title.toLowerCase().includes(query) ||
+          item.company.toLowerCase().includes(query) ||
+          item.quickPhrase.toLowerCase().includes(query) ||
+          item.segment.toLowerCase().includes(query) ||
+          item.category.toLowerCase().includes(query) ||
+          item.tags.some((tag) => tag.label.toLowerCase().includes(query))
+      );
+    }
+
+    return filtered;
+  }, [tableData, hierarchyFilter, searchQuery]);
+
+  // Group items by subcategory when viewing a segment (for group headers in table)
+  const groupedTableData = useMemo(() => {
+    if (hierarchyFilter.type !== 'segment') return null;
+
+    const groups = new Map<string, { label: string; catCode: string; items: TableRow[] }>();
+    for (const item of filteredTableData) {
+      const key = item.categoryCode || 'OTH';
+      if (!groups.has(key)) {
+        groups.set(key, {
+          label: item.category,
+          catCode: key,
+          items: [],
+        });
+      }
+      groups.get(key)!.items.push(item);
+    }
+
+    // Sort groups by item count descending
+    return [...groups.values()].sort((a, b) => b.items.length - a.items.length);
+  }, [filteredTableData, hierarchyFilter]);
 
   // Handlers
   const handleTreeSelect = useCallback((id: string, node: TreeNodeData) => {
     setSelectedTreeId(id);
-    // Update breadcrumbs based on selection
-    const newBreadcrumbs: BreadcrumbItem[] = [{ label: 'Decant Core', id: 'decant-core' }];
 
-    // Add selected node to breadcrumbs
-    newBreadcrumbs.push({ label: node.name, id: node.id });
-
-    setBreadcrumbs(newBreadcrumbs);
+    if (id.startsWith('seg-')) {
+      // Segment click: filter by segment
+      const segCode = id.replace('seg-', '');
+      const segLabel = SEGMENT_LABELS[segCode] || segCode;
+      setHierarchyFilter({ type: 'segment', segmentCode: segCode });
+      setCurrentCategoryTitle(segLabel);
+      setBreadcrumbs([
+        { label: 'All Items', id: 'all' },
+        { label: segLabel, id },
+      ]);
+    } else if (id.startsWith('cat-')) {
+      // Category click: filter by segment + category
+      const parts = id.replace('cat-', '').split('-');
+      const segCode = parts[0];
+      const catCode = parts[1];
+      const segLabel = SEGMENT_LABELS[segCode] || segCode;
+      const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode;
+      setHierarchyFilter({ type: 'category', segmentCode: segCode, categoryCode: catCode });
+      setCurrentCategoryTitle(catLabel);
+      setBreadcrumbs([
+        { label: 'All Items', id: 'all' },
+        { label: segLabel, id: `seg-${segCode}` },
+        { label: catLabel, id },
+      ]);
+    } else {
+      // Item or unknown click: show all
+      setHierarchyFilter({ type: 'all' });
+      setCurrentCategoryTitle('All Items');
+      setBreadcrumbs([{ label: 'All Items', id: 'all' }]);
+    }
   }, []);
 
   const handleRowSelect = useCallback((id: string) => {
@@ -1484,10 +1619,18 @@ export default function DecantDemo() {
   }, []);
 
   const handleBreadcrumbClick = useCallback((item: BreadcrumbItem, index: number) => {
-    if (item.id) {
+    if (item.id === 'all') {
+      setHierarchyFilter({ type: 'all' });
+      setCurrentCategoryTitle('All Items');
+      setSelectedTreeId(null);
+    } else if (item.id?.startsWith('seg-')) {
+      const segCode = item.id.replace('seg-', '');
+      setHierarchyFilter({ type: 'segment', segmentCode: segCode });
+      setCurrentCategoryTitle(SEGMENT_LABELS[segCode] || segCode);
+      setSelectedTreeId(item.id);
+    } else if (item.id) {
       setSelectedTreeId(item.id);
     }
-    // Truncate breadcrumbs to clicked index
     setBreadcrumbs((prev) => prev.slice(0, index + 1));
   }, []);
 
@@ -1548,8 +1691,22 @@ export default function DecantDemo() {
             selectedId={selectedRowId}
             onSelect={handleRowSelect}
             onToggleStar={handleToggleStar}
-            categoryName="Phoenix > Frontend"
-            totalCount={5432}
+            categoryName={currentCategoryTitle}
+            totalCount={tableData.length}
+            groupedData={groupedTableData}
+            segmentCode={hierarchyFilter.segmentCode}
+            onCategoryClick={(segCode, catCode) => {
+              const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode;
+              const segLabel = SEGMENT_LABELS[segCode] || segCode;
+              setHierarchyFilter({ type: 'category', segmentCode: segCode, categoryCode: catCode });
+              setCurrentCategoryTitle(catLabel);
+              setSelectedTreeId(`cat-${segCode}-${catCode}`);
+              setBreadcrumbs([
+                { label: 'All Items', id: 'all' },
+                { label: segLabel, id: `seg-${segCode}` },
+                { label: catLabel, id: `cat-${segCode}-${catCode}` },
+              ]);
+            }}
           />
         </main>
 

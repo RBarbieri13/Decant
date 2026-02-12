@@ -55,6 +55,7 @@
     "vitest": "^2.1.8"
   },
   "dependencies": {
+    "@tabler/icons-react": "3.36.1",
     "@types/cheerio": "^0.22.35",
     "better-sqlite3": "^11.7.0",
     "cheerio": "^1.1.2",
