@@ -44,6 +44,9 @@ export interface UpdateNodeInput {
   key_concepts?: string[];
   function_parent_id?: string | null;
   organization_parent_id?: string | null;
+  segment_code?: string | null;
+  category_code?: string | null;
+  content_type_code?: string | null;
 }
 
 /**
@@ -227,6 +230,18 @@ export function updateNode(id: string, data: UpdateNodeInput): unknown {
     updates.push('organization_parent_id = ?');
     values.push(data.organization_parent_id);
   }
+  if (data.segment_code !== undefined) {
+    updates.push('segment_code = ?');
+    values.push(data.segment_code);
+  }
+  if (data.category_code !== undefined) {
+    updates.push('category_code = ?');
+    values.push(data.category_code);
+  }
+  if (data.content_type_code !== undefined) {
+    updates.push('content_type_code = ?');
+    values.push(data.content_type_code);
+  }
 
   // If no updates to the node itself and no key_concepts update, just return current state
   if (updates.length === 0 && data.key_concepts === undefined) {
@@ -259,8 +274,14 @@ export function updateNode(id: string, data: UpdateNodeInput): unknown {
     return readNode(id);
   });
 
-  // Invalidate tree cache if parent relationships changed
-  if (data.function_parent_id !== undefined || data.organization_parent_id !== undefined) {
+  // Invalidate tree cache if parent relationships or classification changed
+  if (
+    data.function_parent_id !== undefined ||
+    data.organization_parent_id !== undefined ||
+    data.segment_code !== undefined ||
+    data.category_code !== undefined ||
+    data.content_type_code !== undefined
+  ) {
     cache.invalidate('tree:*');
   }
 
