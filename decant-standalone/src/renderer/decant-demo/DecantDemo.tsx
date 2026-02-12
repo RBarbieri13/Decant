@@ -22,7 +22,7 @@ import { nodesAPI, hierarchyAPI } from '../services/api';
 // Real-time service for hierarchy updates
 import { createIntegratedSSEClient } from '../services/realtimeService';
 // Metadata code colors utility
-import { getMetadataCodeColor, getSegmentColor, formatMetadataCodesForDisplay } from '../utils/metadataCodeColors';
+import { getMetadataCodeColor, getSegmentColor, formatMetadataCodesForDisplay, parseRawTag } from '../utils/metadataCodeColors';
 
 const SEGMENT_LABELS: Record<string, string> = {
   A: 'AI & ML', T: 'Technology', F: 'Finance', S: 'Sports',
@@ -1242,10 +1242,10 @@ export default function DecantDemo() {
                   label: badge.label,
                   color: badge.color as TagColor
                 })) :
-                (node.metadata_tags || []).slice(0, 3).map((tag: string) => ({
-                  label: tag,
-                  color: (getSegmentColor(segCode) || 'blue') as TagColor
-                })),
+                (node.metadata_tags || []).slice(0, 3).map((tag: string) => {
+                  const parsed = parseRawTag(tag, segCode);
+                  return { label: parsed.label, color: parsed.color as TagColor };
+                }),
               date: node.date_added || new Date().toISOString().split('T')[0],
               company: node.company || 'Unknown',
               starred: false,
@@ -1359,10 +1359,10 @@ export default function DecantDemo() {
                 label: badge.label,
                 color: badge.color as TagColor
               })) :
-              (node.metadata_tags || []).slice(0, 3).map((tag: string) => ({
-                label: tag,
-                color: (getSegmentColor(segCode) || 'blue') as TagColor
-              })),
+              (node.metadata_tags || []).slice(0, 3).map((tag: string) => {
+                const parsed = parseRawTag(tag, segCode);
+                return { label: parsed.label, color: parsed.color as TagColor };
+              }),
             date: node.date_added || new Date().toISOString().split('T')[0],
             company: node.company || 'Unknown',
             starred: false,
