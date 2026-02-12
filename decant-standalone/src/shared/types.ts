@@ -115,6 +115,7 @@ export interface TreeNode {
   contentTypeCode?: ContentTypeCode | null;
   sourceUrl?: string | null;
   faviconPath?: string | null;
+  iconHint?: string | null;
 }
 
 // ============================================================

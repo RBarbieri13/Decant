@@ -57,29 +57,13 @@ type ViewMode = 'table' | 'grid' | 'tree' | 'list';
 type TagColor = 'blue' | 'yellow' | 'pink' | 'green' | 'purple' | 'gray' | 'orange' | 'teal';
 type PanelTab = 'properties' | 'related' | 'backlinks';
 
-// Icon types matching the mockup exactly
-type TreeIconType =
-  | 'folder'        // Brown folder icon
-  | 'document'      // Blue document icon
-  | 'link'          // Green link/chain icon
-  | 'ui'            // Purple UI/interface icon
-  | 'book'          // Green book/docs icon
-  | 'component'     // Pink/magenta puzzle piece
-  | 'button'        // Pink button icon
-  | 'form'          // Pink form icon
-  | 'modal'         // Pink modal icon
-  | 'layout'        // Brown layout folder
-  | 'style'         // Pink paint palette
-  | 'image'         // Pink image icon
-  | 'backend'       // Brown backend folder
-  | 'test'          // Green flask/beaker
-  | 'settings'      // Gray gear icon
-  | 'guidelines'    // Blue guidelines doc
-  | 'brand'         // Pink brand assets
-  | 'tools'         // Green external tools
-  | 'person'        // Orange person icon
-  | 'notes'         // Green meeting notes
-  | 'default';      // Default gray icon
+// Gumroad palette hex colors for tree node icons
+const GUMROAD_ICON_COLORS: Record<string, string> = {
+  pink: '#ff90e8',
+  blue: '#90a8ed',
+  green: '#23a094',
+  yellow: '#f1c40f',
+};
 
 interface BreadcrumbItem {
   label: string;
@@ -89,7 +73,8 @@ interface BreadcrumbItem {
 interface TreeNodeData {
   id: string;
   name: string;
-  iconType: TreeIconType;
+  iconHint: string;
+  iconColor: string;
   children?: TreeNodeData[];
   isExpanded?: boolean;
 }
@@ -353,30 +338,6 @@ interface TreeNodeProps {
   onToggle: (id: string) => void;
 }
 
-// Icon configuration matching the mockup colors exactly
-const ICON_CONFIG: Record<TreeIconType, { icon: string; color: string }> = {
-  folder: { icon: 'bxs-folder', color: '#a67c52' },           // Brown folder
-  document: { icon: 'bxs-file', color: '#3b82f6' },           // Blue document
-  link: { icon: 'bx-link', color: '#22c55e' },                // Green link
-  ui: { icon: 'bx-layout', color: '#8b5cf6' },                // Purple UI
-  book: { icon: 'bxs-book', color: '#22c55e' },               // Green book
-  component: { icon: 'bx-extension', color: '#ec4899' },      // Pink puzzle
-  button: { icon: 'bx-extension', color: '#ec4899' },         // Pink
-  form: { icon: 'bx-extension', color: '#ec4899' },           // Pink
-  modal: { icon: 'bx-extension', color: '#ec4899' },          // Pink
-  layout: { icon: 'bxs-folder', color: '#a67c52' },           // Brown folder
-  style: { icon: 'bxs-palette', color: '#ec4899' },           // Pink palette
-  image: { icon: 'bxs-image', color: '#ec4899' },             // Pink image
-  backend: { icon: 'bxs-folder', color: '#a67c52' },          // Brown folder
-  test: { icon: 'bxs-flask', color: '#22c55e' },              // Green flask
-  settings: { icon: 'bx-cog', color: '#6b7280' },             // Gray gear
-  guidelines: { icon: 'bxs-file', color: '#3b82f6' },         // Blue document
-  brand: { icon: 'bxs-image', color: '#ec4899' },             // Pink image
-  tools: { icon: 'bx-link', color: '#22c55e' },               // Green link
-  person: { icon: 'bxs-user', color: '#f97316' },             // Orange person
-  notes: { icon: 'bxs-note', color: '#22c55e' },              // Green notes
-  default: { icon: 'bx-file', color: '#6b7280' },             // Gray default
-};
 
 const TreeNode: React.FC<TreeNodeProps> = ({
   node,
@@ -389,8 +350,6 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   const hasChildren = node.children && node.children.length > 0;
   const isExpanded = expandedIds.has(node.id);
   const isSelected = selectedId === node.id;
-
-  const iconConfig = ICON_CONFIG[node.iconType] || ICON_CONFIG.default;
 
   return (
     <div className="decant-tree-node">
@@ -413,8 +372,8 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           <span className="decant-tree-node__toggle-spacer" />
         )}
         <i
-          className={`bx ${iconConfig.icon} decant-tree-node__icon`}
-          style={{ color: iconConfig.color }}
+          className={`bx ${node.iconHint || 'bx-file'} decant-tree-node__icon`}
+          style={{ color: node.iconColor || '#6b7280' }}
         />
         <span className="decant-tree-node__label">{node.name}</span>
       </div>
@@ -1312,7 +1271,8 @@ export default function DecantDemo() {
         const transformNode = (node: any): TreeNodeData => ({
           id: node.id,
           name: node.title,
-          iconType: getIconTypeForNode(node),
+          iconHint: node.iconHint || 'bxs-folder',
+          iconColor: GUMROAD_ICON_COLORS[node.color] || '#6b7280',
           children: (node.children || []).map(transformNode),
           isExpanded: false,
         });
@@ -1417,24 +1377,6 @@ export default function DecantDemo() {
     }
   };
 
-  // Helper function to determine icon type based on node properties
-  const getIconTypeForNode = (node: any): TreeIconType => {
-    // Map based on node type or segment
-    if (node.nodeType === 'segment') return 'folder';
-    if (node.nodeType === 'category') return 'folder';
-    if (node.nodeType === 'content_type') return 'folder';
-    if (node.nodeType === 'organization') return 'person';
-
-    // For items, use content type or segment to determine icon
-    const contentType = node.contentTypeCode;
-    if (contentType === 'T') return 'link';      // Tool/Website
-    if (contentType === 'A') return 'document';  // Article
-    if (contentType === 'V') return 'link';      // Video
-    if (contentType === 'G') return 'backend';   // Repository
-    if (contentType === 'C') return 'book';      // Course
-
-    return 'document'; // Default
-  };
 
   // Selected item for properties panel
   const selectedItem = useMemo(
