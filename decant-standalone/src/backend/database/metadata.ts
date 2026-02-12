@@ -17,6 +17,9 @@ import { log } from '../logger/index.js';
  * Each type represents a different facet of categorization.
  */
 export type MetadataCodeType =
+  | 'SEG'  // Segment (primary hierarchy classification)
+  | 'CAT'  // Category (sub-classification within segment)
+  | 'TYP'  // Content Type (what kind of content)
   | 'ORG'  // Organization (company/entity)
   | 'DOM'  // Domain (field of expertise)
   | 'FNC'  // Function/Capability (what it does)
@@ -33,13 +36,16 @@ export type MetadataCodeType =
  * Valid metadata code types for validation
  */
 export const VALID_METADATA_CODE_TYPES: MetadataCodeType[] = [
-  'ORG', 'DOM', 'FNC', 'TEC', 'CON', 'IND', 'AUD', 'PRC', 'LIC', 'LNG', 'PLT'
+  'SEG', 'CAT', 'TYP', 'ORG', 'DOM', 'FNC', 'TEC', 'CON', 'IND', 'AUD', 'PRC', 'LIC', 'LNG', 'PLT'
 ];
 
 /**
  * Human-readable labels for each metadata type
  */
 export const METADATA_TYPE_LABELS: Record<MetadataCodeType, string> = {
+  SEG: 'Segment',
+  CAT: 'Category',
+  TYP: 'Content Type',
   ORG: 'Organization',
   DOM: 'Domain',
   FNC: 'Function/Capability',

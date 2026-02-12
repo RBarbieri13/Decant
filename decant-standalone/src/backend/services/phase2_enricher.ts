@@ -321,12 +321,12 @@ export class Phase2Enricher {
    * - Uppercase only
    * - Alphanumeric with underscores
    * - Starts with a letter
-   * - 2-50 characters
+   * - 1-50 characters (SEG and TYP are single-letter codes)
    * - No spaces
    */
   private isValidCode(code: string): boolean {
     if (!code || typeof code !== 'string') return false;
-    if (code.length < 2 || code.length > 50) return false;
+    if (code.length < 1 || code.length > 50) return false;
     if (!/^[A-Z][A-Z0-9_]*$/.test(code)) return false;
     return true;
   }

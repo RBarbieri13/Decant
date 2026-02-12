@@ -23,6 +23,9 @@ import { getAllNodes, readNode } from '../../database/nodes.js';
  * Higher weights indicate more importance for similarity calculation.
  */
 const METADATA_WEIGHTS: Record<MetadataCodeType, number> = {
+  SEG: 2.5,   // Segment - critical for hierarchy
+  CAT: 2.0,   // Category - very important for hierarchy
+  TYP: 1.5,   // Content Type - important for hierarchy
   ORG: 2.0,   // Organization - very important
   FNC: 1.5,   // Function/Capability - important
   TEC: 1.0,   // Technology - moderate

@@ -161,9 +161,9 @@ export async function checkLLMConnectivity(): Promise<LLMConnectivityResult> {
       type: 'openai',
       apiKey: config.OPENAI_API_KEY,
       model: config.OPENAI_MODEL,
-      retryConfig: {
-        maxAttempts: 2, // Quick retry for startup check
-        baseDelayMs: 500,
+      retryOptions: {
+        maxAttempts: 2,
+        initialDelayMs: 500,
         maxDelayMs: 2000,
       },
     });
