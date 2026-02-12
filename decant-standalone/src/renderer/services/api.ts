@@ -21,6 +21,10 @@ export interface Node {
   key_concepts?: string[];
   function_parent_id?: string | null;
   organization_parent_id?: string | null;
+  segment_code?: string | null;
+  category_code?: string | null;
+  content_type_code?: string | null;
+  metadataCodes?: Record<string, string[]> | null;
 }
 
 export interface RelatedNode {

@@ -22,7 +22,32 @@ import { nodesAPI, hierarchyAPI } from '../services/api';
 // Real-time service for hierarchy updates
 import { createIntegratedSSEClient } from '../services/realtimeService';
 // Metadata code colors utility
-import { getMetadataCodeColor, formatMetadataCodesForDisplay } from '../utils/metadataCodeColors';
+import { getMetadataCodeColor, getSegmentColor, formatMetadataCodesForDisplay } from '../utils/metadataCodeColors';
+
+const SEGMENT_LABELS: Record<string, string> = {
+  A: 'AI & ML', T: 'Technology', F: 'Finance', S: 'Sports',
+  H: 'Health', B: 'Business', E: 'Entertainment', L: 'Lifestyle',
+  X: 'Science', C: 'Creative',
+};
+
+const CATEGORY_LABELS: Record<string, Record<string, string>> = {
+  A: { LLM: 'LLMs', AGT: 'AI Agents', FND: 'Foundation', MLO: 'MLOps', NLP: 'NLP', CVS: 'Vision', GEN: 'Generative', ETH: 'Ethics', RES: 'Research', OTH: 'Other' },
+  T: { WEB: 'Web', MOB: 'Mobile', DEV: 'Dev Tools', CLD: 'Cloud', SEC: 'Security', DAT: 'Data', API: 'APIs', OPS: 'DevOps', HRD: 'Hardware', OTH: 'Other' },
+  F: { INV: 'Investing', CRY: 'Crypto', FPA: 'FP&A', BNK: 'Banking', TAX: 'Tax', PFN: 'Personal', MKT: 'Markets', REL: 'Real Estate', ECN: 'Economics', OTH: 'Other' },
+  S: { NFL: 'NFL', FAN: 'Fantasy', FIT: 'Fitness', RUN: 'Running', GYM: 'Training', NBA: 'NBA', MLB: 'MLB', SOC: 'Soccer', OLY: 'Olympics', OTH: 'Other' },
+  H: { MED: 'Medical', MNT: 'Mental', NUT: 'Nutrition', SLP: 'Sleep', ACC: 'Access', WEL: 'Wellness', FRT: 'Fertility', AGE: 'Aging', DIS: 'Disease', OTH: 'Other' },
+  B: { STR: 'Strategy', MNG: 'Mgmt', PRD: 'Product', MKT: 'Marketing', SAL: 'Sales', OPS: 'Ops', HRS: 'HR', STP: 'Startups', ENT: 'Enterprise', OTH: 'Other' },
+  E: { GAM: 'Gaming', MUS: 'Music', MOV: 'Movies', STR: 'Streaming', SOC: 'Social', POP: 'Pop Culture', POD: 'Podcasts', CEL: 'Celebs', EVT: 'Events', OTH: 'Other' },
+  L: { HOM: 'Home', FAS: 'Fashion', FOD: 'Food', TRV: 'Travel', REL: 'Relations', PAR: 'Parenting', PET: 'Pets', HOB: 'Hobbies', GAR: 'Garden', OTH: 'Other' },
+  X: { PHY: 'Physics', BIO: 'Biology', CHM: 'Chemistry', AST: 'Astronomy', ENV: 'Environment', MAT: 'Math', ENG: 'Engineering', SOC: 'Social Sci', PSY: 'Psychology', OTH: 'Other' },
+  C: { UXD: 'UX', GRD: 'Graphic', WRT: 'Writing', PHO: 'Photo', VID: 'Video', AUD: 'Audio', ART: 'Art', ANI: 'Animation', TYP: 'Typography', OTH: 'Other' },
+};
+
+const CONTENT_TYPE_SYMBOLS: Record<string, string> = {
+  T: '\u{1F527}', A: '\u{1F4C4}', V: '\u{1F3AC}', P: '\u{1F4DA}', R: '\u{1F4E6}',
+  G: '\u{1F4D6}', S: '\u{2601}', C: '\u{1F393}', I: '\u{1F5BC}', N: '\u{1F4F0}',
+  K: '\u{1F4DA}', U: '\u{2753}',
+};
 
 // ============================================================================
 // TYPES
@@ -528,11 +553,8 @@ const DataTableRow: React.FC<DataTableRowProps> = ({
 
   // Get segment badge class
   const getSegmentClass = (segment: string) => {
-    const lower = segment.toLowerCase();
-    if (lower === 'frontend') return 'decant-segment-badge--frontend';
-    if (lower === 'backend') return 'decant-segment-badge--backend';
-    if (lower === 'testing') return 'decant-segment-badge--testing';
-    if (lower === 'ui') return 'decant-segment-badge--ui';
+    const color = getSegmentColor(segment.charAt(0).toUpperCase());
+    if (color) return `decant-segment-badge--${color}`;
     return '';
   };
 
@@ -1236,34 +1258,41 @@ export default function DecantDemo() {
       try {
         const nodes = await nodesAPI.getAll();
         if (nodes && nodes.length > 0) {
-          const mappedData: TableRow[] = nodes.map((node) => ({
-            id: node.id,
-            logo: node.logo_url || 'https://via.placeholder.com/32',
-            title: node.title || 'Untitled',
-            type: 'Document',
-            typeSymbol: '📄',
-            segment: node.extracted_fields?.segment_code || 'Uncategorized',
-            category: node.extracted_fields?.category_code || 'General',
-            hierarchy: 'Workspace > Development',
-            quickPhrase: node.phrase_description || '',
-            tags: node.metadataCodes ?
-              formatMetadataCodesForDisplay(
-                Object.entries(node.metadataCodes).flatMap(([type, codes]) =>
-                  codes.map(code => ({ type, code, confidence: 0.9 }))
-                )
-              ).slice(0, 3).map((badge) => ({
-                label: badge.label,
-                color: badge.color as TagColor
-              })) :
-              (node.metadata_tags || []).slice(0, 3).map((tag: string) => ({
-                label: tag,
-                color: 'blue' as TagColor
-              })),
-            date: node.date_added || new Date().toISOString().split('T')[0],
-            company: node.company || 'Unknown',
-            starred: false,
-            rowColor: 'default' as RowColor,
-          }));
+          const mappedData: TableRow[] = nodes.map((node) => {
+            const segCode = node.segment_code || node.extracted_fields?.segment || '';
+            const catCode = node.category_code || node.extracted_fields?.category || '';
+            const ctCode = node.content_type_code || node.extracted_fields?.contentType || 'A';
+            const segLabel = SEGMENT_LABELS[segCode] || segCode || 'Uncategorized';
+            const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode || 'General';
+            return {
+              id: node.id,
+              logo: node.logo_url || 'https://via.placeholder.com/32',
+              title: node.title || 'Untitled',
+              type: 'Document',
+              typeSymbol: CONTENT_TYPE_SYMBOLS[ctCode] || '\u{1F4C4}',
+              segment: segLabel,
+              category: catLabel,
+              hierarchy: segCode && catCode ? `${segLabel} > ${catLabel}` : '',
+              quickPhrase: node.phrase_description || '',
+              tags: node.metadataCodes ?
+                formatMetadataCodesForDisplay(
+                  Object.entries(node.metadataCodes).flatMap(([type, codes]) =>
+                    (codes as string[]).map(code => ({ type, code, confidence: 0.9 }))
+                  )
+                ).slice(0, 3).map((badge) => ({
+                  label: badge.label,
+                  color: badge.color as TagColor
+                })) :
+                (node.metadata_tags || []).slice(0, 3).map((tag: string) => ({
+                  label: tag,
+                  color: (getSegmentColor(segCode) || 'blue') as TagColor
+                })),
+              date: node.date_added || new Date().toISOString().split('T')[0],
+              company: node.company || 'Unknown',
+              starred: false,
+              rowColor: 'default' as RowColor,
+            };
+          });
           setTableData(mappedData);
           console.log(`Loaded ${mappedData.length} nodes from API`);
         }
@@ -1345,34 +1374,41 @@ export default function DecantDemo() {
     try {
       const nodes = await nodesAPI.getAll();
       if (nodes && nodes.length > 0) {
-        const mappedData: TableRow[] = nodes.map((node) => ({
-          id: node.id,
-          logo: node.logo_url || 'https://via.placeholder.com/32',
-          title: node.title || 'Untitled',
-          type: 'Document',
-          typeSymbol: '📄',
-          segment: node.extracted_fields?.segment_code || 'Uncategorized',
-          category: node.extracted_fields?.category_code || 'General',
-          hierarchy: 'Workspace > Development',
-          quickPhrase: node.phrase_description || '',
-          tags: node.metadataCodes ?
-            formatMetadataCodesForDisplay(
-              Object.entries(node.metadataCodes).flatMap(([type, codes]) =>
-                codes.map(code => ({ type, code, confidence: 0.9 }))
-              )
-            ).slice(0, 3).map((badge) => ({
-              label: badge.label,
-              color: badge.color as TagColor
-            })) :
-            (node.metadata_tags || []).slice(0, 3).map((tag: string) => ({
-              label: tag,
-              color: 'blue' as TagColor
-            })),
-          date: node.date_added || new Date().toISOString().split('T')[0],
-          company: node.company || 'Unknown',
-          starred: false,
-          rowColor: 'default' as RowColor,
-        }));
+        const mappedData: TableRow[] = nodes.map((node) => {
+          const segCode = node.segment_code || node.extracted_fields?.segment || '';
+          const catCode = node.category_code || node.extracted_fields?.category || '';
+          const ctCode = node.content_type_code || node.extracted_fields?.contentType || 'A';
+          const segLabel = SEGMENT_LABELS[segCode] || segCode || 'Uncategorized';
+          const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode || 'General';
+          return {
+            id: node.id,
+            logo: node.logo_url || 'https://via.placeholder.com/32',
+            title: node.title || 'Untitled',
+            type: 'Document',
+            typeSymbol: CONTENT_TYPE_SYMBOLS[ctCode] || '\u{1F4C4}',
+            segment: segLabel,
+            category: catLabel,
+            hierarchy: segCode && catCode ? `${segLabel} > ${catLabel}` : '',
+            quickPhrase: node.phrase_description || '',
+            tags: node.metadataCodes ?
+              formatMetadataCodesForDisplay(
+                Object.entries(node.metadataCodes).flatMap(([type, codes]) =>
+                  (codes as string[]).map(code => ({ type, code, confidence: 0.9 }))
+                )
+              ).slice(0, 3).map((badge) => ({
+                label: badge.label,
+                color: badge.color as TagColor
+              })) :
+              (node.metadata_tags || []).slice(0, 3).map((tag: string) => ({
+                label: tag,
+                color: (getSegmentColor(segCode) || 'blue') as TagColor
+              })),
+            date: node.date_added || new Date().toISOString().split('T')[0],
+            company: node.company || 'Unknown',
+            starred: false,
+            rowColor: 'default' as RowColor,
+          };
+        });
         setTableData(mappedData);
         console.log(`Reloaded ${mappedData.length} nodes from API`);
       }
