@@ -20,6 +20,7 @@ interface DatabaseNode {
   segment_code: string | null;
   company: string | null;
   extracted_fields: string | null;
+  subcategory_label: string | null;
 }
 
 /**
@@ -120,7 +121,7 @@ export function buildHierarchyTree(viewType: HierarchyView): TreeNode[] {
     SELECT
       id, title, function_hierarchy_code, organization_hierarchy_code,
       content_type_code, category_code, url, logo_url, segment_code, company,
-      extracted_fields
+      extracted_fields, subcategory_label
     FROM nodes
     WHERE is_deleted = 0
     ORDER BY date_added DESC
@@ -135,20 +136,26 @@ export function buildHierarchyTree(viewType: HierarchyView): TreeNode[] {
 }
 
 function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
-  const segmentMap = new Map<string, Map<string, DatabaseNode[]>>();
+  // Segment → Category → Subcategory → Items
+  const segmentMap = new Map<string, Map<string, Map<string, DatabaseNode[]>>>();
 
   for (const node of nodes) {
     const seg = resolveSegment(node);
     const cat = resolveCategory(node);
+    const subcat = node.subcategory_label || 'General';
 
     if (!segmentMap.has(seg)) {
       segmentMap.set(seg, new Map());
     }
     const catMap = segmentMap.get(seg)!;
     if (!catMap.has(cat)) {
-      catMap.set(cat, []);
+      catMap.set(cat, new Map());
     }
-    catMap.get(cat)!.push(node);
+    const subcatMap = catMap.get(cat)!;
+    if (!subcatMap.has(subcat)) {
+      subcatMap.set(subcat, []);
+    }
+    subcatMap.get(subcat)!.push(node);
   }
 
   const tree: TreeNode[] = [];
@@ -161,32 +168,70 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
     const categoryChildren: TreeNode[] = [];
     const sortedCategories = [...catMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
-    for (const [catCode, catNodes] of sortedCategories) {
+    for (const [catCode, subcatMap] of sortedCategories) {
       const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode;
+      const sortedSubcats = [...subcatMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+      const totalInCat = [...subcatMap.values()].reduce((sum, arr) => sum + arr.length, 0);
 
-      const itemChildren: TreeNode[] = catNodes.map(node => ({
-        id: node.id,
-        title: node.title,
-        nodeType: 'item' as NodeType,
-        color: segColor,
-        children: [],
-        isExpanded: false,
-        contentTypeCode: node.content_type_code as ContentTypeCode | null,
-        sourceUrl: node.url,
-        faviconPath: node.logo_url,
-      }));
+      // If only one subcategory (or only 'General'), show items directly under category
+      const hasMultipleSubcats = sortedSubcats.length > 1 ||
+        (sortedSubcats.length === 1 && sortedSubcats[0][0] !== 'General');
+
+      let catChildren: TreeNode[];
+
+      if (hasMultipleSubcats) {
+        // Add subcategory tier
+        catChildren = sortedSubcats.map(([subcatLabel, subcatNodes]) => {
+          const itemChildren: TreeNode[] = subcatNodes.map(node => ({
+            id: node.id,
+            title: node.title,
+            nodeType: 'item' as NodeType,
+            color: segColor,
+            children: [],
+            isExpanded: false,
+            contentTypeCode: node.content_type_code as ContentTypeCode | null,
+            sourceUrl: node.url,
+            faviconPath: node.logo_url,
+          }));
+          return {
+            id: `subcat-${segCode}-${catCode}-${subcatLabel.replace(/\s+/g, '_')}`,
+            title: `${subcatLabel} (${subcatNodes.length})`,
+            nodeType: 'subcategory' as NodeType,
+            color: segColor,
+            children: itemChildren,
+            isExpanded: false,
+          };
+        });
+      } else {
+        // Flatten items directly under category
+        const allNodes = sortedSubcats.flatMap(([, nodes]) => nodes);
+        catChildren = allNodes.map(node => ({
+          id: node.id,
+          title: node.title,
+          nodeType: 'item' as NodeType,
+          color: segColor,
+          children: [],
+          isExpanded: false,
+          contentTypeCode: node.content_type_code as ContentTypeCode | null,
+          sourceUrl: node.url,
+          faviconPath: node.logo_url,
+        }));
+      }
 
       categoryChildren.push({
         id: `cat-${segCode}-${catCode}`,
-        title: `${catLabel} (${catNodes.length})`,
+        title: `${catLabel} (${totalInCat})`,
         nodeType: 'category' as NodeType,
         color: segColor,
-        children: itemChildren,
+        children: catChildren,
         isExpanded: false,
       });
     }
 
-    const totalInSegment = [...catMap.values()].reduce((sum, arr) => sum + arr.length, 0);
+    const totalInSegment = [...catMap.values()].reduce(
+      (sum, subcatMap) => sum + [...subcatMap.values()].reduce((s, arr) => s + arr.length, 0),
+      0
+    );
     tree.push({
       id: `seg-${segCode}`,
       title: `${segLabel} (${totalInSegment})`,

@@ -12,12 +12,22 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const CORS_ALLOWED_ORIGINS = process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:5173';
 
 /**
- * Parse allowed origins from environment variable
+ * Parse allowed origins from environment variable.
+ * Supports wildcard suffix patterns like "chrome-extension://*"
+ * which are converted to RegExp for matching.
  */
 function parseAllowedOrigins(): (string | RegExp)[] {
   const origins = CORS_ALLOWED_ORIGINS.split(',')
     .map(origin => origin.trim())
-    .filter(origin => origin.length > 0);
+    .filter(origin => origin.length > 0)
+    .map(origin => {
+      if (origin.endsWith('/*')) {
+        // Convert "chrome-extension://*" → /^chrome-extension:\/\/.+$/
+        const prefix = origin.slice(0, -1).replace(/[.]/g, '\\.').replace(/\//g, '\\/');
+        return new RegExp('^' + prefix + '.+$');
+      }
+      return origin;
+    });
 
   log.debug('Parsed CORS allowed origins', { origins, module: 'security' });
   return origins;

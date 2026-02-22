@@ -82,6 +82,9 @@ export interface Node {
   shortDescription: string | null;
   descriptorString: string | null;
   phase2Completed: boolean;
+  subcategoryLabel: string | null;
+  // Snake_case DB fields (returned directly by REST API)
+  subcategory_label?: string | null;
 
   // Metadata
   contentTypeCode: ContentTypeCode | null;

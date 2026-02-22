@@ -18,6 +18,7 @@ import migration007 from './007_add_metadata_registry.js';
 import migration008 from './008_add_similarity.js';
 import migration009 from './009_add_hierarchy_audit.js';
 import migration010 from './010_add_categories_table.js';
+import migration011 from './011_add_subcategory.js';
 
 /**
  * All available migrations in order of execution
@@ -33,6 +34,7 @@ export const migrations: Migration[] = [
   migration008,
   migration009,
   migration010,
+  migration011,
 ];
 
 /**

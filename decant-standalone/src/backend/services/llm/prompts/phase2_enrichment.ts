@@ -13,6 +13,7 @@ export const METADATA_CODE_TYPES = {
   // REQUIRED HIERARCHY CODES (must be populated for every node)
   SEG: 'SEG', // Segment - Primary classification (single char: A, T, F, S, H, B, E, L, X, C)
   CAT: 'CAT', // Category - Sub-classification within segment (3-letter code)
+  SUB: 'SUB', // Subcategory - Human-readable focus area within category (2-4 word label, title case)
   TYP: 'TYP', // Content Type - What kind of content (single char: T, A, V, P, R, G, S, C, I, N, K, U)
   // ADDITIONAL METADATA CODES
   ORG: 'ORG', // Organization (e.g., ANTHROPIC, OPENAI, GOOGLE)
@@ -94,6 +95,15 @@ export const METADATA_CODE_CATEGORIES = {
     L = Lifestyle & Personal (home, fashion, food, travel)
     X = Science & Research (physics, biology, engineering)
     C = Creative & Design (UX, graphic design, writing, photography)`,
+  SUB: `Subcategory - A specific focus area WITHIN the chosen category. REQUIRED, exactly 1 value. Must be a short human-readable label (2-4 words, Title Case). Examples:
+    For A/GEN (Generative AI): "Video Generation", "Image Synthesis", "Audio Generation", "3D Generation", "Code Generation"
+    For A/LLM (LLMs): "Chat Interfaces", "Code Assistants", "Reasoning Models", "Embedding Models", "Multimodal Models"
+    For A/AGT (AI Agents): "Coding Agents", "Research Agents", "Workflow Automation", "Browser Agents"
+    For C/UXD (UX Design): "Component Design", "Prototyping Tools", "Accessibility", "Design Systems", "User Research"
+    For T/DEV (Dev Tools): "Testing Frameworks", "IDE Plugins", "Build Tools", "Code Review", "Debugging Tools"
+    For T/DAT (Data): "Data Pipelines", "Analytics Platforms", "Data Visualization", "ETL Tools"
+    For B/PRD (Product): "Roadmap Planning", "User Feedback", "Feature Prioritization", "Product Analytics"
+    IMPORTANT: Do NOT use the category name as the subcategory. Always be specific to the actual content.`,
   CAT: `Category - Sub-classification within segment. MUST be a valid 3-letter code for the chosen segment:
     For A (AI): LLM, AGT, FND, MLO, NLP, CVS, GEN, ETH, RES, OTH
     For T (Tech): WEB, MOB, DEV, CLD, SEC, DAT, API, OPS, HRD, OTH
@@ -144,6 +154,7 @@ export const MetadataCodesSchema = z.object({
   // REQUIRED HIERARCHY CODES - These MUST be populated
   SEG: z.array(MetadataCodeSchema).min(1).max(1).describe('Segment code - REQUIRED, exactly 1 single-letter code (A/T/F/S/H/B/E/L/X/C)'),
   CAT: z.array(MetadataCodeSchema).min(1).max(1).describe('Category code - REQUIRED, exactly 1 three-letter code valid for the segment'),
+  SUB: z.array(z.string().max(60)).min(1).max(1).describe('Subcategory - REQUIRED, exactly 1 human-readable focus area label (2-4 words, Title Case, e.g. "Video Generation", "Component Design")'),
   TYP: z.array(MetadataCodeSchema).min(1).max(1).describe('Content Type code - REQUIRED, exactly 1 single-letter code (T/A/V/P/R/G/S/C/I/N/K/U)'),
   // ADDITIONAL METADATA CODES
   ORG: z.array(MetadataCodeSchema).max(5).default([]).describe('Organization codes'),
@@ -245,6 +256,11 @@ Choose the PRIMARY category that best describes this content:
 - **X** = Science & Research (physics, biology, engineering, academic research)
 - **C** = Creative & Design (UX, graphic design, writing, photography, video)
 
+### SUB (Subcategory) - REQUIRED - Exactly 1 human-readable label
+Choose a specific focus area WITHIN the chosen category (2-4 words, Title Case):
+- Examples: "Video Generation", "Code Assistants", "Component Design", "Data Pipelines", "Reasoning Models"
+- Do NOT repeat the category name. Be specific to the actual content.
+
 ### CAT (Category) - REQUIRED - Exactly 1 three-letter code
 Choose the sub-category within the chosen segment:
 - For **A** (AI): LLM, AGT, FND, MLO, NLP, CVS, GEN, ETH, RES, OTH
@@ -292,6 +308,7 @@ ${Object.entries(METADATA_CODE_CATEGORIES)
 
 - **SEG**: A, T, F, S, H, B, E, L, X, C (exactly one letter)
 - **CAT**: LLM, AGT, WEB, DEV, INV, STR (exactly one 3-letter code matching segment)
+- **SUB**: "Video Generation", "Code Assistants", "Component Design" (exactly one 2-4 word label, Title Case)
 - **TYP**: T, A, V, P, R, G, S, C, I, N, K, U (exactly one letter)
 - **ORG**: ANTHROPIC, OPENAI, GOOGLE, MICROSOFT, META, NVIDIA, HUGGINGFACE
 - **DOM**: AI_SAFETY, ML_OPS, DEVTOOLS, CLOUD, DATA_SCIENCE, SECURITY
@@ -565,10 +582,14 @@ export function normalizeMetadataCodes(codes: Partial<MetadataCodes>): MetadataC
   const catCode = normalizeCategoryCode(codes.CAT?.[0], segCode);
   const typCode = normalizeContentTypeCode(codes.TYP?.[0]);
 
+  // Normalize SUB: keep as-is (human readable label), just trim and clamp length
+  const subLabel = codes.SUB?.[0]?.trim().slice(0, 60) ?? 'General';
+
   const result: MetadataCodes = {
     // Required hierarchy codes - always exactly 1
     SEG: [segCode],
     CAT: [catCode],
+    SUB: [subLabel],
     TYP: [typCode],
     // Additional metadata codes
     ORG: [],
@@ -582,7 +603,7 @@ export function normalizeMetadataCodes(codes: Partial<MetadataCodes>): MetadataC
     PLT: [],
   };
 
-  // Process additional metadata code types (not SEG, CAT, TYP)
+  // Process additional metadata code types (not SEG, CAT, SUB, TYP)
   const additionalTypes: MetadataCodeType[] = ['ORG', 'DOM', 'FNC', 'TEC', 'CON', 'IND', 'AUD', 'PRC', 'PLT'];
   for (const type of additionalTypes) {
     const inputCodes = codes[type];
@@ -657,6 +678,7 @@ export function createEmptyEnrichmentResult(
       // Required hierarchy codes with defaults
       SEG: ['X'], // Default to Science/Research
       CAT: ['OTH'], // Default to Other
+      SUB: ['General'], // Default subcategory
       TYP: ['U'], // Default to Unknown
       // Additional metadata codes
       ORG: [],

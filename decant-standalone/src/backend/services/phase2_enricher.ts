@@ -455,6 +455,7 @@ export class Phase2Enricher {
     segment_code?: string;
     category_code?: string;
     content_type_code?: string;
+    subcategory_label?: string;
   } {
     // Build the update object with all spec-required fields
     const update: {
@@ -470,6 +471,7 @@ export class Phase2Enricher {
       segment_code?: string;
       category_code?: string;
       content_type_code?: string;
+      subcategory_label?: string;
     } = {};
 
     // 1. Title - Cleaned/improved title (max 500 chars)
@@ -548,6 +550,10 @@ export class Phase2Enricher {
       // Set content_type_code from first TYP code
       if (enrichment.metadataCodes.TYP && enrichment.metadataCodes.TYP.length > 0) {
         update.content_type_code = enrichment.metadataCodes.TYP[0];
+      }
+      // Set subcategory_label from first SUB code
+      if (enrichment.metadataCodes.SUB && enrichment.metadataCodes.SUB.length > 0) {
+        update.subcategory_label = enrichment.metadataCodes.SUB[0];
       }
     }
 

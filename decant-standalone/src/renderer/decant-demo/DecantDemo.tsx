@@ -121,6 +121,7 @@ interface TableRow {
   typeSymbol: string;
   segment: string;
   category: string;
+  subcategoryLabel: string;
   hierarchy: string;
   quickPhrase: string;
   tags: { label: string; color: TagColor }[];
@@ -165,6 +166,39 @@ const Tag: React.FC<{ label: string; color: TagColor }> = ({ label, color }) => 
   <span className={`decant-tag decant-tag--${color}`}>{label}</span>
 );
 
+const formatDate = (dateStr: string): string => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const dd = d.getUTCDate();
+  const mm = d.getUTCMonth() + 1;
+  const yyyy = d.getUTCFullYear();
+  return `${mm}/${dd}/${yyyy}`;
+};
+
+const formatRelativeDate = (dateStr: string): { display: string; full: string } => {
+  const full = formatDate(dateStr);
+  try {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (isNaN(diffDays)) return { display: full, full };
+    if (diffDays < 1) return { display: 'Today', full };
+    if (diffDays === 1) return { display: 'Yesterday', full };
+    if (diffDays < 7) return { display: `${diffDays}d ago`, full };
+    if (diffDays < 30) return { display: `${Math.floor(diffDays / 7)}wk ago`, full };
+    if (diffDays < 180) return { display: `${Math.floor(diffDays / 30)}mo ago`, full };
+    // Older than 6 months: abbreviated absolute
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const m = months[date.getMonth()];
+    const y = String(date.getFullYear()).slice(2);
+    return { display: `${m} '${y}`, full };
+  } catch {
+    return { display: full, full };
+  }
+};
+
 // ============================================================================
 // TOP BAR COMPONENT
 // ============================================================================
@@ -174,6 +208,7 @@ interface TopBarProps {
   onSearchChange: (query: string) => void;
   breadcrumbs: BreadcrumbItem[];
   onBreadcrumbClick?: (item: BreadcrumbItem, index: number) => void;
+  onClearFilter?: () => void;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   onBatchImportClick?: () => void;
@@ -181,13 +216,16 @@ interface TopBarProps {
   onSettingsClick?: () => void;
   onUserClick?: () => void;
   userName?: string;
+  showStarredOnly?: boolean;
+  onToggleStarredFilter?: () => void;
 }
 
 const TopBar: React.FC<TopBarProps> = ({
   searchQuery,
   onSearchChange,
-  // breadcrumbs available for future use
-  // onBreadcrumbClick available for future use
+  breadcrumbs,
+  onBreadcrumbClick,
+  onClearFilter,
   // viewMode available for future use - moved to title bar
   // onViewModeChange available for future use - moved to title bar
   onBatchImportClick,
@@ -195,6 +233,8 @@ const TopBar: React.FC<TopBarProps> = ({
   onSettingsClick,
   onUserClick,
   // userName available for future use
+  showStarredOnly,
+  onToggleStarredFilter,
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
@@ -244,6 +284,30 @@ const TopBar: React.FC<TopBarProps> = ({
             </button>
           )}
         </div>
+
+        {/* Active filter breadcrumb chip — only show when not at root */}
+        {breadcrumbs && breadcrumbs.length > 1 && (
+          <div className="decant-filter-breadcrumb">
+            {breadcrumbs.map((crumb, index) => (
+              <React.Fragment key={crumb.id}>
+                {index > 0 && <span className="decant-filter-breadcrumb__sep">›</span>}
+                <button
+                  className={`decant-filter-breadcrumb__crumb ${index === breadcrumbs.length - 1 ? 'decant-filter-breadcrumb__crumb--active' : ''}`}
+                  onClick={() => onBreadcrumbClick?.(crumb, index)}
+                >
+                  {crumb.label}
+                </button>
+              </React.Fragment>
+            ))}
+            <button
+              className="decant-filter-breadcrumb__clear"
+              onClick={onClearFilter}
+              title="Clear filter"
+            >
+              ×
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Spacer */}
@@ -251,6 +315,14 @@ const TopBar: React.FC<TopBarProps> = ({
 
       {/* Right side icons */}
       <div className="decant-topbar__actions">
+        <button
+          className={`decant-topbar__icon-btn decant-topbar__star-filter ${showStarredOnly ? 'decant-topbar__star-filter--active' : ''}`}
+          onClick={onToggleStarredFilter}
+          title={showStarredOnly ? 'Showing starred only (click to show all)' : 'Filter to starred items'}
+        >
+          <i className={`bx ${showStarredOnly ? 'bxs-star' : 'bx-star'}`} />
+        </button>
+
         <button
           className="quick-add-trigger"
           onClick={onQuickAddClick}
@@ -387,14 +459,29 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   const isExpanded = expandedIds.has(node.id);
   const isSelected = selectedId === node.id;
 
+  // Check if this node is an ancestor of the selected node
+  const isAncestor = selectedId !== null && selectedId !== node.id &&
+    (node.id.startsWith('seg-') && selectedId.startsWith(`cat-${node.id.replace('seg-', '')}-`));
+
   // Get the appropriate Tabler icon based on node ID pattern
   const NodeIcon = getTreeNodeIcon(node.id, node.iconType);
-  const iconProps = getIconProps({ size: 16, stroke: 1.5 });
+
+  // Derive segment color from node.id prefix (e.g. "A", "A.LLM", "A.LLM.gpt4")
+  const segmentHexMap: Record<string, string> = {
+    A: '#ec4899', H: '#ec4899', C: '#ec4899', // pink
+    T: '#3b82f6', B: '#3b82f6', X: '#3b82f6', // blue
+    F: '#22c55e', L: '#22c55e',                // green
+    S: '#eab308', E: '#eab308',                // yellow
+  };
+  const segmentCode = node.id === 'all' ? '' : node.id.charAt(0).toUpperCase();
+  const iconColor = segmentHexMap[segmentCode] ?? '#6b7280';
+
+  const iconProps = getIconProps({ size: 16, stroke: 1.5, color: iconColor });
 
   return (
     <div className="decant-tree-node">
       <div
-        className={`decant-tree-node__row ${isSelected ? 'decant-tree-node__row--selected' : ''}`}
+        className={`decant-tree-node__row ${isSelected ? 'decant-tree-node__row--selected' : ''} ${isAncestor ? 'decant-tree-node__row--ancestor' : ''}`}
         style={{ paddingLeft: `${level * 20 + 12}px` }}
         onClick={() => onSelect(node.id, node)}
       >
@@ -443,6 +530,7 @@ interface SidebarProps {
   onSelect: (id: string, node: TreeNodeData) => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  totalCount: number;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -451,6 +539,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onSelect,
   isCollapsed,
   onToggleCollapse,
+  totalCount,
 }) => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
     new Set(['decant-core', 'project-phoenix', 'frontend', 'components', 'resources', 'team-space'])
@@ -501,6 +590,23 @@ const Sidebar: React.FC<SidebarProps> = ({
         />
       </div>
       <div className="decant-sidebar__content">
+        {/* All Items root node */}
+        <div
+          className={`decant-tree-node__root-row ${selectedId === 'all' || selectedId === null ? 'decant-tree-node__row--selected' : ''}`}
+          onClick={() => onSelect('all', { id: 'all', name: 'All Items' } as any)}
+          role="button"
+          tabIndex={0}
+        >
+          <span className="decant-tree-node__toggle-spacer" />
+          <svg className="decant-tree-node__root-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          <span className="decant-tree-node__root-label">All Items</span>
+          <span className="decant-tree-node__root-count">{totalCount}</span>
+        </div>
         {filteredData.map((node) => (
           <TreeNode
             key={node.id}
@@ -533,6 +639,10 @@ interface DataTableRowProps {
   onToggleExpand: (id: string) => void;
   onToggleStar: (id: string) => void;
   onToggleCheck: (id: string) => void;
+  gridTemplate: string;
+  onTagClick?: (tag: string) => void;
+  onSegmentClick?: (segCode: string) => void;
+  onCategoryClick?: (segCode: string, catCode: string) => void;
 }
 
 const DataTableRow: React.FC<DataTableRowProps> = ({
@@ -544,8 +654,14 @@ const DataTableRow: React.FC<DataTableRowProps> = ({
   onToggleExpand,
   onToggleStar,
   onToggleCheck,
+  gridTemplate,
+  onTagClick,
+  onSegmentClick,
+  onCategoryClick,
 }) => {
   const rowColorClass = data.rowColor ? `decant-table__row--${data.rowColor}` : '';
+  const [starPulse, setStarPulse] = useState(false);
+  const [faviconError, setFaviconError] = useState(false);
 
   // Get segment badge class
   const getSegmentClass = (segment: string) => {
@@ -558,6 +674,7 @@ const DataTableRow: React.FC<DataTableRowProps> = ({
     <>
       <div
         className={`decant-table__row ${rowColorClass} ${isSelected ? 'decant-table__row--selected' : ''}`}
+        style={{ gridTemplateColumns: gridTemplate }}
         onClick={() => onSelect(data.id)}
       >
         {/* Checkbox */}
@@ -587,38 +704,110 @@ const DataTableRow: React.FC<DataTableRowProps> = ({
           <img src={data.logo} alt={data.title} className="decant-logo-icon" />
         </div>
         {/* Title */}
-        <div className="decant-table__cell decant-table__cell--title">{data.title}</div>
+        <div className="decant-table__cell decant-table__cell--title">
+          {data.url ? (
+            <a href={data.url} target="_blank" rel="noopener noreferrer">{data.title}</a>
+          ) : (
+            data.title
+          )}
+        </div>
         {/* Type symbol */}
         <div className="decant-table__cell decant-table__cell--center">
           <span className="decant-type-symbol">{data.typeSymbol}</span>
         </div>
         {/* Segment with badge */}
         <div className="decant-table__cell">
-          <span className={`decant-segment-badge ${getSegmentClass(data.segment)}`}>
+          <span
+            className={`decant-segment-badge ${getSegmentClass(data.segment)} decant-segment-badge--clickable`}
+            onClick={(e) => { e.stopPropagation(); onSegmentClick?.(data.segmentCode); }}
+            title={`Filter by ${data.segment}`}
+          >
             {data.segment}
           </span>
         </div>
         {/* Category */}
-        <div className="decant-table__cell">{data.category}</div>
+        <div
+          className="decant-table__cell decant-table__cell--category decant-table__cell--category-clickable"
+          onClick={(e) => { e.stopPropagation(); onCategoryClick?.(data.segmentCode, data.categoryCode); }}
+          title={`Filter by ${data.category}`}
+        >
+          <span
+            className="decant-category-dot"
+            style={{
+              backgroundColor: (() => {
+                const m: Record<string, string> = {
+                  A: '#ec4899', H: '#ec4899', C: '#ec4899',
+                  T: '#3b82f6', B: '#3b82f6', X: '#3b82f6',
+                  F: '#22c55e', L: '#22c55e',
+                  S: '#eab308', E: '#eab308',
+                };
+                return m[data.segmentCode?.charAt(0).toUpperCase() ?? ''] ?? '#6b7280';
+              })()
+            }}
+          />
+          {data.category}
+        </div>
+        {/* Subcategory */}
+        <div className="decant-table__cell decant-table__cell--secondary">
+          {data.subcategoryLabel || '—'}
+        </div>
         {/* Quick Phrase (was hierarchy) */}
-        <div className="decant-table__cell decant-table__cell--secondary">{data.quickPhrase}</div>
+        <div className="decant-table__cell decant-table__cell--quick-phrase" title={data.quickPhrase}>{data.quickPhrase}</div>
         {/* Tags */}
         <div className="decant-table__cell decant-table__cell--tags">
           {data.tags.slice(0, 3).map((tag, i) => (
-            <Tag key={i} label={tag.label} color={tag.color} />
+            <span
+              key={i}
+              className={`decant-tag decant-tag--${tag.color} decant-tag--clickable`}
+              onClick={(e) => { e.stopPropagation(); onTagClick?.(tag.label); }}
+            >
+              {tag.label}
+            </span>
           ))}
+          {data.tags.length > 3 && (
+            <span className="decant-tag decant-tag--overflow">+{data.tags.length - 3}</span>
+          )}
         </div>
         {/* Date */}
-        <div className="decant-table__cell decant-table__cell--secondary">{data.date}</div>
+        {(() => {
+          const { display, full } = formatRelativeDate(data.date);
+          return (
+            <div className="decant-table__cell decant-table__cell--secondary" title={full}>
+              {display}
+            </div>
+          );
+        })()}
         {/* Company */}
-        <div className="decant-table__cell">{data.company}</div>
+        <div className="decant-table__cell decant-table__cell--company">
+          {data.sourceDomain && (
+            faviconError ? (
+              <span className="decant-favicon-placeholder">
+                {data.company?.charAt(0).toUpperCase() || '?'}
+              </span>
+            ) : (
+              <img
+                className="decant-company-favicon"
+                src={`https://www.google.com/s2/favicons?domain=${data.sourceDomain}&sz=16`}
+                alt=""
+                width={16}
+                height={16}
+                onError={() => setFaviconError(true)}
+              />
+            )
+          )}
+          <span>{data.company}</span>
+        </div>
         {/* Star */}
         <div className="decant-table__cell decant-table__cell--center">
           <button
-            className={`decant-star-btn ${data.starred ? 'decant-star-btn--active' : ''}`}
+            className={`decant-star-btn ${data.starred ? 'decant-star-btn--active' : ''} ${starPulse ? 'decant-star-btn--pulse' : ''}`}
             onClick={(e) => {
               e.stopPropagation();
               onToggleStar(data.id);
+              if (!data.starred) {
+                setStarPulse(true);
+                setTimeout(() => setStarPulse(false), 400);
+              }
             }}
           >
             <i className={`bx ${data.starred ? 'bxs-star' : 'bx-star'}`} />
@@ -663,6 +852,75 @@ const DataTableRow: React.FC<DataTableRowProps> = ({
                   <strong>Used by:</strong> {data.usedBy?.join(', ') || 'Facebook, Netflix, Airbnb'}
                 </span>
               </div>
+              {/* Visual Intelligence Card */}
+              {(data.shortDescription || data.aiSummary || data.quickPhrase || (data.keyConcepts && data.keyConcepts.length > 0)) && (
+                <div className="decant-visual-card">
+                  <div className="decant-visual-card__header">
+                    <i className="bx bx-analyse" />
+                    <span>Visual Summary</span>
+                  </div>
+                  <div className="decant-visual-card__body">
+                    {/* Zone A: Type glyph */}
+                    <div
+                      className="decant-visual-card__glyph"
+                      style={{
+                        backgroundColor: (() => {
+                          const m: Record<string, string> = {
+                            A: 'rgba(236,72,153,0.1)', H: 'rgba(236,72,153,0.1)', C: 'rgba(236,72,153,0.1)',
+                            T: 'rgba(59,130,246,0.1)', B: 'rgba(59,130,246,0.1)', X: 'rgba(59,130,246,0.1)',
+                            F: 'rgba(34,197,94,0.1)', L: 'rgba(34,197,94,0.1)',
+                            S: 'rgba(234,179,8,0.1)', E: 'rgba(234,179,8,0.1)',
+                          };
+                          return m[data.segmentCode?.charAt(0).toUpperCase() ?? ''] ?? 'rgba(107,114,128,0.1)';
+                        })()
+                      }}
+                    >
+                      <span className="decant-visual-card__glyph-emoji">{data.typeSymbol}</span>
+                      <div className="decant-visual-card__glyph-crumb">
+                        <span>{data.segment}</span>
+                        <span className="decant-visual-card__glyph-sep">›</span>
+                        <span>{data.category}</span>
+                      </div>
+                    </div>
+                    {/* Zone B: Summary text + concepts */}
+                    <div className="decant-visual-card__summary">
+                      {(data.shortDescription || data.aiSummary || data.quickPhrase) && (
+                        <p className="decant-visual-card__summary-text">
+                          {(data.shortDescription || data.aiSummary || data.quickPhrase || '').slice(0, 160)}
+                          {(data.shortDescription || data.aiSummary || data.quickPhrase || '').length > 160 ? '…' : ''}
+                        </p>
+                      )}
+                      {data.keyConcepts && data.keyConcepts.length > 0 && (
+                        <div className="decant-visual-card__concepts">
+                          {data.keyConcepts.slice(0, 5).map((c, i) => (
+                            <span key={i} className="decant-visual-card__concept">{c.replace(/_/g, ' ')}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* Zone C: Popularity bar */}
+                  {(data.stars || data.forks || data.downloads) && (
+                    <div className="decant-visual-card__popularity">
+                      <div className="decant-visual-card__signal-bars">
+                        {(() => {
+                          const val = parseInt((data.stars || '0').replace(/[^0-9]/g, ''));
+                          const bars = val >= 100000 ? 4 : val >= 10000 ? 3 : val >= 1000 ? 2 : 1;
+                          return [1,2,3,4].map(b => (
+                            <span key={b} className={`decant-visual-card__bar ${b <= bars ? 'decant-visual-card__bar--filled' : ''}`} />
+                          ));
+                        })()}
+                        <span className="decant-visual-card__pop-label">Popularity</span>
+                      </div>
+                      <div className="decant-visual-card__metrics">
+                        {data.stars && <span className="decant-visual-card__metric"><i className="bx bx-star" />{data.stars}</span>}
+                        {data.forks && <span className="decant-visual-card__metric"><i className="bx bx-git-branch" />{data.forks}</span>}
+                        {data.downloads && <span className="decant-visual-card__metric"><i className="bx bx-download" />{data.downloads}</span>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="decant-expanded-row__actions">
               <button className="decant-expanded-row__btn decant-expanded-row__btn--primary">
@@ -703,7 +961,20 @@ interface DataTableProps {
   groupedData?: { label: string; catCode: string; items: TableRow[] }[] | null;
   segmentCode?: string;
   onCategoryClick?: (segCode: string, catCode: string) => void;
+  onTagClick?: (tag: string) => void;
+  onSegmentClick?: (segCode: string) => void;
 }
+
+type SortKey = 'title' | 'segment' | 'category' | 'subcategoryLabel' | 'quickPhrase' | 'date' | 'company';
+type SortDir = 'asc' | 'desc';
+type ColumnWidths = Record<string, number>;
+
+const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
+  checkbox: 24, expand: 28, logo: 32, title: 200,
+  type: 24, segment: 90, category: 100, subcategory: 130, quickPhrase: 200,
+  tags: 140, date: 90, company: 100, star: 32,
+};
+const RESIZABLE_COLUMNS = ['title', 'segment', 'category', 'subcategory', 'quickPhrase', 'tags', 'date', 'company'];
 
 const DataTable: React.FC<DataTableProps> = ({
   data,
@@ -716,9 +987,53 @@ const DataTable: React.FC<DataTableProps> = ({
   groupedData,
   segmentCode,
   onCategoryClick,
+  onTagClick,
+  onSegmentClick,
 }) => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(['tailwind-css']));
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  const [sortKey, setSortKey] = useState<SortKey | null>(
+    () => (localStorage.getItem('decant-sort-key') as SortKey | null) ?? null
+  );
+  const [sortDir, setSortDir] = useState<SortDir>(
+    () => (localStorage.getItem('decant-sort-dir') as SortDir) ?? 'asc'
+  );
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [columnWidths, setColumnWidths] = useState<ColumnWidths>(() => {
+    try {
+      const saved = localStorage.getItem('decant-column-widths');
+      return saved ? { ...DEFAULT_COLUMN_WIDTHS, ...JSON.parse(saved) } : DEFAULT_COLUMN_WIDTHS;
+    } catch { return DEFAULT_COLUMN_WIDTHS; }
+  });
+
+  const handleColumnResize = useCallback((col: string, width: number) => {
+    setColumnWidths(prev => {
+      const next = { ...prev, [col]: Math.max(50, width) };
+      localStorage.setItem('decant-column-widths', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const handleResizeStart = useCallback((e: React.MouseEvent, col: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startWidth = columnWidths[col];
+    const onMove = (ev: MouseEvent) => {
+      handleColumnResize(col, startWidth + (ev.clientX - startX));
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }, [columnWidths, handleColumnResize]);
+
+  const gridTemplate = useMemo(() => {
+    const w = columnWidths;
+    return `${w.checkbox}px ${w.expand}px ${w.logo}px ${w.title}px ${w.type}px ${w.segment}px ${w.category}px ${w.subcategory}px ${w.quickPhrase}px ${w.tags}px ${w.date}px ${w.company}px ${w.star}px`;
+  }, [columnWidths]);
 
   const handleToggleExpand = useCallback((id: string) => {
     setExpandedIds((prev) => {
@@ -744,6 +1059,41 @@ const DataTable: React.FC<DataTableProps> = ({
     });
   }, []);
 
+  const handleToggleGroup = useCallback((catCode: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCollapsedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(catCode)) next.delete(catCode); else next.add(catCode);
+      return next;
+    });
+  }, []);
+
+  const handleSort = useCallback((key: SortKey) => {
+    setSortKey((prev) => {
+      const newDir = prev === key ? (sortDir === 'asc' ? 'desc' : 'asc') : 'asc';
+      setSortDir(newDir);
+      localStorage.setItem('decant-sort-key', key);
+      localStorage.setItem('decant-sort-dir', newDir);
+      return key;
+    });
+  }, [sortDir]);
+
+  const sortedData = useMemo(() => {
+    if (!sortKey) return data;
+    return [...data].sort((a, b) => {
+      const aVal = (a[sortKey] ?? '').toLowerCase();
+      const bVal = (b[sortKey] ?? '').toLowerCase();
+      if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [data, sortKey, sortDir]);
+
+  const SortIcon = ({ col }: { col: SortKey }) => {
+    if (sortKey !== col) return <i className="bx bx-sort-alt-2 decant-table__sort-icon" />;
+    return <i className={`bx ${sortDir === 'asc' ? 'bx-sort-up' : 'bx-sort-down'} decant-table__sort-icon decant-table__sort-icon--active`} />;
+  };
+
   return (
     <div className="decant-table">
       {/* Title bar with view toggles */}
@@ -765,29 +1115,42 @@ const DataTable: React.FC<DataTableProps> = ({
         </div>
       </div>
       {/* Column headers */}
-      <div className="decant-table__header">
+      <div className="decant-table__header" style={{ gridTemplateColumns: gridTemplate }}>
         <div className="decant-table__header-cell"></div>
         <div className="decant-table__header-cell"></div>
         <div className="decant-table__header-cell">Logo</div>
-        <div className="decant-table__header-cell decant-table__header-cell--sortable">
-          Title <i className="bx bx-sort-alt-2 decant-table__sort-icon" />
+        <div className="decant-table__header-cell decant-table__header-cell--sortable" onClick={() => handleSort('title')}>
+          Title <SortIcon col="title" />
+          <div className="decant-col-resize-handle" onMouseDown={(e) => handleResizeStart(e, 'title')} />
         </div>
         <div className="decant-table__header-cell"></div>
-        <div className="decant-table__header-cell decant-table__header-cell--sortable">
-          Segment <i className="bx bx-sort-alt-2 decant-table__sort-icon" />
+        <div className="decant-table__header-cell decant-table__header-cell--sortable" onClick={() => handleSort('segment')}>
+          Segment <SortIcon col="segment" />
+          <div className="decant-col-resize-handle" onMouseDown={(e) => handleResizeStart(e, 'segment')} />
         </div>
-        <div className="decant-table__header-cell decant-table__header-cell--sortable">
-          Category <i className="bx bx-sort-alt-2 decant-table__sort-icon" />
+        <div className="decant-table__header-cell decant-table__header-cell--sortable" onClick={() => handleSort('category')}>
+          Category <SortIcon col="category" />
+          <div className="decant-col-resize-handle" onMouseDown={(e) => handleResizeStart(e, 'category')} />
         </div>
-        <div className="decant-table__header-cell decant-table__header-cell--sortable">
-          Quick Phrase <i className="bx bx-sort-alt-2 decant-table__sort-icon" />
+        <div className="decant-table__header-cell decant-table__header-cell--sortable" onClick={() => handleSort('subcategoryLabel')}>
+          Subcategory <SortIcon col="subcategoryLabel" />
+          <div className="decant-col-resize-handle" onMouseDown={(e) => handleResizeStart(e, 'subcategory')} />
         </div>
-        <div className="decant-table__header-cell">Tags</div>
-        <div className="decant-table__header-cell decant-table__header-cell--sortable">
-          Date <i className="bx bx-sort-alt-2 decant-table__sort-icon" />
+        <div className="decant-table__header-cell decant-table__header-cell--sortable" onClick={() => handleSort('quickPhrase')}>
+          Quick Phrase <SortIcon col="quickPhrase" />
+          <div className="decant-col-resize-handle" onMouseDown={(e) => handleResizeStart(e, 'quickPhrase')} />
         </div>
-        <div className="decant-table__header-cell decant-table__header-cell--sortable">
-          Company <i className="bx bx-sort-alt-2 decant-table__sort-icon" />
+        <div className="decant-table__header-cell">
+          Tags
+          <div className="decant-col-resize-handle" onMouseDown={(e) => handleResizeStart(e, 'tags')} />
+        </div>
+        <div className="decant-table__header-cell decant-table__header-cell--sortable" onClick={() => handleSort('date')}>
+          Date <SortIcon col="date" />
+          <div className="decant-col-resize-handle" onMouseDown={(e) => handleResizeStart(e, 'date')} />
+        </div>
+        <div className="decant-table__header-cell decant-table__header-cell--sortable" onClick={() => handleSort('company')}>
+          Company <SortIcon col="company" />
+          <div className="decant-col-resize-handle" onMouseDown={(e) => handleResizeStart(e, 'company')} />
         </div>
         <div className="decant-table__header-cell"></div>
       </div>
@@ -800,17 +1163,28 @@ const DataTable: React.FC<DataTableProps> = ({
               : null;
             return (
               <React.Fragment key={`group-${group.catCode}`}>
-                <div
-                  className="decant-table__group-header"
-                  onClick={() => segmentCode && onCategoryClick?.(segmentCode, group.catCode)}
-                  role="button"
-                  tabIndex={0}
-                >
-                  {GroupIcon && <GroupIcon size={14} stroke={1.5} className="decant-table__group-icon" />}
-                  <span className="decant-table__group-label">{group.label}</span>
-                  <span className="decant-table__group-count">{group.items.length}</span>
+                <div className={`decant-table__group-header ${collapsedGroups.has(group.catCode) ? 'decant-table__group-header--collapsed' : ''}`}>
+                  <button
+                    className="decant-table__group-collapse-btn"
+                    onClick={(e) => handleToggleGroup(group.catCode, e)}
+                    title={collapsedGroups.has(group.catCode) ? 'Expand' : 'Collapse'}
+                  >
+                    <i className={`bx ${collapsedGroups.has(group.catCode) ? 'bx-chevron-right' : 'bx-chevron-down'}`} />
+                  </button>
+                  <div
+                    className="decant-table__group-header__inner"
+                    onClick={() => segmentCode && onCategoryClick?.(segmentCode, group.catCode)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    {GroupIcon && <GroupIcon size={14} stroke={1.5} className="decant-table__group-icon" />}
+                    <span className="decant-table__group-label">{group.label}</span>
+                    <span className={`decant-table__group-count ${collapsedGroups.has(group.catCode) ? 'decant-table__group-count--collapsed' : ''}`}>
+                      {group.items.length}
+                    </span>
+                  </div>
                 </div>
-                {group.items.map((row) => (
+                {!collapsedGroups.has(group.catCode) && group.items.map((row) => (
                   <DataTableRow
                     key={row.id}
                     data={row}
@@ -821,6 +1195,10 @@ const DataTable: React.FC<DataTableProps> = ({
                     onToggleExpand={handleToggleExpand}
                     onToggleStar={onToggleStar}
                     onToggleCheck={handleToggleCheck}
+                    gridTemplate={gridTemplate}
+                    onTagClick={onTagClick}
+                    onSegmentClick={onSegmentClick}
+                    onCategoryClick={onCategoryClick}
                   />
                 ))}
               </React.Fragment>
@@ -828,7 +1206,7 @@ const DataTable: React.FC<DataTableProps> = ({
           })
         ) : (
           // Render flat list
-          data.map((row) => (
+          sortedData.map((row) => (
             <DataTableRow
               key={row.id}
               data={row}
@@ -839,10 +1217,38 @@ const DataTable: React.FC<DataTableProps> = ({
               onToggleExpand={handleToggleExpand}
               onToggleStar={onToggleStar}
               onToggleCheck={handleToggleCheck}
+              gridTemplate={gridTemplate}
+              onTagClick={onTagClick}
+              onSegmentClick={onSegmentClick}
+              onCategoryClick={onCategoryClick}
             />
           ))
         )}
       </div>
+      {checkedIds.size > 0 && (
+        <div className="decant-bulk-bar">
+          <span className="decant-bulk-bar__count">
+            {checkedIds.size} {checkedIds.size === 1 ? 'item' : 'items'} selected
+          </span>
+          <div className="decant-bulk-bar__actions">
+            <button
+              className="decant-bulk-bar__btn decant-bulk-bar__btn--star"
+              onClick={() => {
+                checkedIds.forEach(id => onToggleStar(id));
+                setCheckedIds(new Set());
+              }}
+            >
+              <i className="bx bxs-star" /> Star All
+            </button>
+            <button
+              className="decant-bulk-bar__btn decant-bulk-bar__btn--clear"
+              onClick={() => setCheckedIds(new Set())}
+            >
+              <i className="bx bx-x" /> Clear
+            </button>
+          </div>
+        </div>
+      )}
       <div className="decant-table__status">
         {statusText || `Showing ${data.length} items in "${categoryName}" | ${data.length} total in category | ${totalCount.toLocaleString()} total in database`}
       </div>
@@ -1026,7 +1432,7 @@ const HybridDetailCard: React.FC<HybridDetailCardProps> = ({ item, isOpen, onClo
                 </div>
                 <div className="decant-hybrid-card__row">
                   <span className="decant-hybrid-card__label">Created</span>
-                  <span className="decant-hybrid-card__value">{item.date}</span>
+                  <span className="decant-hybrid-card__value">{formatDate(item.date)}</span>
                 </div>
                 <div className="decant-hybrid-card__row">
                   <span className="decant-hybrid-card__label">Language</span>
@@ -1097,14 +1503,15 @@ const HybridDetailCard: React.FC<HybridDetailCardProps> = ({ item, isOpen, onClo
 interface PropertiesPanelProps {
   item: TableRow | null;
   onClose: () => void;
+  isVisible: boolean;
 }
 
-const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ item, onClose }) => {
+const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ item, onClose, isVisible }) => {
   const [activeTab, setActiveTab] = useState<PanelTab>('properties');
 
   if (!item) {
     return (
-      <aside className="decant-panel decant-panel--empty">
+      <aside className={`decant-panel decant-panel--empty${!isVisible ? ' decant-panel--hidden' : ''}`}>
         <div className="decant-panel__empty-state">
           <i className="bx bx-info-circle" />
           <p>Select an item to view its properties</p>
@@ -1114,7 +1521,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ item, onClose }) => {
   }
 
   return (
-    <aside className="decant-panel">
+    <aside className={`decant-panel${!isVisible ? ' decant-panel--hidden' : ''}`}>
       <div className="decant-panel__header">
         <button className="decant-panel__close" onClick={onClose}>
           <i className="bx bx-x" />
@@ -1188,7 +1595,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ item, onClose }) => {
               )}
               <div className="decant-card__row">
                 <span className="decant-card__label">Added</span>
-                <span className="decant-card__value">{item.date}</span>
+                <span className="decant-card__value">{formatDate(item.date)}</span>
               </div>
             </div>
 
@@ -1283,7 +1690,7 @@ export default function DecantDemo() {
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [panelTab, setPanelTab] = useState<PanelTab>('properties');
   const [selectedTreeId, setSelectedTreeId] = useState<string | null>('project-phoenix');
-  const [selectedRowId, setSelectedRowId] = useState<string | null>('tailwind-css');
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [rightPanelVisible, setRightPanelVisible] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [tableData, setTableData] = useState<TableRow[]>(SAMPLE_TABLE_DATA);
@@ -1297,6 +1704,7 @@ export default function DecantDemo() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBatchImportOpen, setIsBatchImportOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [showStarredOnly, setShowStarredOnly] = useState(false);
 
   // Load real nodes from API
   useEffect(() => {
@@ -1320,6 +1728,7 @@ export default function DecantDemo() {
               typeSymbol: CONTENT_TYPE_SYMBOLS[ctCode] || '\u{1F4C4}',
               segment: segLabel,
               category: catLabel,
+              subcategoryLabel: node.subcategory_label || '',
               hierarchy: segCode && catCode ? `${segLabel} > ${catLabel}` : '',
               quickPhrase: node.phrase_description || '',
               tags: (node.metadata_tags || []).slice(0, 3).map((tag: string, i: number) => {
@@ -1452,6 +1861,7 @@ export default function DecantDemo() {
             typeSymbol: CONTENT_TYPE_SYMBOLS[ctCode] || '\u{1F4C4}',
             segment: segLabel,
             category: catLabel,
+            subcategoryLabel: node.subcategory_label || '',
             hierarchy: segCode && catCode ? `${segLabel} > ${catLabel}` : '',
             quickPhrase: node.phrase_description || '',
             tags: (node.metadata_tags || []).slice(0, 3).map((tag: string, i: number) => {
@@ -1544,8 +1954,11 @@ export default function DecantDemo() {
       );
     }
 
+    // Step 3: Apply starred filter
+    if (showStarredOnly) filtered = filtered.filter(item => item.starred);
+
     return filtered;
-  }, [tableData, hierarchyFilter, searchQuery]);
+  }, [tableData, hierarchyFilter, searchQuery, showStarredOnly]);
 
   // Group items by subcategory when viewing a segment (for group headers in table)
   const groupedTableData = useMemo(() => {
@@ -1618,6 +2031,21 @@ export default function DecantDemo() {
     );
   }, []);
 
+  const handleTagClick = useCallback((tagLabel: string) => {
+    setSearchQuery(tagLabel);
+  }, []);
+
+  const handleSegmentBadgeClick = useCallback((segCode: string) => {
+    const segLabel = SEGMENT_LABELS[segCode] || segCode;
+    setSelectedTreeId(`seg-${segCode}`);
+    setHierarchyFilter({ type: 'segment', segmentCode: segCode });
+    setCurrentCategoryTitle(segLabel);
+    setBreadcrumbs([
+      { label: 'All Items', id: 'all' },
+      { label: segLabel, id: `seg-${segCode}` },
+    ]);
+  }, []);
+
   const handleBreadcrumbClick = useCallback((item: BreadcrumbItem, index: number) => {
     if (item.id === 'all') {
       setHierarchyFilter({ type: 'all' });
@@ -1660,12 +2088,20 @@ export default function DecantDemo() {
         onSearchChange={setSearchQuery}
         breadcrumbs={breadcrumbs}
         onBreadcrumbClick={handleBreadcrumbClick}
+        onClearFilter={() => {
+          setHierarchyFilter({ type: 'all' });
+          setCurrentCategoryTitle('All Items');
+          setBreadcrumbs([{ label: 'All Items', id: 'all' }]);
+          setSelectedTreeId(null);
+        }}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onBatchImportClick={() => setIsBatchImportOpen(true)}
         onQuickAddClick={() => setIsQuickAddOpen(true)}
         onSettingsClick={handleSettingsClick}
         onUserClick={handleUserClick}
+        showStarredOnly={showStarredOnly}
+        onToggleStarredFilter={() => setShowStarredOnly(prev => !prev)}
       />
 
       <TitleBar
@@ -1683,6 +2119,7 @@ export default function DecantDemo() {
           onSelect={handleTreeSelect}
           isCollapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
+          totalCount={tableData.length}
         />
 
         <main className="decant-main">
@@ -1695,6 +2132,8 @@ export default function DecantDemo() {
             totalCount={tableData.length}
             groupedData={groupedTableData}
             segmentCode={hierarchyFilter.segmentCode}
+            onTagClick={handleTagClick}
+            onSegmentClick={handleSegmentBadgeClick}
             onCategoryClick={(segCode, catCode) => {
               const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode;
               const segLabel = SEGMENT_LABELS[segCode] || segCode;
@@ -1710,9 +2149,11 @@ export default function DecantDemo() {
           />
         </main>
 
-        {rightPanelVisible && (
-          <PropertiesPanel item={selectedItem} onClose={handleClosePanel} />
-        )}
+        <PropertiesPanel
+          item={selectedItem}
+          onClose={handleClosePanel}
+          isVisible={rightPanelVisible}
+        />
       </div>
 
       {/* Hybrid Detail Card Modal */}
