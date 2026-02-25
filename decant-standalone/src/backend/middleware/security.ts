@@ -9,23 +9,36 @@ import { log } from '../logger/index.js';
 
 // Environment configuration
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const CORS_ALLOWED_ORIGINS = process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:5173';
+const DEFAULT_CORS_ALLOWED_ORIGINS = 'http://localhost:3000,http://localhost:5173';
+const CORS_ALLOWED_ORIGINS = process.env.CORS_ALLOWED_ORIGINS;
 
 /**
  * Parse allowed origins from environment variable.
  * Supports wildcard suffix patterns like "chrome-extension://*"
  * which are converted to RegExp for matching.
  */
-function parseAllowedOrigins(): (string | RegExp)[] {
-  const origins = CORS_ALLOWED_ORIGINS.split(',')
+function parseAllowedOrigins(value?: string): (string | RegExp)[] | null {
+  const raw = (value ?? '').trim();
+  if (!raw) return null;
+
+  const origins = raw.split(',')
     .map(origin => origin.trim())
     .filter(origin => origin.length > 0)
     .map(origin => {
+      // Support simple wildcard suffix patterns:
+      // - chrome-extension://*  (matches any extension ID)
+      // - https://example.com*  (matches any origin with that prefix)
+      // - chrome-extension://*/ (legacy)
       if (origin.endsWith('/*')) {
-        // Convert "chrome-extension://*" → /^chrome-extension:\/\/.+$/
-        const prefix = origin.slice(0, -1).replace(/[.]/g, '\\.').replace(/\//g, '\\/');
-        return new RegExp('^' + prefix + '.+$');
+        origin = origin.slice(0, -1);
       }
+
+      if (origin.endsWith('*')) {
+        const prefix = origin.slice(0, -1);
+        const escaped = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return new RegExp('^' + escaped + '.*$');
+      }
+
       return origin;
     });
 
@@ -43,7 +56,23 @@ function parseAllowedOrigins(): (string | RegExp)[] {
  * - Methods: GET, POST, PUT, DELETE, OPTIONS
  */
 export function createCorsMiddleware(): RequestHandler {
-  const allowedOrigins = parseAllowedOrigins();
+  const allowedOrigins = parseAllowedOrigins(
+    CORS_ALLOWED_ORIGINS || (NODE_ENV === 'development' ? DEFAULT_CORS_ALLOWED_ORIGINS : undefined)
+  );
+
+  // If not configured (common in deployments), allow all origins.
+  // API access is still protected via DECANT_ACCESS_TOKEN if enabled.
+  if (!allowedOrigins) {
+    log.warn('CORS_ALLOWED_ORIGINS not set; allowing all origins', { module: 'security' });
+    return cors({
+      origin: true,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+      exposedHeaders: ['RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset'],
+      maxAge: 86400,
+    });
+  }
 
   const corsOptions: CorsOptions = {
     origin: (origin, callback) => {

@@ -13,6 +13,44 @@ import {
 } from '../../utils/toasts';
 import { settingsAPI } from '../../services/api';
 
+const LOCAL_STORAGE_KEYS = {
+  theme: 'decant_theme',
+  phase1Model: 'decant_phase1_model',
+  phase2Model: 'decant_phase2_model',
+  requestsPerMinute: 'decant_requests_per_minute',
+  concurrentRequests: 'decant_concurrent_requests',
+  accessToken: 'decant_access_token',
+} as const;
+
+function getLocalSetting(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function setLocalSetting(key: string, value: string): void {
+  try {
+    if (value === '') {
+      localStorage.removeItem(key);
+    } else {
+      localStorage.setItem(key, value);
+    }
+  } catch {
+    // ignore
+  }
+}
+
+function withAuthHeaders(headers?: HeadersInit): Headers {
+  const h = new Headers(headers);
+  const token = getLocalSetting(LOCAL_STORAGE_KEYS.accessToken);
+  if (token) {
+    h.set('Authorization', `Bearer ${token}`);
+  }
+  return h;
+}
+
 interface SettingsDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -79,6 +117,8 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps): React.
   const [activeTab, setActiveTab] = useState<TabType>('general');
   const [apiKey, setApiKey] = useState<string>('');
   const [showApiKey, setShowApiKey] = useState(false);
+  const [accessToken, setAccessToken] = useState<string>('');
+  const [showAccessToken, setShowAccessToken] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -127,29 +167,38 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps): React.
       setHasApiKey(keyStatus.configured);
       setApiKey(''); // Don't show existing key for security
 
+      // Load access token (client-side only)
+      setAccessToken(getLocalSetting(LOCAL_STORAGE_KEYS.accessToken) || '');
+
       // Load theme preference
-      const savedTheme = await window.decantAPI.settings.get('theme');
+      const savedTheme = getLocalSetting(LOCAL_STORAGE_KEYS.theme);
       if (savedTheme === 'dark' || savedTheme === 'light') {
         setTheme(savedTheme);
+        document.documentElement.setAttribute('data-theme', savedTheme);
       }
 
       // Load AI model preferences
-      const savedPhase1 = await window.decantAPI.settings.get('phase1_model');
+      const savedPhase1 = getLocalSetting(LOCAL_STORAGE_KEYS.phase1Model);
       if (savedPhase1) setPhase1Model(savedPhase1);
 
-      const savedPhase2 = await window.decantAPI.settings.get('phase2_model');
+      const savedPhase2 = getLocalSetting(LOCAL_STORAGE_KEYS.phase2Model);
       if (savedPhase2) setPhase2Model(savedPhase2);
 
       // Load performance settings
-      const savedRPM = await window.decantAPI.settings.get('requests_per_minute');
+      const savedRPM = getLocalSetting(LOCAL_STORAGE_KEYS.requestsPerMinute);
       if (savedRPM) setRequestsPerMinute(parseInt(savedRPM, 10));
 
-      const savedConcurrent = await window.decantAPI.settings.get('concurrent_requests');
+      const savedConcurrent = getLocalSetting(LOCAL_STORAGE_KEYS.concurrentRequests);
       if (savedConcurrent) setConcurrentRequests(parseInt(savedConcurrent, 10));
     } catch (err) {
       console.error('Failed to load settings:', err);
     }
   };
+
+  const handleSaveAccessToken = useCallback(async () => {
+    setLocalSetting(LOCAL_STORAGE_KEYS.accessToken, accessToken.trim());
+    showSettingsSaved(toast, accessToken.trim() ? 'Access token saved' : 'Access token cleared');
+  }, [accessToken, toast]);
 
   const loadCacheStats = async () => {
     // Mock cache stats - in real app, fetch from API
@@ -232,7 +281,7 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps): React.
   const handleThemeChange = useCallback(async (newTheme: 'light' | 'dark') => {
     setTheme(newTheme);
     try {
-      await window.decantAPI.settings.set('theme', newTheme);
+      setLocalSetting(LOCAL_STORAGE_KEYS.theme, newTheme);
       document.documentElement.setAttribute('data-theme', newTheme);
       showSettingsSaved(toast, `Theme changed to ${newTheme} mode`);
     } catch (err) {
@@ -245,10 +294,10 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps): React.
     try {
       if (phase === 'phase1') {
         setPhase1Model(model);
-        await window.decantAPI.settings.set('phase1_model', model);
+        setLocalSetting(LOCAL_STORAGE_KEYS.phase1Model, model);
       } else {
         setPhase2Model(model);
-        await window.decantAPI.settings.set('phase2_model', model);
+        setLocalSetting(LOCAL_STORAGE_KEYS.phase2Model, model);
       }
       showSettingsSaved(toast, 'Model preference saved');
     } catch (err) {
@@ -261,10 +310,10 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps): React.
     try {
       if (setting === 'rpm') {
         setRequestsPerMinute(value);
-        await window.decantAPI.settings.set('requests_per_minute', value.toString());
+        setLocalSetting(LOCAL_STORAGE_KEYS.requestsPerMinute, value.toString());
       } else if (setting === 'concurrent') {
         setConcurrentRequests(value);
-        await window.decantAPI.settings.set('concurrent_requests', value.toString());
+        setLocalSetting(LOCAL_STORAGE_KEYS.concurrentRequests, value.toString());
       }
     } catch (err) {
       console.error('Failed to save performance setting:', err);
@@ -306,9 +355,20 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps): React.
   const handleExportData = useCallback(async () => {
     setIsExporting(true);
     try {
-      const result = await window.decantAPI.data.export();
-      if (result.success && result.data) {
-        const blob = new Blob([result.data], { type: 'application/json' });
+      const res = await fetch('/api/export', {
+        headers: withAuthHeaders(),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showGenericError(toast, (err as any).error || 'Export failed');
+        return;
+      }
+
+      const data = await res.json();
+      const jsonString = JSON.stringify(data, null, 2);
+
+      {
+        const blob = new Blob([jsonString], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -317,13 +377,10 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps): React.
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-
-        const data = JSON.parse(result.data);
-        const itemCount = data.nodes?.length || 0;
-        showExportSuccess(toast, itemCount);
-      } else {
-        showGenericError(toast, result.error || 'Export failed');
       }
+
+      const itemCount = (data as any).data?.nodes?.length || (data as any).nodes?.length || 0;
+      showExportSuccess(toast, itemCount);
     } catch (err) {
       console.error('Export failed:', err);
       showGenericError(toast, 'Export failed');
@@ -343,14 +400,22 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps): React.
       setIsImporting(true);
       try {
         const jsonData = await file.text();
-        const result = await window.decantAPI.data.import(jsonData);
-        if (result.success) {
-          showImportDataSuccess(toast, result.nodesImported || 0);
-          window.dispatchEvent(new CustomEvent('decant:refresh'));
-          loadDatabaseStats(); // Refresh stats
-        } else {
+
+        const parsed = JSON.parse(jsonData);
+        const res = await fetch('/api/import/json', {
+          method: 'POST',
+          headers: withAuthHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ data: parsed, mode: 'merge' }),
+        });
+        const result = await res.json().catch(() => ({}));
+        if (!res.ok || !result.success) {
           showGenericError(toast, result.error || 'Import failed');
+          return;
         }
+
+        showImportDataSuccess(toast, result.nodesImported || 0);
+        window.dispatchEvent(new CustomEvent('decant:refresh'));
+        loadDatabaseStats();
       } catch (err) {
         console.error('Import failed:', err);
         showGenericError(toast, 'Import failed: Invalid file format');
@@ -359,11 +424,13 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps): React.
       }
     };
     input.click();
-  }, [toast]);
+  }, [toast, loadDatabaseStats]);
 
   const handleClose = useCallback(() => {
     setApiKey('');
     setShowApiKey(false);
+    setAccessToken('');
+    setShowAccessToken(false);
     setTestResult(null);
     setActiveTab('general');
     onClose();
@@ -451,6 +518,60 @@ export function SettingsDialog({ isOpen, onClose }: SettingsDialogProps): React.
                     onClick={() => handleThemeChange('dark')}
                   >
                     🌙 Dark
+                  </button>
+                </div>
+              </div>
+
+              {/* Access Token Section */}
+              <div className="settings-section">
+                <h3>Access Token</h3>
+                <p className="settings-description">
+                  Required to use a protected Decant API (for live deployments).
+                </p>
+
+                <div className="api-key-status">
+                  {accessToken.trim() ? (
+                    <span className="api-key-indicator api-key-set">✓ Token is set</span>
+                  ) : (
+                    <span className="api-key-indicator api-key-missing">⚠ No token set</span>
+                  )}
+                </div>
+
+                <div className="api-key-input-group">
+                  <div className="api-key-input-wrapper">
+                    <input
+                      type={showAccessToken ? 'text' : 'password'}
+                      className="gum-input api-key-input"
+                      placeholder="Paste access token"
+                      value={accessToken}
+                      onChange={(e) => setAccessToken(e.target.value)}
+                      aria-label="Access Token"
+                    />
+                    <button
+                      className="api-key-toggle"
+                      onClick={() => setShowAccessToken(!showAccessToken)}
+                      type="button"
+                      title={showAccessToken ? 'Hide' : 'Show'}
+                      aria-label={showAccessToken ? 'Hide access token' : 'Show access token'}
+                    >
+                      {showAccessToken ? '👁️' : '👁️‍🗨️'}
+                    </button>
+                  </div>
+                  <button
+                    className="gum-button gum-button--small gum-button--green"
+                    onClick={handleSaveAccessToken}
+                  >
+                    Save
+                  </button>
+                  <button
+                    className="gum-button gum-button--small"
+                    onClick={() => {
+                      setAccessToken('');
+                      setLocalSetting(LOCAL_STORAGE_KEYS.accessToken, '');
+                      showSettingsSaved(toast, 'Access token cleared');
+                    }}
+                  >
+                    Clear
                   </button>
                 </div>
               </div>

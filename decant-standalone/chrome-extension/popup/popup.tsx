@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { BrowserTab, ConnectionState, TabImportStatus, SelectionMode } from '../types/index.js';
 import { checkConnection, batchImport, importUrl } from '../services/decant-api.js';
+import { getExtensionSettings, setExtensionSettings, type ConnectionTarget } from '../services/settings.js';
 import { isFilteredUrl } from '../background/service-worker.js';
 import { ConnectionStatus } from './ConnectionStatus.js';
 import { TabListItem } from './TabListItem.js';
@@ -32,6 +33,12 @@ export function DecantPopup() {
     connected: false,
     checking: true,
   });
+  const [showSettings, setShowSettings] = useState(false);
+  const [target, setTarget] = useState<ConnectionTarget>('local');
+  const [liveBaseUrl, setLiveBaseUrl] = useState('');
+  const [accessToken, setAccessToken] = useState('');
+  const [showToken, setShowToken] = useState(false);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
   const [tabs, setTabs] = useState<BrowserTab[]>([]);
   const [skipDuplicates, setSkipDuplicates] = useState(true);
   const [isImporting, setIsImporting] = useState(false);
@@ -64,6 +71,11 @@ export function DecantPopup() {
   }, []);
 
   const initializePopup = useCallback(async () => {
+    const settings = await getExtensionSettings();
+    setTarget(settings.target);
+    setLiveBaseUrl(settings.liveBaseUrl);
+    setAccessToken(settings.accessToken);
+
     const conn = await checkConnection();
     setConnection(conn);
 
@@ -85,6 +97,23 @@ export function DecantPopup() {
 
     setTabs(browserTabs);
   }, []);
+
+  const handleSaveSettings = useCallback(async () => {
+    setSettingsError(null);
+    if (target === 'live' && !liveBaseUrl.trim()) {
+      setSettingsError('Enter your live Decant base URL (e.g. https://your-app.fly.dev)');
+      return;
+    }
+
+    await setExtensionSettings({
+      target,
+      liveBaseUrl,
+      accessToken,
+    });
+
+    const conn = await checkConnection();
+    setConnection(conn);
+  }, [target, liveBaseUrl, accessToken]);
 
   // ----------------------------------------
   // Selection handlers
@@ -230,9 +259,13 @@ export function DecantPopup() {
               <path d="M12 8v4l2 2" strokeLinecap="round" />
             </svg>
           </div>
-          <p className="ext-disconnected-title">Decant is not running</p>
+          <p className="ext-disconnected-title">
+            {connection.error ? 'Cannot connect to Decant' : 'Decant is not running'}
+          </p>
           <p className="ext-disconnected-text">
-            Open the Decant app and start the server, then try again.
+            {connection.error
+              ? connection.error
+              : 'Open the Decant app (or set your live URL) and try again.'}
           </p>
           <button className="ext-disconnected-retry" onClick={handleRetryConnection}>
             Try Again
@@ -292,12 +325,86 @@ export function DecantPopup() {
             This Page
           </button>
         </div>
-        <div className="ext-toolbar-filter" title="Filter options (coming soon)">
+        <button
+          type="button"
+          className="ext-toolbar-filter"
+          title="Connection settings"
+          onClick={() => setShowSettings(v => !v)}
+          disabled={isImporting}
+        >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7z" />
+            <path d="M19.4 15a7.7 7.7 0 0 0 .1-1 7.7 7.7 0 0 0-.1-1l2.1-1.6-2-3.4-2.5 1a7.8 7.8 0 0 0-1.7-1L15 2h-4l-.4 3a7.8 7.8 0 0 0-1.7 1l-2.5-1-2 3.4L4.6 12a7.7 7.7 0 0 0-.1 1 7.7 7.7 0 0 0 .1 1L2.5 15.6l2 3.4 2.5-1a7.8 7.8 0 0 0 1.7 1l.4 3h4l.4-3a7.8 7.8 0 0 0 1.7-1l2.5 1 2-3.4L19.4 15z" />
           </svg>
-        </div>
+        </button>
       </div>
+
+      {/* SETTINGS */}
+      {showSettings && (
+        <div className="ext-settings">
+          <div className="ext-settings-row">
+            <label className="ext-settings-label">Target</label>
+            <select
+              className="ext-settings-input"
+              value={target}
+              onChange={(e) => setTarget(e.target.value as ConnectionTarget)}
+              disabled={isImporting}
+            >
+              <option value="local">Local (localhost)</option>
+              <option value="live">Live (website)</option>
+            </select>
+          </div>
+
+          {target === 'live' && (
+            <div className="ext-settings-row">
+              <label className="ext-settings-label">Live URL</label>
+              <input
+                className="ext-settings-input"
+                value={liveBaseUrl}
+                onChange={(e) => setLiveBaseUrl(e.target.value)}
+                placeholder="https://your-app.fly.dev"
+                disabled={isImporting}
+              />
+            </div>
+          )}
+
+          <div className="ext-settings-row">
+            <label className="ext-settings-label">Token</label>
+            <div className="ext-settings-token">
+              <input
+                className="ext-settings-input"
+                type={showToken ? 'text' : 'password'}
+                value={accessToken}
+                onChange={(e) => setAccessToken(e.target.value)}
+                placeholder="(optional)"
+                disabled={isImporting}
+              />
+              <button
+                type="button"
+                className="ext-settings-toggle"
+                onClick={() => setShowToken(v => !v)}
+              >
+                {showToken ? 'Hide' : 'Show'}
+              </button>
+            </div>
+          </div>
+
+          {settingsError && (
+            <div className="ext-settings-error">{settingsError}</div>
+          )}
+
+          <div className="ext-settings-actions">
+            <button
+              type="button"
+              className="ext-settings-save"
+              onClick={handleSaveSettings}
+              disabled={isImporting}
+            >
+              Save & Reconnect
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* TAB LIST */}
       <div className="ext-tab-list">

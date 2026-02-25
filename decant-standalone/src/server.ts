@@ -17,6 +17,7 @@ import {
   securityHeaders,
   REQUEST_BODY_LIMIT,
 } from './backend/middleware/security.js';
+import { requireApiAuth } from './backend/middleware/auth.js';
 import { log } from './backend/logger/index.js';
 import httpLogger from './backend/middleware/requestLogger.js';
 import * as cache from './backend/cache/index.js';
@@ -79,6 +80,9 @@ log.info('Metrics stats collection started');
 
 // Health check routes (registered first, before rate limiting)
 registerHealthRoutes(app);
+
+// API auth (applies to /api/* except /api/health)
+app.use('/api', requireApiAuth());
 
 // Apply global rate limiter to all API routes
 // This applies to all routes registered after this middleware

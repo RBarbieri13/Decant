@@ -4,23 +4,30 @@
 // ============================================================
 
 import { ConnectionState, ImportResult, BatchImportResult, BrowserTab } from '../types/index.js';
+import { getExtensionSettings, getActiveApiBase } from './settings.js';
 
-const API_BASE = 'http://localhost:3000';
 const REQUEST_TIMEOUT = 10000; // 10 seconds
 
 /**
  * Makes a request to the Decant local API with timeout support
  */
 async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const settings = await getExtensionSettings();
+  const base = getActiveApiBase(settings);
+  if (!base) {
+    throw new Error('No live base URL set — open the extension settings and configure it.');
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
   try {
-    const response = await fetch(`${API_BASE}${path}`, {
+    const response = await fetch(`${base}${path}`, {
       ...options,
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
+        ...(settings.accessToken ? { Authorization: `Bearer ${settings.accessToken}` } : {}),
         ...options.headers,
       },
     });

@@ -65,10 +65,10 @@ ENV DATABASE_PATH=/data/decant.db
 # Expose the application port
 EXPOSE 3000
 
-# Health check using wget (available in alpine)
+# Health check (Node has built-in fetch)
 # Check the readiness endpoint which verifies database connectivity
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health/ready || exit 1
+  CMD node -e "fetch('http://localhost:3000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 # Start the server
 CMD ["node", "dist/server.js"]

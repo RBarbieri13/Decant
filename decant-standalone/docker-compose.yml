@@ -21,13 +21,14 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - DATABASE_PATH=/data/decant.db
+      - DECANT_ACCESS_TOKEN=${DECANT_ACCESS_TOKEN:-}
       # OpenAI API key (required for AI features)
       # Set this in .env file or pass via command line
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       # Optional: Configure log level
       - LOG_LEVEL=${LOG_LEVEL:-info}
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health/ready"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -13,5 +13,14 @@
     "resolveJsonModule": true
   },
   "include": ["src/server.ts", "src/backend/**/*", "src/shared/**/*"],
-  "exclude": ["node_modules", "dist", "src/renderer/**/*"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/renderer/**/*",
+
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "src/**/__tests__/**",
+    "src/**/*.example.ts"
+  ]
 }

@@ -246,11 +246,101 @@ body {
   padding: 3px;
   border-radius: 3px;
   transition: all var(--ext-transition);
+  background: none;
+  border: none;
 }
 
 .ext-toolbar-filter:hover {
   color: var(--ext-gray-700);
   background: var(--ext-gray-200);
+}
+
+/* ----------------------------------------
+   Settings Panel
+   ---------------------------------------- */
+
+.ext-settings {
+  padding: 10px 14px;
+  background: var(--ext-cream);
+  border-bottom: 1px solid var(--ext-cream-border);
+}
+
+.ext-settings-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.ext-settings-label {
+  width: 56px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ext-gray-700);
+}
+
+.ext-settings-input {
+  flex: 1;
+  height: 28px;
+  border: 1px solid var(--ext-gray-200);
+  border-radius: 6px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-family: var(--ext-font-ui);
+  background: var(--ext-white);
+}
+
+.ext-settings-token {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+}
+
+.ext-settings-toggle {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid var(--ext-gray-200);
+  background: var(--ext-white);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ext-gray-700);
+  cursor: pointer;
+}
+
+.ext-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.ext-settings-save {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--ext-green);
+  background: var(--ext-green);
+  color: var(--ext-white);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--ext-transition);
+}
+
+.ext-settings-save:hover:not(:disabled) {
+  background: var(--ext-green-hover);
+  border-color: var(--ext-green-hover);
+}
+
+.ext-settings-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ext-settings-error {
+  margin-top: -2px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: var(--ext-error-red);
 }
 
 /* ----------------------------------------

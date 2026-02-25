@@ -17,6 +17,8 @@ import decantLogoLight from '../assets/decant-logo-light.png';
 import { BatchImportModal } from '../components/import/BatchImportModal';
 // Import Quick Add Modal
 import { QuickAddModal } from '../components/import/QuickAddModal';
+import { SettingsDialog } from '../components/settings/SettingsDialog';
+import { useApp } from '../context/AppContext';
 // API imports for backend integration
 import { nodesAPI, hierarchyAPI } from '../services/api';
 // Real-time service for hierarchy updates
@@ -53,10 +55,29 @@ const CONTENT_TYPE_SYMBOLS: Record<string, string> = {
 };
 
 const CONTENT_TYPE_LABELS: Record<string, string> = {
-  T: 'Tool', A: 'Article', V: 'Video', P: 'Tutorial',
-  R: 'Repository', G: 'Guide', S: 'SaaS/Service', C: 'Course',
-  I: 'Image', N: 'News', K: 'Knowledge Base', U: 'Unknown',
+  T: 'Tool', A: 'Website', V: 'Video', P: 'Tutorial',
+  R: 'Repo', G: 'Guide', S: 'Social', C: 'Course',
+  I: 'Image', N: 'News', K: 'Reference', U: 'Unknown',
 };
+
+function getTypeBadgeClass(type: string): string {
+  const map: Record<string, string> = {
+    'Website':   'website',
+    'Video':     'video',
+    'X':         'x',
+    'Tool':      'tool',
+    'Social':    'social',
+    'Repo':      'repo',
+    'Tutorial':  'tutorial',
+    'Course':    'course',
+    'Guide':     'guide',
+    'News':      'news',
+    'Image':     'image',
+    'Reference': 'reference',
+    'Unknown':   'unknown',
+  };
+  return map[type] || 'unknown';
+}
 
 // ============================================================================
 // TYPES
@@ -705,15 +726,19 @@ const DataTableRow: React.FC<DataTableRowProps> = ({
         </div>
         {/* Title */}
         <div className="decant-table__cell decant-table__cell--title">
-          {data.url ? (
-            <a href={data.url} target="_blank" rel="noopener noreferrer">{data.title}</a>
-          ) : (
-            data.title
+          <span className="decant-table__title-text">{data.title}</span>
+          {data.url && (
+            <a
+              className="decant-table__title-link"
+              href={data.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              title="Open URL"
+            >
+              <i className="bx bx-link-external" />
+            </a>
           )}
-        </div>
-        {/* Type symbol */}
-        <div className="decant-table__cell decant-table__cell--center">
-          <span className="decant-type-symbol">{data.typeSymbol}</span>
         </div>
         {/* Segment with badge */}
         <div className="decant-table__cell">
@@ -723,6 +748,12 @@ const DataTableRow: React.FC<DataTableRowProps> = ({
             title={`Filter by ${data.segment}`}
           >
             {data.segment}
+          </span>
+        </div>
+        {/* Type badge */}
+        <div className="decant-table__cell decant-table__cell--center">
+          <span className={`decant-type-badge decant-type-badge--${getTypeBadgeClass(data.type)}`}>
+            {data.type}
           </span>
         </div>
         {/* Category */}
@@ -971,10 +1002,11 @@ type ColumnWidths = Record<string, number>;
 
 const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
   checkbox: 24, expand: 28, logo: 32, title: 200,
-  type: 24, segment: 90, category: 100, subcategory: 130, quickPhrase: 200,
+  segment: 90, type: 70, category: 100, subcategory: 130, quickPhrase: 200,
   tags: 140, date: 90, company: 100, star: 32,
 };
 const RESIZABLE_COLUMNS = ['title', 'segment', 'category', 'subcategory', 'quickPhrase', 'tags', 'date', 'company'];
+const COLUMN_WIDTHS_KEY = 'decant-column-widths-v2';
 
 const DataTable: React.FC<DataTableProps> = ({
   data,
@@ -1001,7 +1033,7 @@ const DataTable: React.FC<DataTableProps> = ({
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [columnWidths, setColumnWidths] = useState<ColumnWidths>(() => {
     try {
-      const saved = localStorage.getItem('decant-column-widths');
+      const saved = localStorage.getItem(COLUMN_WIDTHS_KEY);
       return saved ? { ...DEFAULT_COLUMN_WIDTHS, ...JSON.parse(saved) } : DEFAULT_COLUMN_WIDTHS;
     } catch { return DEFAULT_COLUMN_WIDTHS; }
   });
@@ -1009,7 +1041,7 @@ const DataTable: React.FC<DataTableProps> = ({
   const handleColumnResize = useCallback((col: string, width: number) => {
     setColumnWidths(prev => {
       const next = { ...prev, [col]: Math.max(50, width) };
-      localStorage.setItem('decant-column-widths', JSON.stringify(next));
+      localStorage.setItem(COLUMN_WIDTHS_KEY, JSON.stringify(next));
       return next;
     });
   }, []);
@@ -1032,7 +1064,7 @@ const DataTable: React.FC<DataTableProps> = ({
 
   const gridTemplate = useMemo(() => {
     const w = columnWidths;
-    return `${w.checkbox}px ${w.expand}px ${w.logo}px ${w.title}px ${w.type}px ${w.segment}px ${w.category}px ${w.subcategory}px ${w.quickPhrase}px ${w.tags}px ${w.date}px ${w.company}px ${w.star}px`;
+    return `${w.checkbox}px ${w.expand}px ${w.logo}px ${w.title}px ${w.segment}px ${w.type}px ${w.category}px ${w.subcategory}px ${w.quickPhrase}px ${w.tags}px ${w.date}px ${w.company}px ${w.star}px`;
   }, [columnWidths]);
 
   const handleToggleExpand = useCallback((id: string) => {
@@ -1123,11 +1155,11 @@ const DataTable: React.FC<DataTableProps> = ({
           Title <SortIcon col="title" />
           <div className="decant-col-resize-handle" onMouseDown={(e) => handleResizeStart(e, 'title')} />
         </div>
-        <div className="decant-table__header-cell"></div>
         <div className="decant-table__header-cell decant-table__header-cell--sortable" onClick={() => handleSort('segment')}>
           Segment <SortIcon col="segment" />
           <div className="decant-col-resize-handle" onMouseDown={(e) => handleResizeStart(e, 'segment')} />
         </div>
+        <div className="decant-table__header-cell">Type</div>
         <div className="decant-table__header-cell decant-table__header-cell--sortable" onClick={() => handleSort('category')}>
           Category <SortIcon col="category" />
           <div className="decant-col-resize-handle" onMouseDown={(e) => handleResizeStart(e, 'category')} />
@@ -1671,7 +1703,13 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ item, onClose, isVisi
       </div>
 
       <div className="decant-panel__actions">
-        <button className="decant-panel__action-btn decant-panel__action-btn--primary">Open</button>
+        <button
+          className="decant-panel__action-btn decant-panel__action-btn--primary"
+          onClick={() => item.url && window.open(item.url, '_blank', 'noopener,noreferrer')}
+          disabled={!item.url}
+        >
+          Open
+        </button>
         <button className="decant-panel__action-btn">Edit</button>
         <button className="decant-panel__action-btn">Link</button>
         <button className="decant-panel__action-btn">Share</button>
@@ -1685,6 +1723,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ item, onClose, isVisi
 // ============================================================================
 
 export default function DecantDemo() {
+  const { state: appState, actions: appActions } = useApp();
+
   // State
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('table');
@@ -1718,14 +1758,24 @@ export default function DecantDemo() {
             const ctCode = node.content_type_code || node.extracted_fields?.contentType || 'A';
             const segLabel = SEGMENT_LABELS[segCode] || segCode || 'Uncategorized';
             const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode || 'General';
+            const domain = (node.source_domain || '').toLowerCase();
+            let typeLabel = CONTENT_TYPE_LABELS[ctCode] || 'Website';
+            let typeSymbol = CONTENT_TYPE_SYMBOLS[ctCode] || '\u{1F4C4}';
+            if (domain.includes('twitter.com') || domain.includes('x.com')) {
+              typeLabel = 'X';
+              typeSymbol = '\u{1D54F}';
+            } else if (domain.includes('youtube.com') || domain.includes('youtu.be')) {
+              typeLabel = 'Video';
+              typeSymbol = '\u{1F3AC}';
+            }
             return {
               id: node.id,
               segmentCode: segCode,
               categoryCode: catCode,
               logo: node.logo_url || 'https://via.placeholder.com/32',
               title: node.title || 'Untitled',
-              type: CONTENT_TYPE_LABELS[ctCode] || 'Document',
-              typeSymbol: CONTENT_TYPE_SYMBOLS[ctCode] || '\u{1F4C4}',
+              type: typeLabel,
+              typeSymbol: typeSymbol,
               segment: segLabel,
               category: catLabel,
               subcategoryLabel: node.subcategory_label || '',
@@ -1851,14 +1901,24 @@ export default function DecantDemo() {
           const ctCode = node.content_type_code || node.extracted_fields?.contentType || 'A';
           const segLabel = SEGMENT_LABELS[segCode] || segCode || 'Uncategorized';
           const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode || 'General';
+          const domain = (node.source_domain || '').toLowerCase();
+          let typeLabel = CONTENT_TYPE_LABELS[ctCode] || 'Website';
+          let typeSymbol = CONTENT_TYPE_SYMBOLS[ctCode] || '\u{1F4C4}';
+          if (domain.includes('twitter.com') || domain.includes('x.com')) {
+            typeLabel = 'X';
+            typeSymbol = '\u{1D54F}';
+          } else if (domain.includes('youtube.com') || domain.includes('youtu.be')) {
+            typeLabel = 'Video';
+            typeSymbol = '\u{1F3AC}';
+          }
           return {
             id: node.id,
             segmentCode: segCode,
             categoryCode: catCode,
             logo: node.logo_url || 'https://via.placeholder.com/32',
             title: node.title || 'Untitled',
-            type: CONTENT_TYPE_LABELS[ctCode] || 'Document',
-            typeSymbol: CONTENT_TYPE_SYMBOLS[ctCode] || '\u{1F4C4}',
+            type: typeLabel,
+            typeSymbol: typeSymbol,
             segment: segLabel,
             category: catLabel,
             subcategoryLabel: node.subcategory_label || '',
@@ -2063,9 +2123,8 @@ export default function DecantDemo() {
   }, []);
 
   const handleSettingsClick = useCallback(() => {
-    console.log('Settings clicked');
-    // TODO: Open settings dialog
-  }, []);
+    appActions.openSettingsDialog();
+  }, [appActions]);
 
   const handleUserClick = useCallback(() => {
     console.log('User menu clicked');
@@ -2183,6 +2242,8 @@ export default function DecantDemo() {
         isOpen={isBatchImportOpen}
         onClose={() => setIsBatchImportOpen(false)}
       />
+
+      <SettingsDialog isOpen={appState.settingsDialogOpen} onClose={appActions.closeSettingsDialog} />
     </div>
   );
 }

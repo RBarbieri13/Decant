@@ -108,7 +108,8 @@ export class AppError extends Error {
     message: string,
     statusCode: number = 500,
     code: ErrorCode = ErrorCode.INTERNAL_ERROR,
-    context?: Record<string, unknown>
+    context?: Record<string, unknown>,
+    options?: { isOperational?: boolean }
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -116,7 +117,7 @@ export class AppError extends Error {
     this.code = code;
     this.context = context;
     this.timestamp = new Date();
-    this.isOperational = true;
+    this.isOperational = options?.isOperational ?? true;
 
     // Capture stack trace
     Error.captureStackTrace(this, this.constructor);
@@ -216,8 +217,12 @@ export class SchemaValidationError extends AppError {
  * Resource not found error
  */
 export class NotFoundError extends AppError {
-  constructor(message = 'Resource not found', context?: Record<string, unknown>) {
-    super(message, 404, ErrorCode.NOT_FOUND, context);
+  constructor(
+    message = 'Resource not found',
+    code: ErrorCode = ErrorCode.NOT_FOUND,
+    context?: Record<string, unknown>
+  ) {
+    super(message, 404, code, context);
   }
 }
 
@@ -226,8 +231,7 @@ export class NotFoundError extends AppError {
  */
 export class NodeNotFoundError extends NotFoundError {
   constructor(nodeId: string, context?: Record<string, unknown>) {
-    super(`Node not found: ${nodeId}`, { ...context, nodeId });
-    this.code = ErrorCode.NODE_NOT_FOUND;
+    super(`Node not found: ${nodeId}`, ErrorCode.NODE_NOT_FOUND, { ...context, nodeId });
   }
 }
 
@@ -248,8 +252,12 @@ export class UnauthorizedError extends AppError {
  * Forbidden error (403)
  */
 export class ForbiddenError extends AppError {
-  constructor(message = 'Forbidden', context?: Record<string, unknown>) {
-    super(message, 403, ErrorCode.FORBIDDEN, context);
+  constructor(
+    message = 'Forbidden',
+    code: ErrorCode = ErrorCode.FORBIDDEN,
+    context?: Record<string, unknown>
+  ) {
+    super(message, 403, code, context);
   }
 }
 
@@ -258,8 +266,7 @@ export class ForbiddenError extends AppError {
  */
 export class SSRFError extends ForbiddenError {
   constructor(message = 'Access to requested URL is forbidden', context?: Record<string, unknown>) {
-    super(message, { ...context, reason: 'ssrf_protection' });
-    this.code = ErrorCode.SSRF_BLOCKED;
+    super(message, ErrorCode.SSRF_BLOCKED, { ...context, reason: 'ssrf_protection' });
   }
 }
 
@@ -541,8 +548,7 @@ export class DatabaseConstraintError extends DatabaseError {
  */
 export class ConfigurationError extends AppError {
   constructor(message = 'Configuration error', context?: Record<string, unknown>) {
-    super(message, 500, ErrorCode.CONFIGURATION_ERROR, context);
-    this.isOperational = false; // Programming error
+    super(message, 500, ErrorCode.CONFIGURATION_ERROR, context, { isOperational: false });
   }
 }
 
