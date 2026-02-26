@@ -79,3 +79,38 @@ export function formatMetadataCodesForDisplay(
     type,
   }));
 }
+
+export function formatCodesForDisplay(
+  codes: string[]
+): Array<{ label: string; color: GumroadColor; type: string; code: string }> {
+  return codes.map(code => {
+    const type = extractTypeFromCode(code);
+    return {
+      label: code,
+      color: getMetadataCodeColor(type),
+      type,
+      code,
+    };
+  });
+}
+
+export function groupCodesByType(
+  codes: string[]
+): Record<string, string[]> {
+  const grouped: Record<string, string[]> = {};
+  for (const code of codes) {
+    const type = extractTypeFromCode(code);
+    if (!grouped[type]) {
+      grouped[type] = [];
+    }
+    grouped[type].push(code);
+  }
+  return grouped;
+}
+
+function extractTypeFromCode(code: string): string {
+  const match = code.match(/^([A-Z]{2,3})[-_:]/);
+  if (match) return match[1];
+  if (code.length <= 4 && /^[A-Z]+$/.test(code)) return 'ORG';
+  return 'CON';
+}

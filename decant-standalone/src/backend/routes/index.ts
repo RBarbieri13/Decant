@@ -13,6 +13,8 @@ import * as backupRoutes from './backup.js';
 import * as queueRoutes from './queue.js';
 import * as auditRoutes from './audit.js';
 import { importLimiter, settingsLimiter } from '../middleware/rateLimit.js';
+import { enqueueManyForEnrichment } from '../services/processing_queue.js';
+import { getDatabase } from '../database/connection.js';
 import { getNotificationService, type NotificationEvent } from '../services/notifications/index.js';
 import { log } from '../logger/index.js';
 import { metricsEndpoint } from '../services/metrics/index.js';
@@ -45,6 +47,11 @@ export function registerHealthRoutes(app: Express): void {
   app.get('/health/full', healthRoutes.fullHealth);
   app.get('/health/component/:name', healthRoutes.componentHealth);
   app.get('/metrics', metricsEndpoint);
+
+  // Lightweight health check for Chrome extension (no rate limit, instant response)
+  app.get('/api/health', (_req: Request, res: Response) => {
+    res.json({ success: true, app: 'decant', ready: true });
+  });
 }
 
 /**
@@ -213,6 +220,53 @@ export function registerAPIRoutes(app: Express): void {
 
   // POST /api/queue/clear - Clear completed jobs
   app.post('/api/queue/clear', queueRoutes.clearCompletedJobs);
+
+  // ============================================================
+  // Admin routes (one-time operations)
+  // ============================================================
+
+  // POST /api/admin/backfill-subcategories - Re-enqueue all nodes missing subcategory_label
+  app.post('/api/admin/backfill-subcategories', (_req: Request, res: Response) => {
+    try {
+      const db = getDatabase();
+      const rows = db.prepare(
+        `SELECT id FROM nodes WHERE subcategory_label IS NULL AND is_deleted = 0`
+      ).all() as { id: string }[];
+
+      if (rows.length === 0) {
+        res.json({ queued: 0, message: 'All nodes already have subcategory labels' });
+        return;
+      }
+
+      const nodeIds = rows.map(r => r.id);
+      enqueueManyForEnrichment(nodeIds, 1);
+
+      log.info(`Backfill: queued ${nodeIds.length} nodes for subcategory enrichment`, { module: 'admin' });
+      res.json({ queued: nodeIds.length, message: `Queued ${nodeIds.length} nodes for subcategory enrichment` });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      log.error('Backfill subcategories failed', { error: msg, module: 'admin' });
+      res.status(500).json({ error: msg });
+    }
+  });
+
+  // POST /api/admin/enrich-all - Re-enqueue all nodes for full Phase 2 re-enrichment
+  app.post('/api/admin/enrich-all', (_req: Request, res: Response) => {
+    try {
+      const db = getDatabase();
+      const rows = db.prepare(
+        `SELECT id FROM nodes WHERE is_deleted = 0`
+      ).all() as { id: string }[];
+      const nodeIds = rows.map(r => r.id);
+      enqueueManyForEnrichment(nodeIds, 5);
+      log.info(`Enrich-all queued`, { count: nodeIds.length, module: 'admin' });
+      res.json({ queued: true, count: nodeIds.length });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      log.error('Enrich-all failed', { error: msg, module: 'admin' });
+      res.status(500).json({ error: msg });
+    }
+  });
 
   // ============================================================
   // Audit routes

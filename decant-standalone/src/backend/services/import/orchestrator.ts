@@ -468,7 +468,7 @@ export class ImportOrchestrator {
     classification: Phase1Classification
   ): Promise<any> {
     const nodeInput: CreateNodeInput = {
-      title: scraped.title,
+      title: classification.title || scraped.title,
       url: url,
       source_domain: scraped.domain,
       company: classification.organization !== 'UNKN' ? classification.organization : undefined,
@@ -476,6 +476,9 @@ export class ImportOrchestrator {
       short_description: scraped.description ?? undefined,
       logo_url: scraped.favicon ?? undefined,
       ai_summary: scraped.description ?? undefined,
+      segment_code: classification.segment,
+      category_code: classification.category,
+      content_type_code: classification.contentType,
       extracted_fields: {
         author: scraped.author,
         siteName: scraped.siteName,

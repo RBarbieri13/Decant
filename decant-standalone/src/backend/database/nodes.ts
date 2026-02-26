@@ -27,6 +27,10 @@ export interface CreateNodeInput {
   key_concepts?: string[];
   function_parent_id?: string | null;
   organization_parent_id?: string | null;
+  segment_code?: string | null;
+  category_code?: string | null;
+  content_type_code?: string | null;
+  subcategory_label?: string | null;
 }
 
 export interface UpdateNodeInput {
@@ -41,6 +45,10 @@ export interface UpdateNodeInput {
   key_concepts?: string[];
   function_parent_id?: string | null;
   organization_parent_id?: string | null;
+  segment_code?: string | null;
+  category_code?: string | null;
+  content_type_code?: string | null;
+  subcategory_label?: string | null;
 }
 
 /**
@@ -68,6 +76,8 @@ export interface Phase2UpdateInput {
   descriptor_string?: string;
   /** Metadata codes for faceted classification */
   metadata_codes?: Record<string, string[]>;
+  /** AI-generated semantic subcategory label (e.g. "Video Generation") */
+  subcategory_label?: string | null;
 }
 
 /**
@@ -86,6 +96,8 @@ export interface HierarchyCodeUpdate {
   categoryCode?: string | null;
   /** New content type code */
   contentTypeCode?: string | null;
+  /** New semantic subcategory label */
+  subcategoryLabel?: string | null;
 }
 
 /**
@@ -111,8 +123,9 @@ export function createNode(data: CreateNodeInput): unknown {
       INSERT INTO nodes (
         id, title, url, source_domain, company, phrase_description,
         short_description, logo_url, ai_summary, extracted_fields,
-        metadata_tags, function_parent_id, organization_parent_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        metadata_tags, function_parent_id, organization_parent_id,
+        segment_code, category_code, content_type_code, subcategory_label
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -128,7 +141,11 @@ export function createNode(data: CreateNodeInput): unknown {
       JSON.stringify(data.extracted_fields || {}),
       JSON.stringify(data.metadata_tags || []),
       data.function_parent_id || null,
-      data.organization_parent_id || null
+      data.organization_parent_id || null,
+      data.segment_code || null,
+      data.category_code || null,
+      data.content_type_code || null,
+      data.subcategory_label || null
     );
 
     // Insert key concepts (within same transaction)
@@ -219,6 +236,22 @@ export function updateNode(id: string, data: UpdateNodeInput): unknown {
   if (data.organization_parent_id !== undefined) {
     updates.push('organization_parent_id = ?');
     values.push(data.organization_parent_id);
+  }
+  if (data.segment_code !== undefined) {
+    updates.push('segment_code = ?');
+    values.push(data.segment_code);
+  }
+  if (data.category_code !== undefined) {
+    updates.push('category_code = ?');
+    values.push(data.category_code);
+  }
+  if (data.content_type_code !== undefined) {
+    updates.push('content_type_code = ?');
+    values.push(data.content_type_code);
+  }
+  if (data.subcategory_label !== undefined) {
+    updates.push('subcategory_label = ?');
+    values.push(data.subcategory_label ? data.subcategory_label.slice(0, 60) : null);
   }
 
   // If no updates to the node itself and no key_concepts update, just return current state
@@ -321,6 +354,12 @@ export function updateNodePhase2(id: string, data: Phase2UpdateInput): unknown {
   if (data.metadata_tags !== undefined) {
     updates.push('metadata_tags = ?');
     values.push(JSON.stringify(data.metadata_tags.slice(0, 10)));
+  }
+
+  // 9. Subcategory Label - AI-generated semantic subcategory
+  if (data.subcategory_label !== undefined) {
+    updates.push('subcategory_label = ?');
+    values.push(data.subcategory_label ? data.subcategory_label.slice(0, 60) : null);
   }
 
   // Merge extracted_fields with existing data

@@ -23,6 +23,9 @@ import { getAllNodes, readNode } from '../../database/nodes.js';
  * Higher weights indicate more importance for similarity calculation.
  */
 const METADATA_WEIGHTS: Record<MetadataCodeType, number> = {
+  SEG: 2.5,   // Segment - critical for hierarchy
+  CAT: 2.0,   // Category - very important for hierarchy
+  TYP: 1.5,   // Content Type - important for hierarchy
   ORG: 2.0,   // Organization - very important
   FNC: 1.5,   // Function/Capability - important
   TEC: 1.0,   // Technology - moderate
@@ -202,14 +205,17 @@ export async function computeSimilarityForNode(
   let computed = 0;
   let skipped = 0;
 
-  for (const otherNode of allNodes) {
+  for (const otherNode of allNodes as Array<Record<string, unknown>>) {
+    const otherId = otherNode.id;
+    if (typeof otherId !== 'string') continue;
+
     // Skip self-comparison
-    if (otherNode.id === nodeId) {
+    if (otherId === nodeId) {
       continue;
     }
 
     // Compute similarity
-    const result = computeSimilarity(nodeId, otherNode.id as string);
+    const result = computeSimilarity(nodeId, otherId);
 
     computed++;
 
@@ -411,10 +417,13 @@ export async function recomputeAllSimilarities(
   const allNodes = getAllNodes();
   const nodesWithMetadata: string[] = [];
 
-  for (const node of allNodes) {
-    const metadata = getNodeMetadata(node.id as string);
+  for (const node of allNodes as Array<Record<string, unknown>>) {
+    const id = node.id;
+    if (typeof id !== 'string') continue;
+
+    const metadata = getNodeMetadata(id);
     if (metadata.length > 0) {
-      nodesWithMetadata.push(node.id as string);
+      nodesWithMetadata.push(id);
     }
   }
 

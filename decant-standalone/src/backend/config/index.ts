@@ -27,12 +27,21 @@ const ConfigSchema = z.object({
   // CORS Configuration
   CORS_ALLOWED_ORIGINS: z.string().optional(),
 
+  // API Authentication
+  // If set, all /api/* routes (except /api/health) require this token.
+  // Send as: Authorization: Bearer <token>
+  // For SSE (/api/events), token can also be provided via ?token=<token>
+  DECANT_ACCESS_TOKEN: z.string().min(16).optional(),
+
   // Security Configuration
   DECANT_MASTER_KEY: z.string().min(32).optional(),
 
   // OpenAI Configuration
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().default('gpt-4o-mini'),
+
+  // Apify Configuration (for Twitter/X scraping)
+  APIFY_API_KEY: z.string().optional(),
 
   // Logging Configuration
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
@@ -105,6 +114,7 @@ export function logConfigSummary(): void {
     databasePath: config.DATABASE_PATH || 'default',
     rateLimitMax: config.RATE_LIMIT_MAX,
     rateLimitImportMax: config.RATE_LIMIT_IMPORT_MAX,
+    hasAccessToken: !!config.DECANT_ACCESS_TOKEN,
     hasOpenAIKey: !!config.OPENAI_API_KEY,
     openAIModel: config.OPENAI_MODEL,
     hasMasterKey: !!config.DECANT_MASTER_KEY,

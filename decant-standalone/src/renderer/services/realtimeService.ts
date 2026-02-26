@@ -4,6 +4,30 @@
 
 const API_BASE = '/api';
 
+function getAccessToken(): string | null {
+  try {
+    return localStorage.getItem('decant_access_token');
+  } catch {
+    return null;
+  }
+}
+
+function withAuthHeaders(headers?: HeadersInit): Headers {
+  const h = new Headers(headers);
+  const token = getAccessToken();
+  if (token) {
+    h.set('Authorization', `Bearer ${token}`);
+  }
+  return h;
+}
+
+async function fetchWithAuth(url: string, init: RequestInit = {}): Promise<Response> {
+  return fetch(url, {
+    ...init,
+    headers: withAuthHeaders(init.headers),
+  });
+}
+
 // ============================================================
 // Types
 // ============================================================
@@ -103,7 +127,7 @@ export const queueAPI = {
    * Get overall queue statistics
    */
   async getStatus(): Promise<QueueStatus> {
-    const res = await fetch(`${API_BASE}/queue/status`);
+    const res = await fetchWithAuth(`${API_BASE}/queue/status`);
     if (!res.ok) throw new Error('Failed to fetch queue status');
     return res.json();
   },
@@ -112,7 +136,7 @@ export const queueAPI = {
    * Get job status for a specific node
    */
   async getJobForNode(nodeId: string): Promise<JobForNodeResponse> {
-    const res = await fetch(`${API_BASE}/queue/jobs/${nodeId}`);
+    const res = await fetchWithAuth(`${API_BASE}/queue/jobs/${nodeId}`);
     if (!res.ok) throw new Error('Failed to fetch job for node');
     return res.json();
   },
@@ -121,7 +145,7 @@ export const queueAPI = {
    * Retry a failed job
    */
   async retryJob(jobId: string): Promise<{ success: boolean; message?: string }> {
-    const res = await fetch(`${API_BASE}/queue/retry/${jobId}`, {
+    const res = await fetchWithAuth(`${API_BASE}/queue/retry/${jobId}`, {
       method: 'POST',
     });
     if (!res.ok) throw new Error('Failed to retry job');
@@ -285,7 +309,11 @@ export class SSEClient {
     this.setConnectionState('connecting');
 
     try {
-      this.eventSource = new EventSource(`${API_BASE}/events`);
+      const token = getAccessToken();
+      const url = token
+        ? `${API_BASE}/events?token=${encodeURIComponent(token)}`
+        : `${API_BASE}/events`;
+      this.eventSource = new EventSource(url);
 
       // Handle connection open
       this.eventSource.onopen = () => {

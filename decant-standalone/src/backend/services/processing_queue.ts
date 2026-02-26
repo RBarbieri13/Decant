@@ -263,12 +263,12 @@ export class ProcessingQueue {
 
         // Emit notification for successful enrichment with hierarchy updates
         const hierarchyUpdates = updatedNode ? {
-          segmentCode: updatedNode.extracted_fields?.segment_code,
-          categoryCode: updatedNode.extracted_fields?.category_code,
-          contentTypeCode: updatedNode.extracted_fields?.content_type_code,
+          segmentCode: updatedNode.segment_code,
+          categoryCode: updatedNode.category_code,
+          contentTypeCode: updatedNode.content_type_code,
           title: updatedNode.title,
-          functionCode: updatedNode.function_parent_id,
-          organizationCode: updatedNode.organization_parent_id,
+          functionCode: updatedNode.function_hierarchy_code,
+          organizationCode: updatedNode.organization_hierarchy_code,
         } : undefined;
 
         emitEnrichmentComplete(job.node_id, true, hierarchyUpdates);
@@ -353,7 +353,7 @@ export class ProcessingQueue {
       });
 
       // Emit notification for failed enrichment
-      emitEnrichmentComplete(job.node_id, false, errorMessage);
+      emitEnrichmentComplete(job.node_id, false, undefined, errorMessage);
     } else {
       // Schedule for retry
       const retryDelay =

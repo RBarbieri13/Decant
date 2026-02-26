@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "Decant — Save to Knowledge Base",
+  "short_name": "Decant",
+  "description": "Save browser tabs to your Decant knowledge base. Supports single-page and batch tab import with AI classification.",
+  "version": "1.0.0",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    },
+    "default_title": "Save to Decant"
+  },
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "https://*.fly.dev/*",
+    "https://*.onrender.com/*"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "commands": {
+    "quick-add-current": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+D",
+        "mac": "Command+Shift+D"
+      },
+      "description": "Add current page to Decant"
+    }
+  }
+}

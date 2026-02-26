@@ -4,6 +4,30 @@
 
 const API_BASE = '/api';
 
+function getAccessToken(): string | null {
+  try {
+    return localStorage.getItem('decant_access_token');
+  } catch {
+    return null;
+  }
+}
+
+function withAuthHeaders(headers?: HeadersInit): Headers {
+  const h = new Headers(headers);
+  const token = getAccessToken();
+  if (token) {
+    h.set('Authorization', `Bearer ${token}`);
+  }
+  return h;
+}
+
+async function fetchWithAuth(url: string, init: RequestInit = {}): Promise<Response> {
+  return fetch(url, {
+    ...init,
+    headers: withAuthHeaders(init.headers),
+  });
+}
+
 export interface Node {
   id: string;
   title: string;
@@ -21,6 +45,11 @@ export interface Node {
   key_concepts?: string[];
   function_parent_id?: string | null;
   organization_parent_id?: string | null;
+  segment_code?: string | null;
+  category_code?: string | null;
+  content_type_code?: string | null;
+  subcategory_label?: string | null;
+  metadataCodes?: Record<string, string[]> | null;
 }
 
 export interface RelatedNode {
@@ -97,7 +126,7 @@ export const nodesAPI = {
    * Get all nodes (backward compatible - no pagination)
    */
   async getAll(): Promise<Node[]> {
-    const res = await fetch(`${API_BASE}/nodes`);
+    const res = await fetchWithAuth(`${API_BASE}/nodes`);
     if (!res.ok) throw new Error('Failed to fetch nodes');
     return res.json();
   },
@@ -119,19 +148,19 @@ export const nodesAPI = {
     const queryString = urlParams.toString();
     const url = queryString ? `${API_BASE}/nodes?${queryString}` : `${API_BASE}/nodes?page=1`;
 
-    const res = await fetch(url);
+    const res = await fetchWithAuth(url);
     if (!res.ok) throw new Error('Failed to fetch nodes');
     return res.json();
   },
 
   async get(id: string): Promise<Node> {
-    const res = await fetch(`${API_BASE}/nodes/${id}`);
+    const res = await fetchWithAuth(`${API_BASE}/nodes/${id}`);
     if (!res.ok) throw new Error('Failed to fetch node');
     return res.json();
   },
 
   async create(data: Partial<Node>): Promise<Node> {
-    const res = await fetch(`${API_BASE}/nodes`, {
+    const res = await fetchWithAuth(`${API_BASE}/nodes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -141,7 +170,7 @@ export const nodesAPI = {
   },
 
   async update(id: string, data: Partial<Node>): Promise<Node> {
-    const res = await fetch(`${API_BASE}/nodes/${id}`, {
+    const res = await fetchWithAuth(`${API_BASE}/nodes/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -151,20 +180,20 @@ export const nodesAPI = {
   },
 
   async delete(id: string): Promise<void> {
-    const res = await fetch(`${API_BASE}/nodes/${id}`, {
+    const res = await fetchWithAuth(`${API_BASE}/nodes/${id}`, {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Failed to delete node');
   },
 
   async getRelated(id: string, limit: number = 5): Promise<RelatedNodesResponse> {
-    const res = await fetch(`${API_BASE}/nodes/${id}/related?limit=${limit}`);
+    const res = await fetchWithAuth(`${API_BASE}/nodes/${id}/related?limit=${limit}`);
     if (!res.ok) throw new Error('Failed to fetch related nodes');
     return res.json();
   },
 
   async getBacklinks(id: string, limit: number = 10): Promise<BacklinksResponse> {
-    const res = await fetch(`${API_BASE}/nodes/${id}/backlinks?limit=${limit}`);
+    const res = await fetchWithAuth(`${API_BASE}/nodes/${id}/backlinks?limit=${limit}`);
     if (!res.ok) throw new Error('Failed to fetch backlinks');
     return res.json();
   },
@@ -176,19 +205,19 @@ export const nodesAPI = {
 
 export const hierarchyAPI = {
   async getTree(view: 'function' | 'organization'): Promise<any> {
-    const res = await fetch(`${API_BASE}/hierarchy/tree/${view}`);
+    const res = await fetchWithAuth(`${API_BASE}/hierarchy/tree/${view}`);
     if (!res.ok) throw new Error(`Failed to fetch ${view} tree`);
     return res.json();
   },
 
   async getSegments(): Promise<any[]> {
-    const res = await fetch(`${API_BASE}/hierarchy/segments`);
+    const res = await fetchWithAuth(`${API_BASE}/hierarchy/segments`);
     if (!res.ok) throw new Error('Failed to fetch segments');
     return res.json();
   },
 
   async getOrganizations(): Promise<any[]> {
-    const res = await fetch(`${API_BASE}/hierarchy/organizations`);
+    const res = await fetchWithAuth(`${API_BASE}/hierarchy/organizations`);
     if (!res.ok) throw new Error('Failed to fetch organizations');
     return res.json();
   },
@@ -207,7 +236,7 @@ export const searchAPI = {
     if (filters) {
       params.append('filters', JSON.stringify(filters));
     }
-    const res = await fetch(`${API_BASE}/search?${params}`);
+    const res = await fetchWithAuth(`${API_BASE}/search?${params}`);
     if (!res.ok) throw new Error('Failed to search');
     return res.json();
   },
@@ -241,7 +270,7 @@ export const searchAPI = {
       params.append('page', '1');
     }
 
-    const res = await fetch(`${API_BASE}/search?${params}`);
+    const res = await fetchWithAuth(`${API_BASE}/search?${params}`);
     if (!res.ok) throw new Error('Failed to search');
     return res.json();
   },
@@ -271,7 +300,7 @@ export interface ImportResult {
 
 export const importAPI = {
   async importUrl(url: string): Promise<ImportResult> {
-    const res = await fetch(`${API_BASE}/import`, {
+    const res = await fetchWithAuth(`${API_BASE}/import`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url }),
@@ -290,7 +319,7 @@ export const importAPI = {
 
 export const mergeAPI = {
   async merge(primaryId: string, secondaryId: string, options: { keepMetadata?: boolean; appendSummary?: boolean }): Promise<Node> {
-    const res = await fetch(`${API_BASE}/nodes/${primaryId}/merge`, {
+    const res = await fetchWithAuth(`${API_BASE}/nodes/${primaryId}/merge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ secondaryId, options }),
@@ -306,7 +335,7 @@ export const mergeAPI = {
 
 export const moveAPI = {
   async moveNode(nodeId: string, targetParentId: string, targetHierarchy: 'function' | 'organization'): Promise<Node> {
-    const res = await fetch(`${API_BASE}/nodes/${nodeId}/move`, {
+    const res = await fetchWithAuth(`${API_BASE}/nodes/${nodeId}/move`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ targetParentId, targetHierarchy }),
@@ -322,7 +351,7 @@ export const moveAPI = {
 
 export const settingsAPI = {
   async setApiKey(apiKey: string): Promise<void> {
-    const res = await fetch(`${API_BASE}/settings/api-key`, {
+    const res = await fetchWithAuth(`${API_BASE}/settings/api-key`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ apiKey }),
@@ -331,7 +360,7 @@ export const settingsAPI = {
   },
 
   async getApiKeyStatus(): Promise<{ configured: boolean }> {
-    const res = await fetch(`${API_BASE}/settings/api-key/status`);
+    const res = await fetchWithAuth(`${API_BASE}/settings/api-key/status`);
     if (!res.ok) throw new Error('Failed to get API key status');
     return res.json();
   },
@@ -422,7 +451,7 @@ export const batchImportAPI = {
    * Start a batch import of multiple URLs
    */
   async start(urls: string[], options?: Partial<BatchImportOptions>): Promise<BatchImportStartResult> {
-    const res = await fetch(`${API_BASE}/batch-import`, {
+    const res = await fetchWithAuth(`${API_BASE}/batch-import`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ urls, options }),
@@ -438,7 +467,7 @@ export const batchImportAPI = {
    * Cancel an active batch import
    */
   async cancel(batchId: string): Promise<{ success: boolean; error?: string }> {
-    const res = await fetch(`${API_BASE}/batch-import/${batchId}/cancel`, {
+    const res = await fetchWithAuth(`${API_BASE}/batch-import/${batchId}/cancel`, {
       method: 'POST',
     });
     const data = await res.json();
@@ -452,12 +481,26 @@ export const batchImportAPI = {
    * Get the status of a batch import
    */
   async getStatus(batchId: string): Promise<BatchImportStatusResult> {
-    const res = await fetch(`${API_BASE}/batch-import/${batchId}`);
+    const res = await fetchWithAuth(`${API_BASE}/batch-import/${batchId}`);
     const data = await res.json();
     if (!res.ok) {
       return { success: false, error: data.error || 'Failed to get batch status' };
     }
     return data;
+  },
+};
+
+// ============================================================
+// Admin API
+// ============================================================
+
+export const adminAPI = {
+  async reEnrichAll(): Promise<{ queued: boolean; count: number }> {
+    const res = await fetchWithAuth(`${API_BASE}/admin/enrich-all`, {
+      method: 'POST',
+    });
+    if (!res.ok) throw new Error(`Re-enrich all failed: ${res.statusText}`);
+    return res.json();
   },
 };
 
@@ -485,7 +528,7 @@ export const auditAPI = {
       ? `${API_BASE}/nodes/${nodeId}/history?${queryString}`
       : `${API_BASE}/nodes/${nodeId}/history`;
 
-    const res = await fetch(url);
+    const res = await fetchWithAuth(url);
     if (!res.ok) throw new Error('Failed to fetch node history');
     return res.json();
   },
@@ -494,7 +537,7 @@ export const auditAPI = {
    * Get recent changes across all nodes
    */
   async getRecentChanges(limit: number = 50): Promise<RecentAuditChangesResponse> {
-    const res = await fetch(`${API_BASE}/audit/recent?limit=${limit}`);
+    const res = await fetchWithAuth(`${API_BASE}/audit/recent?limit=${limit}`);
     if (!res.ok) throw new Error('Failed to fetch recent changes');
     return res.json();
   },
@@ -503,7 +546,7 @@ export const auditAPI = {
    * Get audit statistics
    */
   async getStatistics(): Promise<AuditStatistics> {
-    const res = await fetch(`${API_BASE}/audit/stats`);
+    const res = await fetchWithAuth(`${API_BASE}/audit/stats`);
     if (!res.ok) throw new Error('Failed to fetch audit statistics');
     return res.json();
   },

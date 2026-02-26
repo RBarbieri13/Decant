@@ -257,6 +257,12 @@ export const Phase1ClassificationSchema = z.object({
     .max(200)
     .optional()
     .describe('Brief explanation for the classification'),
+
+  title: z
+    .string()
+    .max(200)
+    .optional()
+    .describe('True subject/name of the content — not the HTML page title'),
 });
 
 export type Phase1Classification = z.infer<typeof Phase1ClassificationSchema>;
@@ -313,6 +319,18 @@ ${Object.entries(COMMON_ORGANIZATIONS).slice(0, 15).map(([code, name]) => `- ${c
 - For other organizations, create a sensible 4-letter code
 - Use UNKN if organization is unclear
 
+## TITLE EXTRACTION
+Extract the TRUE name/title — the actual subject, tool name, concept, or topic.
+Do NOT repeat the HTML page title verbatim. Strip site names, SEO keywords, marketing language.
+For X/Twitter posts (domain: x.com or twitter.com): Read the post content carefully.
+Look for tool names, product names, or GitHub repo links mentioned in the post text.
+If the post links to a GitHub repo or website, use that as the primary title source.
+Examples:
+  "Claude Code - Build software with AI | Anthropic" → "Claude Code"
+  "How to Build a RAG Pipeline - A Complete Guide | DataCamp Blog" → "Building a RAG Pipeline"
+  "GitHub - langchain-ai/langchain: Building applications with LLMs" → "LangChain"
+Max 200 characters. Focus on what the content IS, not how it's marketed.
+
 ## RESPONSE FORMAT:
 Respond with a JSON object containing:
 {
@@ -321,7 +339,8 @@ Respond with a JSON object containing:
   "contentType": "X",       // 1 uppercase letter
   "organization": "XXXX",   // 4 uppercase letters
   "confidence": 0.0-1.0,    // How confident you are
-  "reasoning": "Brief explanation (optional, max 200 chars)"
+  "reasoning": "Brief explanation (optional, max 200 chars)",
+  "title": "True subject/name (optional, max 200 chars)"
 }
 
 ## GUIDELINES:

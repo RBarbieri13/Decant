@@ -12,10 +12,12 @@ import {
   YouTubeFields,
   GitHubFields,
   ArticleFields,
+  TwitterFields,
 } from './base.js';
 import { YouTubeExtractor, youtubeExtractor } from './youtube.js';
 import { GitHubExtractor, githubExtractor } from './github.js';
 import { ArticleExtractor, articleExtractor } from './article.js';
+import { TwitterExtractor, twitterExtractor } from './twitter.js';
 import { log } from '../../logger/index.js';
 
 // Re-export types and classes from base
@@ -26,6 +28,7 @@ export type {
   YouTubeFields,
   GitHubFields,
   ArticleFields,
+  TwitterFields,
 };
 
 export { BaseExtractor };
@@ -34,6 +37,7 @@ export { BaseExtractor };
 export { YouTubeExtractor, youtubeExtractor } from './youtube.js';
 export { GitHubExtractor, githubExtractor } from './github.js';
 export { ArticleExtractor, articleExtractor } from './article.js';
+export { TwitterExtractor, twitterExtractor } from './twitter.js';
 
 // ============================================================
 // Extractor Registry
@@ -51,6 +55,7 @@ export class ExtractorRegistry {
     // Register built-in extractors
     this.register(youtubeExtractor);
     this.register(githubExtractor);
+    this.register(twitterExtractor);
 
     // Article extractor is the fallback
     this.fallbackExtractor = articleExtractor;
@@ -194,7 +199,9 @@ export class ExtractorRegistry {
       'youtube.com',
       'youtu.be',
       'github.com',
-      'gist.github.com'
+      'gist.github.com',
+      'twitter.com',
+      'x.com'
     );
 
     return domains;

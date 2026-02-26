@@ -14,7 +14,7 @@ import {
   type MetadataCodeType,
   METADATA_CODE_TYPES,
 } from './llm/prompts/phase2_enrichment.js';
-import { readNode, updateNode } from '../database/nodes.js';
+import { readNode, updateNodePhase2 } from '../database/nodes.js';
 import {
   getOrCreateCode,
   setMetadataForNode,
@@ -321,12 +321,12 @@ export class Phase2Enricher {
    * - Uppercase only
    * - Alphanumeric with underscores
    * - Starts with a letter
-   * - 2-50 characters
+   * - 1-50 characters (SEG and TYP are single-letter codes)
    * - No spaces
    */
   private isValidCode(code: string): boolean {
     if (!code || typeof code !== 'string') return false;
-    if (code.length < 2 || code.length > 50) return false;
+    if (code.length < 1 || code.length > 50) return false;
     if (!/^[A-Z][A-Z0-9_]*$/.test(code)) return false;
     return true;
   }
@@ -368,7 +368,7 @@ export class Phase2Enricher {
       // Update the node with enrichment data
       try {
         const updateData = this.mapEnrichmentToNodeUpdate(result.enrichment, node.source_domain as string);
-        updateNode(nodeId, updateData);
+        updateNodePhase2(nodeId, updateData);
 
         log.info('Node updated with Phase 2 enrichment', {
           nodeId,
@@ -455,6 +455,7 @@ export class Phase2Enricher {
     segment_code?: string;
     category_code?: string;
     content_type_code?: string;
+    subcategory_label?: string;
   } {
     // Build the update object with all spec-required fields
     const update: {
@@ -470,6 +471,7 @@ export class Phase2Enricher {
       segment_code?: string;
       category_code?: string;
       content_type_code?: string;
+      subcategory_label?: string;
     } = {};
 
     // 1. Title - Cleaned/improved title (max 500 chars)
@@ -548,6 +550,10 @@ export class Phase2Enricher {
       // Set content_type_code from first TYP code
       if (enrichment.metadataCodes.TYP && enrichment.metadataCodes.TYP.length > 0) {
         update.content_type_code = enrichment.metadataCodes.TYP[0];
+      }
+      // Set subcategory_label from first SUB code
+      if (enrichment.metadataCodes.SUB && enrichment.metadataCodes.SUB.length > 0) {
+        update.subcategory_label = enrichment.metadataCodes.SUB[0];
       }
     }
 

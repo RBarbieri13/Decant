@@ -315,6 +315,28 @@ export interface ArticleFields {
   articleType: string | null;
 }
 
+/**
+ * Twitter/X-specific extracted fields
+ */
+export interface TwitterFields {
+  tweetId: string;
+  authorHandle: string | null;
+  authorName: string | null;
+  authorFollowers: number | null;
+  tweetText: string | null;
+  likeCount: number | null;
+  retweetCount: number | null;
+  replyCount: number | null;
+  quoteCount: number | null;
+  isRetweet: boolean;
+  isQuoteTweet: boolean;
+  quotedTweetUrl: string | null;
+  mediaUrls: string[];
+  hashtags: string[];
+  mentions: string[];
+  postedAt: string | null;
+}
+
 export default {
   BaseExtractor,
 };
