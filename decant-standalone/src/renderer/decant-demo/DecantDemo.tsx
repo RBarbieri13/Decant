@@ -20,11 +20,11 @@ import { QuickAddModal } from '../components/import/QuickAddModal';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
 import { useApp } from '../context/AppContext';
 // API imports for backend integration
-import { nodesAPI, hierarchyAPI, adminAPI } from '../services/api';
+import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI } from '../services/api';
 // Real-time service for hierarchy updates
 import { createIntegratedSSEClient } from '../services/realtimeService';
 // Metadata code colors utility
-import { getSegmentColor } from '../utils/metadataCodeColors';
+import { getMetadataCodeColor, getSegmentColor, formatMetadataCodesForDisplay, parseRawTag } from '../utils/metadataCodeColors';
 // Hierarchy icons
 import { getTreeNodeIcon, getIconProps, getCategoryIcon } from '../utils/hierarchyIcons';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
@@ -87,29 +87,13 @@ type ViewMode = 'table' | 'grid' | 'tree' | 'list';
 type TagColor = 'blue' | 'yellow' | 'pink' | 'green' | 'purple' | 'gray' | 'orange' | 'teal';
 type PanelTab = 'properties' | 'related' | 'backlinks';
 
-// Icon types matching the mockup exactly
-type TreeIconType =
-  | 'folder'        // Brown folder icon
-  | 'document'      // Blue document icon
-  | 'link'          // Green link/chain icon
-  | 'ui'            // Purple UI/interface icon
-  | 'book'          // Green book/docs icon
-  | 'component'     // Pink/magenta puzzle piece
-  | 'button'        // Pink button icon
-  | 'form'          // Pink form icon
-  | 'modal'         // Pink modal icon
-  | 'layout'        // Brown layout folder
-  | 'style'         // Pink paint palette
-  | 'image'         // Pink image icon
-  | 'backend'       // Brown backend folder
-  | 'test'          // Green flask/beaker
-  | 'settings'      // Gray gear icon
-  | 'guidelines'    // Blue guidelines doc
-  | 'brand'         // Pink brand assets
-  | 'tools'         // Green external tools
-  | 'person'        // Orange person icon
-  | 'notes'         // Green meeting notes
-  | 'default';      // Default gray icon
+// Gumroad palette hex colors for tree node icons
+const GUMROAD_ICON_COLORS: Record<string, string> = {
+  pink: '#ff90e8',
+  blue: '#90a8ed',
+  green: '#23a094',
+  yellow: '#f1c40f',
+};
 
 interface BreadcrumbItem {
   label: string;
@@ -119,7 +103,9 @@ interface BreadcrumbItem {
 interface TreeNodeData {
   id: string;
   name: string;
-  iconType: TreeIconType;
+  iconHint: string;
+  iconColor: string;
+  iconType?: string;
   children?: TreeNodeData[];
   isExpanded?: boolean;
 }
@@ -235,6 +221,8 @@ interface TopBarProps {
   onBatchImportClick?: () => void;
   onQuickAddClick?: () => void;
   onRefreshAllClick?: () => void;
+  onReclassifyClick?: () => void;
+  isReclassifying?: boolean;
   onSettingsClick?: () => void;
   onUserClick?: () => void;
   userName?: string;
@@ -253,6 +241,8 @@ const TopBar: React.FC<TopBarProps> = ({
   onBatchImportClick,
   onQuickAddClick,
   onRefreshAllClick,
+  onReclassifyClick,
+  isReclassifying: isReclassifyingProp,
   onSettingsClick,
   onUserClick,
   // userName available for future use
@@ -358,9 +348,19 @@ const TopBar: React.FC<TopBarProps> = ({
           className="gum-button gum-button--small gum-button--blue"
           onClick={onBatchImportClick}
           title="Batch Import URLs"
-          style={{ marginLeft: '8px', marginRight: '12px' }}
+          style={{ marginLeft: '8px', marginRight: '4px' }}
         >
           Batch
+        </button>
+
+        <button
+          className="gum-button gum-button--small gum-button--pink"
+          onClick={onReclassifyClick}
+          disabled={isReclassifyingProp}
+          title="Reclassify all nodes with AI"
+          style={{ marginRight: '12px' }}
+        >
+          {isReclassifyingProp ? 'Classifying...' : 'Reclassify'}
         </button>
 
         <button className="decant-topbar__icon-btn" title="Notifications">
@@ -478,6 +478,7 @@ interface TreeNodeProps {
   onToggle: (id: string) => void;
 }
 
+
 const TreeNode: React.FC<TreeNodeProps> = ({
   node,
   level,
@@ -509,6 +510,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 
   const iconProps = getIconProps({ size: 16, stroke: 1.5, color: iconColor });
 
+
   return (
     <div className="decant-tree-node">
       <div
@@ -530,6 +532,10 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           <span className="decant-tree-node__toggle-spacer" />
         )}
         <NodeIcon {...iconProps} className="decant-tree-node__icon" />
+        <i
+          className={`bx ${node.iconHint || 'bx-file'} decant-tree-node__icon`}
+          style={{ color: node.iconColor || '#6b7280' }}
+        />
         <span className="decant-tree-node__label">{node.name}</span>
       </div>
       {hasChildren && isExpanded && (
@@ -1757,6 +1763,7 @@ export default function DecantDemo() {
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
   const [refreshQueuedCount, setRefreshQueuedCount] = useState<number | null>(null);
+  const [isReclassifying, setIsReclassifying] = useState(false);
 
   // Load real nodes from API
   useEffect(() => {
@@ -1793,27 +1800,36 @@ export default function DecantDemo() {
               subcategoryLabel: node.subcategory_label || '',
               hierarchy: segCode && catCode ? `${segLabel} > ${catLabel}` : '',
               quickPhrase: node.phrase_description || '',
-              tags: (node.metadata_tags || []).slice(0, 3).map((tag: string, i: number) => {
-                // Structured tags (segment:A, category:AGT, type:S, org:COMP)
-                const prefix = tag.split(':')[0] || '';
-                const structuredColorMap: Record<string, TagColor> = {
-                  'segment': getSegmentColor(segCode) as TagColor,
-                  'category': 'green' as TagColor,
-                  'type': 'yellow' as TagColor,
-                  'org': 'pink' as TagColor,
-                };
-                if (structuredColorMap[prefix] && tag.includes(':')) {
-                  return { label: tag, color: structuredColorMap[prefix] };
-                }
-                // Plain word tags: cycle through colors based on position
-                const plainColors: TagColor[] = [
-                  getSegmentColor(segCode) as TagColor,
-                  'green',
-                  'yellow',
-                  'pink',
-                ];
-                return { label: tag, color: plainColors[i % plainColors.length] };
-              }),
+              tags: node.metadataCodes ?
+                formatMetadataCodesForDisplay(
+                  Object.entries(node.metadataCodes).flatMap(([type, codes]) =>
+                    (codes as string[]).map(code => ({ type, code, confidence: 0.9 }))
+                  )
+                ).slice(0, 3).map((badge) => ({
+                  label: badge.label,
+                  color: badge.color as TagColor
+                })) :
+                (node.metadata_tags || []).slice(0, 3).map((tag: string, i: number) => {
+                  // Structured tags (segment:A, category:AGT, type:S, org:COMP)
+                  const prefix = tag.split(':')[0] || '';
+                  const structuredColorMap: Record<string, TagColor> = {
+                    'segment': getSegmentColor(segCode) as TagColor,
+                    'category': 'green' as TagColor,
+                    'type': 'yellow' as TagColor,
+                    'org': 'pink' as TagColor,
+                  };
+                  if (structuredColorMap[prefix] && tag.includes(':')) {
+                    return { label: tag, color: structuredColorMap[prefix] };
+                  }
+                  // Plain word tags: cycle through colors based on position
+                  const plainColors: TagColor[] = [
+                    getSegmentColor(segCode) as TagColor,
+                    'green',
+                    'yellow',
+                    'pink',
+                  ];
+                  return { label: tag, color: plainColors[i % plainColors.length] };
+                }),
               date: node.date_added || new Date().toISOString().split('T')[0],
               company: node.company || 'Unknown',
               starred: false,
@@ -1845,7 +1861,8 @@ export default function DecantDemo() {
         const transformNode = (node: any): TreeNodeData => ({
           id: node.id,
           name: node.title,
-          iconType: getIconTypeForNode(node),
+          iconHint: node.iconHint || 'bxs-folder',
+          iconColor: GUMROAD_ICON_COLORS[node.color] || '#6b7280',
           children: (node.children || []).map(transformNode),
           isExpanded: false,
         });
@@ -1936,25 +1953,34 @@ export default function DecantDemo() {
             subcategoryLabel: node.subcategory_label || '',
             hierarchy: segCode && catCode ? `${segLabel} > ${catLabel}` : '',
             quickPhrase: node.phrase_description || '',
-            tags: (node.metadata_tags || []).slice(0, 3).map((tag: string, i: number) => {
-              const prefix = tag.split(':')[0] || '';
-              const structuredColorMap: Record<string, TagColor> = {
-                'segment': getSegmentColor(segCode) as TagColor,
-                'category': 'green' as TagColor,
-                'type': 'yellow' as TagColor,
-                'org': 'pink' as TagColor,
-              };
-              if (structuredColorMap[prefix] && tag.includes(':')) {
-                return { label: tag, color: structuredColorMap[prefix] };
-              }
-              const plainColors: TagColor[] = [
-                getSegmentColor(segCode) as TagColor,
-                'green',
-                'yellow',
-                'pink',
-              ];
-              return { label: tag, color: plainColors[i % plainColors.length] };
-            }),
+            tags: node.metadataCodes ?
+              formatMetadataCodesForDisplay(
+                Object.entries(node.metadataCodes).flatMap(([type, codes]) =>
+                  (codes as string[]).map(code => ({ type, code, confidence: 0.9 }))
+                )
+              ).slice(0, 3).map((badge) => ({
+                label: badge.label,
+                color: badge.color as TagColor
+              })) :
+              (node.metadata_tags || []).slice(0, 3).map((tag: string, i: number) => {
+                const prefix = tag.split(':')[0] || '';
+                const structuredColorMap: Record<string, TagColor> = {
+                  'segment': getSegmentColor(segCode) as TagColor,
+                  'category': 'green' as TagColor,
+                  'type': 'yellow' as TagColor,
+                  'org': 'pink' as TagColor,
+                };
+                if (structuredColorMap[prefix] && tag.includes(':')) {
+                  return { label: tag, color: structuredColorMap[prefix] };
+                }
+                const plainColors: TagColor[] = [
+                  getSegmentColor(segCode) as TagColor,
+                  'green',
+                  'yellow',
+                  'pink',
+                ];
+                return { label: tag, color: plainColors[i % plainColors.length] };
+              }),
             date: node.date_added || new Date().toISOString().split('T')[0],
             company: node.company || 'Unknown',
             starred: false,
@@ -1975,24 +2001,6 @@ export default function DecantDemo() {
     }
   };
 
-  // Helper function to determine icon type based on node properties
-  const getIconTypeForNode = (node: any): TreeIconType => {
-    // Map based on node type or segment
-    if (node.nodeType === 'segment') return 'folder';
-    if (node.nodeType === 'category') return 'folder';
-    if (node.nodeType === 'content_type') return 'folder';
-    if (node.nodeType === 'organization') return 'person';
-
-    // For items, use content type or segment to determine icon
-    const contentType = node.contentTypeCode;
-    if (contentType === 'T') return 'link';      // Tool/Website
-    if (contentType === 'A') return 'document';  // Article
-    if (contentType === 'V') return 'link';      // Video
-    if (contentType === 'G') return 'backend';   // Repository
-    if (contentType === 'C') return 'book';      // Course
-
-    return 'document'; // Default
-  };
 
   // Selected item for properties panel
   const selectedItem = useMemo(
@@ -2167,6 +2175,21 @@ export default function DecantDemo() {
     setIsModalOpen(false);
   }, []);
 
+  const handleReclassifyAll = useCallback(async () => {
+    if (isReclassifying) return;
+    setIsReclassifying(true);
+    try {
+      const result = await reclassifyAPI.reclassifyAll();
+      console.log('Reclassification complete:', result.message, result.segmentDistribution);
+      await loadNodes();
+      await loadTree();
+    } catch (error) {
+      console.error('Reclassification failed:', error);
+    } finally {
+      setIsReclassifying(false);
+    }
+  }, [isReclassifying, loadTree]);
+
   return (
     <div className="decant-app">
       <TopBar
@@ -2185,6 +2208,8 @@ export default function DecantDemo() {
         onBatchImportClick={() => setIsBatchImportOpen(true)}
         onQuickAddClick={() => setIsQuickAddOpen(true)}
         onRefreshAllClick={handleRefreshAll}
+        onReclassifyClick={handleReclassifyAll}
+        isReclassifying={isReclassifying}
         onSettingsClick={handleSettingsClick}
         onUserClick={handleUserClick}
         showStarredOnly={showStarredOnly}

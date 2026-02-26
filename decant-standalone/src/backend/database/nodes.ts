@@ -285,8 +285,14 @@ export function updateNode(id: string, data: UpdateNodeInput): unknown {
     return readNode(id);
   });
 
-  // Invalidate tree cache if parent relationships changed
-  if (data.function_parent_id !== undefined || data.organization_parent_id !== undefined) {
+  // Invalidate tree cache if parent relationships or classification changed
+  if (
+    data.function_parent_id !== undefined ||
+    data.organization_parent_id !== undefined ||
+    data.segment_code !== undefined ||
+    data.category_code !== undefined ||
+    data.content_type_code !== undefined
+  ) {
     cache.invalidate('tree:*');
   }
 

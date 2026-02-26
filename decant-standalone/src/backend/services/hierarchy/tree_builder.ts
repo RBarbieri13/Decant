@@ -7,6 +7,13 @@
 
 import { getDatabase } from '../../database/connection.js';
 import { HierarchyView, TreeNode, NodeType, GumroadColor, ContentTypeCode } from '../../../shared/types.js';
+import {
+  SEGMENT_ICONS as SHARED_SEGMENT_ICONS,
+  CATEGORY_ICONS as SHARED_CATEGORY_ICONS,
+  CONTENT_TYPE_ICONS as SHARED_CONTENT_TYPE_ICONS,
+  ORGANIZATION_ICONS,
+  getIconByKeyword,
+} from '../../../shared/iconDatabase.js';
 
 interface DatabaseNode {
   id: string;
@@ -109,6 +116,10 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
   U: 'Other',
 };
 
+const SEGMENT_ICONS = SHARED_SEGMENT_ICONS;
+const CATEGORY_ICONS = SHARED_CATEGORY_ICONS;
+const CONTENT_TYPE_ICONS = SHARED_CONTENT_TYPE_ICONS;
+
 /**
  * Build hierarchy tree from database nodes
  * Groups nodes into: Segment > Category > Items (function view)
@@ -133,6 +144,29 @@ export function buildHierarchyTree(viewType: HierarchyView): TreeNode[] {
     return buildFunctionTree(nodes);
   }
   return buildOrganizationTree(nodes);
+}
+
+function resolveClassification(node: DatabaseNode): { seg: string; cat: string; ct: string } {
+  let seg = node.segment_code || '';
+  let cat = node.category_code || '';
+  let ct = node.content_type_code || '';
+
+  if (!seg && node.extracted_fields) {
+    try {
+      const fields = JSON.parse(node.extracted_fields);
+      if (fields.segment) seg = fields.segment;
+      if (fields.category) cat = fields.category;
+      if (fields.contentType) ct = fields.contentType;
+    } catch {
+      // ignore parse errors
+    }
+  }
+
+  return {
+    seg: seg || 'T',
+    cat: cat || 'OTH',
+    ct: ct || 'A',
+  };
 }
 
 function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
@@ -192,6 +226,7 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
             contentTypeCode: node.content_type_code as ContentTypeCode | null,
             sourceUrl: node.url,
             faviconPath: node.logo_url,
+            iconHint: getIconByKeyword(node.title) || CONTENT_TYPE_ICONS[node.content_type_code || 'A'] || 'bxs-file',
           }));
           return {
             id: `subcat-${segCode}-${catCode}-${subcatLabel.replace(/\s+/g, '_')}`,
@@ -215,6 +250,7 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
           contentTypeCode: node.content_type_code as ContentTypeCode | null,
           sourceUrl: node.url,
           faviconPath: node.logo_url,
+          iconHint: getIconByKeyword(node.title) || CONTENT_TYPE_ICONS[node.content_type_code || 'A'] || 'bxs-file',
         }));
       }
 
@@ -225,6 +261,7 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
         color: segColor,
         children: catChildren,
         isExpanded: false,
+        iconHint: CATEGORY_ICONS[segCode]?.[catCode] || 'bxs-folder',
       });
     }
 
@@ -239,6 +276,7 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
       color: segColor,
       children: categoryChildren,
       isExpanded: false,
+      iconHint: SEGMENT_ICONS[segCode] || 'bxs-folder',
     });
   }
 
@@ -283,6 +321,7 @@ function buildOrganizationTree(nodes: DatabaseNode[]): TreeNode[] {
         contentTypeCode: node.content_type_code as ContentTypeCode | null,
         sourceUrl: node.url,
         faviconPath: node.logo_url,
+        iconHint: getIconByKeyword(node.title) || CONTENT_TYPE_ICONS[node.content_type_code || 'A'] || 'bxs-file',
       }));
 
       categoryChildren.push({
@@ -291,6 +330,7 @@ function buildOrganizationTree(nodes: DatabaseNode[]): TreeNode[] {
         nodeType: 'category' as NodeType,
         children: itemChildren,
         isExpanded: false,
+        iconHint: CATEGORY_ICONS[segCode]?.[catCode] || 'bxs-folder',
       });
     }
 
@@ -301,6 +341,7 @@ function buildOrganizationTree(nodes: DatabaseNode[]): TreeNode[] {
       nodeType: 'organization' as NodeType,
       children: categoryChildren,
       isExpanded: false,
+      iconHint: ORGANIZATION_ICONS[orgName] || 'bxs-buildings',
     });
   }
 

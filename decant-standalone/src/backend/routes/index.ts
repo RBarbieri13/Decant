@@ -12,6 +12,7 @@ import * as healthRoutes from './health.js';
 import * as backupRoutes from './backup.js';
 import * as queueRoutes from './queue.js';
 import * as auditRoutes from './audit.js';
+import * as reclassifyRoutes from './reclassify.js';
 import { importLimiter, settingsLimiter } from '../middleware/rateLimit.js';
 import { enqueueManyForEnrichment } from '../services/processing_queue.js';
 import { getDatabase } from '../database/connection.js';
@@ -101,6 +102,12 @@ export function registerAPIRoutes(app: Express): void {
 
   // GET /api/nodes/:id/backlinks - Get nodes that reference/link to this node
   app.get('/api/nodes/:id/backlinks', validateParams(UuidParamSchema), nodeRoutes.getBacklinks);
+
+  // POST /api/nodes/reclassify - Reclassify all nodes using AI
+  app.post('/api/nodes/reclassify', reclassifyRoutes.reclassifyAll);
+
+  // POST /api/nodes/:id/reclassify - Reclassify a single node using AI
+  app.post('/api/nodes/:id/reclassify', validateParams(UuidParamSchema), reclassifyRoutes.reclassifyNode);
 
   // GET /api/nodes/:id/history - Get node audit history
   app.get('/api/nodes/:id/history', validateParams(UuidParamSchema), auditRoutes.getNodeAuditHistory);

@@ -252,6 +252,11 @@ export const Phase1ClassificationSchema = z.object({
     .max(1)
     .describe('Confidence score between 0 and 1'),
 
+  quickPhrase: z
+    .string()
+    .max(100)
+    .describe('Ultra-brief tagline capturing the essence of this content, like a subtitle. No period at end. Max 100 chars. Examples: "Anthropic flagship reasoning model", "Python framework for building AI agents", "Real-time stock market analytics dashboard"'),
+
   reasoning: z
     .string()
     .max(200)
@@ -339,6 +344,7 @@ Respond with a JSON object containing:
   "contentType": "X",       // 1 uppercase letter
   "organization": "XXXX",   // 4 uppercase letters
   "confidence": 0.0-1.0,    // How confident you are
+  "quickPhrase": "...",     // Ultra-brief tagline (max 100 chars, no period, title case)
   "reasoning": "Brief explanation (optional, max 200 chars)",
   "title": "True subject/name (optional, max 200 chars)"
 }
@@ -348,7 +354,8 @@ Respond with a JSON object containing:
 2. Category MUST match the chosen segment's categories
 3. For content type, analyze the format not just the topic
 4. Confidence: >0.9 for clear cases, 0.7-0.9 for typical, <0.7 if uncertain
-5. Be decisive - avoid "Unknown" unless truly ambiguous`;
+5. Be decisive - avoid "Unknown" unless truly ambiguous
+6. quickPhrase should be a concise tagline that captures the essence/function of the content (like a subtitle). No period at end. Examples: "Anthropic's flagship reasoning model", "Open-source vector database for AI apps", "NFL fantasy draft rankings and analysis"`;
 
 // ============================================================
 // User Prompt Builder
@@ -414,6 +421,7 @@ export const DEFAULT_CLASSIFICATION: Phase1Classification = {
   contentType: 'A',
   organization: 'UNKN',
   confidence: 0,
+  quickPhrase: '',
   reasoning: 'Fallback classification - AI classification failed',
 };
 
@@ -427,6 +435,7 @@ export function createFallbackClassification(
     ...DEFAULT_CLASSIFICATION,
     ...partial,
     confidence: partial?.confidence ?? 0,
+    quickPhrase: partial?.quickPhrase ?? '',
     reasoning: partial?.reasoning ?? 'Fallback classification applied',
   };
 }
