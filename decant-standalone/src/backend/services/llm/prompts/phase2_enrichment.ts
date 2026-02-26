@@ -322,7 +322,12 @@ ${Object.entries(METADATA_CODE_CATEGORIES)
 
 ## Guidelines
 
-1. **Title**: Clean and improve the title if needed. Remove site names, unnecessary punctuation, or marketing language. Keep it concise but descriptive. Max 500 characters.
+1. **Title**: Extract the TRUE name/title — the actual subject, tool, concept, or topic.
+   Do NOT use the HTML page title verbatim. Strip site names, SEO suffixes, marketing language.
+   For X/Twitter posts: Analyze the post content to identify the tool, product, or concept discussed.
+   If linked URLs (GitHub, product sites) are referenced in the content, use them to inform the title.
+   If about a specific tool/product, use its name. If an article, capture the core topic concisely.
+   Max 500 characters.
 
 2. **Company**: Identify the organization behind the content. For open-source projects, use the project name. For personal blogs, use the author's name or "Independent".
 

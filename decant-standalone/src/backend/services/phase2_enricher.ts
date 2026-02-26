@@ -14,7 +14,7 @@ import {
   type MetadataCodeType,
   METADATA_CODE_TYPES,
 } from './llm/prompts/phase2_enrichment.js';
-import { readNode, updateNode } from '../database/nodes.js';
+import { readNode, updateNodePhase2 } from '../database/nodes.js';
 import {
   getOrCreateCode,
   setMetadataForNode,
@@ -368,7 +368,7 @@ export class Phase2Enricher {
       // Update the node with enrichment data
       try {
         const updateData = this.mapEnrichmentToNodeUpdate(result.enrichment, node.source_domain as string);
-        updateNode(nodeId, updateData);
+        updateNodePhase2(nodeId, updateData);
 
         log.info('Node updated with Phase 2 enrichment', {
           nodeId,

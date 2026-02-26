@@ -250,6 +250,24 @@ export function registerAPIRoutes(app: Express): void {
     }
   });
 
+  // POST /api/admin/enrich-all - Re-enqueue all nodes for full Phase 2 re-enrichment
+  app.post('/api/admin/enrich-all', (_req: Request, res: Response) => {
+    try {
+      const db = getDatabase();
+      const rows = db.prepare(
+        `SELECT id FROM nodes WHERE is_deleted = 0`
+      ).all() as { id: string }[];
+      const nodeIds = rows.map(r => r.id);
+      enqueueManyForEnrichment(nodeIds, 5);
+      log.info(`Enrich-all queued`, { count: nodeIds.length, module: 'admin' });
+      res.json({ queued: true, count: nodeIds.length });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      log.error('Enrich-all failed', { error: msg, module: 'admin' });
+      res.status(500).json({ error: msg });
+    }
+  });
+
   // ============================================================
   // Audit routes
   // ============================================================

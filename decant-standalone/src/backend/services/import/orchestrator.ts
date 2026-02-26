@@ -468,7 +468,7 @@ export class ImportOrchestrator {
     classification: Phase1Classification
   ): Promise<any> {
     const nodeInput: CreateNodeInput = {
-      title: scraped.title,
+      title: classification.title || scraped.title,
       url: url,
       source_domain: scraped.domain,
       company: classification.organization !== 'UNKN' ? classification.organization : undefined,

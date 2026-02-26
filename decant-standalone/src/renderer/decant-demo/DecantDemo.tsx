@@ -20,7 +20,7 @@ import { QuickAddModal } from '../components/import/QuickAddModal';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
 import { useApp } from '../context/AppContext';
 // API imports for backend integration
-import { nodesAPI, hierarchyAPI } from '../services/api';
+import { nodesAPI, hierarchyAPI, adminAPI } from '../services/api';
 // Real-time service for hierarchy updates
 import { createIntegratedSSEClient } from '../services/realtimeService';
 // Metadata code colors utility
@@ -234,6 +234,7 @@ interface TopBarProps {
   onViewModeChange: (mode: ViewMode) => void;
   onBatchImportClick?: () => void;
   onQuickAddClick?: () => void;
+  onRefreshAllClick?: () => void;
   onSettingsClick?: () => void;
   onUserClick?: () => void;
   userName?: string;
@@ -251,6 +252,7 @@ const TopBar: React.FC<TopBarProps> = ({
   // onViewModeChange available for future use - moved to title bar
   onBatchImportClick,
   onQuickAddClick,
+  onRefreshAllClick,
   onSettingsClick,
   onUserClick,
   // userName available for future use
@@ -367,6 +369,14 @@ const TopBar: React.FC<TopBarProps> = ({
 
         <button className="decant-topbar__icon-btn" title="Messages">
           <i className="bx bx-message-square-detail" />
+        </button>
+
+        <button
+          className="decant-topbar__icon-btn"
+          onClick={onRefreshAllClick}
+          title="Re-analyze and rebuild hierarchy for all content"
+        >
+          <i className="bx bx-refresh" />
         </button>
 
         <button className="decant-topbar__icon-btn" onClick={onSettingsClick} title="Settings">
@@ -1745,6 +1755,8 @@ export default function DecantDemo() {
   const [isBatchImportOpen, setIsBatchImportOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [showStarredOnly, setShowStarredOnly] = useState(false);
+  const [isRefreshingAll, setIsRefreshingAll] = useState(false);
+  const [refreshQueuedCount, setRefreshQueuedCount] = useState<number | null>(null);
 
   // Load real nodes from API
   useEffect(() => {
@@ -2131,6 +2143,21 @@ export default function DecantDemo() {
     // TODO: Open user menu
   }, []);
 
+  const handleRefreshAll = useCallback(async () => {
+    if (isRefreshingAll) return;
+    setIsRefreshingAll(true);
+    setRefreshQueuedCount(null);
+    try {
+      const result = await adminAPI.reEnrichAll();
+      setRefreshQueuedCount(result.count);
+      setTimeout(() => setRefreshQueuedCount(null), 4000);
+    } catch (err) {
+      console.error('Refresh all failed:', err);
+    } finally {
+      setIsRefreshingAll(false);
+    }
+  }, [isRefreshingAll]);
+
   const handleClosePanel = useCallback(() => {
     setRightPanelVisible(false);
     setSelectedRowId(null);
@@ -2157,6 +2184,7 @@ export default function DecantDemo() {
         onViewModeChange={setViewMode}
         onBatchImportClick={() => setIsBatchImportOpen(true)}
         onQuickAddClick={() => setIsQuickAddOpen(true)}
+        onRefreshAllClick={handleRefreshAll}
         onSettingsClick={handleSettingsClick}
         onUserClick={handleUserClick}
         showStarredOnly={showStarredOnly}

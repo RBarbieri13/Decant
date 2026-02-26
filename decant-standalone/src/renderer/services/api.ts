@@ -490,6 +490,20 @@ export const batchImportAPI = {
   },
 };
 
+// ============================================================
+// Admin API
+// ============================================================
+
+export const adminAPI = {
+  async reEnrichAll(): Promise<{ queued: boolean; count: number }> {
+    const res = await fetchWithAuth(`${API_BASE}/admin/enrich-all`, {
+      method: 'POST',
+    });
+    if (!res.ok) throw new Error(`Re-enrich all failed: ${res.statusText}`);
+    return res.json();
+  },
+};
+
 export const auditAPI = {
   /**
    * Get audit history for a specific node
