@@ -24,7 +24,7 @@ const KEYS_FILE = path.join(DECANT_CONFIG_DIR, 'keys.enc');
 /**
  * Key identifiers for different API keys
  */
-export type KeyIdentifier = 'openai' | 'anthropic' | 'custom';
+export type KeyIdentifier = 'openai' | 'anthropic' | 'x_api' | 'custom';
 
 /**
  * Encrypted key storage format
@@ -228,9 +228,18 @@ export async function setApiKey(
  */
 export async function getApiKey(identifier: KeyIdentifier): Promise<string | null> {
   try {
-    // Check environment variable first (for 'openai' identifier)
-    if (identifier === 'openai' && process.env.OPENAI_API_KEY) {
-      return process.env.OPENAI_API_KEY;
+    // Check environment variables first
+    let envKey: string | undefined;
+    switch (identifier) {
+      case 'openai':
+        envKey = process.env.OPENAI_API_KEY;
+        break;
+      case 'x_api':
+        envKey = process.env.X_API_BEARER_TOKEN;
+        break;
+    }
+    if (envKey) {
+      return envKey;
     }
 
     // Load store
@@ -290,9 +299,14 @@ export async function deleteApiKey(identifier: KeyIdentifier): Promise<void> {
  * @returns True if the key is configured (either in store or env var)
  */
 export async function isConfigured(identifier: KeyIdentifier): Promise<boolean> {
-  // Check environment variable first (for 'openai' identifier)
-  if (identifier === 'openai' && process.env.OPENAI_API_KEY) {
-    return true;
+  // Check environment variables first
+  switch (identifier) {
+    case 'openai':
+      if (process.env.OPENAI_API_KEY) return true;
+      break;
+    case 'x_api':
+      if (process.env.X_API_BEARER_TOKEN) return true;
+      break;
   }
 
   try {
@@ -315,9 +329,12 @@ export async function isConfigured(identifier: KeyIdentifier): Promise<boolean> 
 export async function listConfiguredKeys(): Promise<KeyIdentifier[]> {
   const configured: KeyIdentifier[] = [];
 
-  // Check environment variable
+  // Check environment variables
   if (process.env.OPENAI_API_KEY) {
     configured.push('openai');
+  }
+  if (process.env.X_API_BEARER_TOKEN) {
+    configured.push('x_api');
   }
 
   try {

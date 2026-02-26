@@ -1,10 +1,9 @@
 // ============================================================
 // Twitter/X Extractor
-// Specialized extractor for Twitter/X posts using Apify scraper
-// Falls back to meta-tag extraction if no API key is configured
+// Specialized extractor for Twitter/X posts using X API v2
+// Falls back to blank metadata if no API key is configured
 // ============================================================
 
-import * as cheerio from 'cheerio';
 import {
   BaseExtractor,
   ExtractionContext,
@@ -12,129 +11,179 @@ import {
   TwitterFields,
 } from './base.js';
 import { log } from '../../logger/index.js';
+import * as keystore from '../keystore.js';
 
 // ============================================================
-// Apify Response Types
+// X API v2 Response Types
 // ============================================================
 
-interface ApifyTweetItem {
-  id?: string;
-  full_text?: string;
-  text?: string;
-  user?: {
-    screen_name?: string;
-    name?: string;
-    followers_count?: number;
-  };
-  favorite_count?: number;
-  retweet_count?: number;
-  reply_count?: number;
-  quote_count?: number;
-  retweeted?: boolean;
-  is_quote_status?: boolean;
-  quoted_status_id_str?: string;
+interface XApiTweetData {
+  id: string;
+  text: string;
+  author_id?: string;
   created_at?: string;
-  entities?: {
-    hashtags?: Array<{ text?: string }>;
-    user_mentions?: Array<{ screen_name?: string }>;
-    media?: Array<{ media_url_https?: string; type?: string }>;
+  conversation_id?: string;
+  public_metrics?: {
+    like_count: number;
+    retweet_count: number;
+    reply_count: number;
+    quote_count: number;
   };
-  extended_entities?: {
-    media?: Array<{ media_url_https?: string; type?: string }>;
+  entities?: {
+    hashtags?: Array<{ tag: string }>;
+    mentions?: Array<{ username: string }>;
+  };
+  attachments?: {
+    media_keys?: string[];
   };
 }
+
+interface XApiUser {
+  id: string;
+  name: string;
+  username: string;
+  profile_image_url?: string;
+  public_metrics?: {
+    followers_count: number;
+    following_count: number;
+    tweet_count: number;
+  };
+}
+
+interface XApiMedia {
+  media_key: string;
+  type: string;
+  url?: string;
+  preview_image_url?: string;
+}
+
+interface XApiTweetResponse {
+  data?: XApiTweetData;
+  includes?: {
+    users?: XApiUser[];
+    media?: XApiMedia[];
+  };
+  errors?: Array<{ message: string; title?: string }>;
+}
+
+// ============================================================
+// Rate Limiter
+// ============================================================
+
+class XApiRateLimiter {
+  private timestamps: number[] = [];
+  private readonly windowMs = 15 * 60 * 1000;
+  private readonly maxRequests = 450;
+  private readonly safetyMargin = 50;
+
+  canMakeRequest(): boolean {
+    this.pruneOldTimestamps();
+    return this.timestamps.length < (this.maxRequests - this.safetyMargin);
+  }
+
+  recordRequest(): void {
+    this.timestamps.push(Date.now());
+  }
+
+  getWaitTimeMs(): number {
+    this.pruneOldTimestamps();
+    if (this.timestamps.length < (this.maxRequests - this.safetyMargin)) {
+      return 0;
+    }
+    const oldest = this.timestamps[0];
+    return oldest + this.windowMs - Date.now() + 100;
+  }
+
+  private pruneOldTimestamps(): void {
+    const cutoff = Date.now() - this.windowMs;
+    while (this.timestamps.length > 0 && this.timestamps[0] < cutoff) {
+      this.timestamps.shift();
+    }
+  }
+}
+
+const rateLimiter = new XApiRateLimiter();
 
 // ============================================================
 // Helpers
 // ============================================================
 
-/**
- * Extract tweet ID from Twitter/X URL path
- * Handles: /username/status/TWEET_ID
- */
 function extractTweetId(url: URL): string | null {
   const match = url.pathname.match(/\/status\/(\d+)/);
   return match ? match[1] : null;
 }
 
-/**
- * Call Apify twitter-scraper actor synchronously and return dataset items
- */
-async function fetchFromApify(
-  tweetUrl: string,
-  apiKey: string,
+async function fetchFromXApi(
+  tweetId: string,
+  bearerToken: string,
   timeoutMs: number
-): Promise<ApifyTweetItem[]> {
+): Promise<XApiTweetResponse> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
+  const params = new URLSearchParams({
+    'tweet.fields': 'text,author_id,created_at,public_metrics,entities,attachments,conversation_id',
+    'user.fields': 'name,username,profile_image_url,public_metrics',
+    'media.fields': 'url,preview_image_url,type',
+    'expansions': 'author_id,attachments.media_keys',
+  });
+
   try {
+    rateLimiter.recordRequest();
     const response = await fetch(
-      'https://api.apify.com/v2/acts/apify~twitter-scraper/run-sync-get-dataset-items',
+      `https://api.x.com/2/tweets/${tweetId}?${params.toString()}`,
       {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          urls: [tweetUrl],
-          maxItems: 1,
-        }),
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${bearerToken}` },
         signal: controller.signal,
       }
     );
-
     if (!response.ok) {
-      throw new Error(`Apify API error: ${response.status} ${response.statusText}`);
+      throw new Error(`X API error: ${response.status} ${response.statusText}`);
     }
-
-    const data = await response.json() as ApifyTweetItem[];
-    return Array.isArray(data) ? data : [];
+    return await response.json() as XApiTweetResponse;
   } finally {
     clearTimeout(timer);
   }
 }
 
-/**
- * Map an Apify tweet item to TwitterFields
- */
-function mapApifyItemToFields(item: ApifyTweetItem, tweetId: string): TwitterFields {
-  const media = item.extended_entities?.media ?? item.entities?.media ?? [];
+function mapXApiResponseToFields(
+  response: XApiTweetResponse,
+  tweetId: string
+): TwitterFields {
+  const tweet = response.data;
+  const user = response.includes?.users?.[0];
+  const media = response.includes?.media ?? [];
+
   const mediaUrls = media
-    .map(m => m.media_url_https)
+    .map(m => m.url ?? m.preview_image_url)
     .filter((u): u is string => !!u);
 
-  const hashtags = (item.entities?.hashtags ?? [])
-    .map(h => h.text)
+  const hashtags = (tweet?.entities?.hashtags ?? [])
+    .map(h => h.tag)
     .filter((t): t is string => !!t);
 
-  const mentions = (item.entities?.user_mentions ?? [])
-    .map(m => m.screen_name)
+  const mentions = (tweet?.entities?.mentions ?? [])
+    .map(m => m.username)
     .filter((s): s is string => !!s);
-
-  let quotedTweetUrl: string | null = null;
-  if (item.is_quote_status && item.quoted_status_id_str && item.user?.screen_name) {
-    quotedTweetUrl = `https://x.com/${item.user.screen_name}/status/${item.quoted_status_id_str}`;
-  }
 
   return {
     tweetId,
-    authorHandle: item.user?.screen_name ?? null,
-    authorName: item.user?.name ?? null,
-    authorFollowers: item.user?.followers_count ?? null,
-    tweetText: item.full_text ?? item.text ?? null,
-    likeCount: item.favorite_count ?? null,
-    retweetCount: item.retweet_count ?? null,
-    replyCount: item.reply_count ?? null,
-    quoteCount: item.quote_count ?? null,
-    isRetweet: item.retweeted ?? false,
-    isQuoteTweet: item.is_quote_status ?? false,
-    quotedTweetUrl,
+    authorHandle: user?.username ?? null,
+    authorName: user?.name ?? null,
+    authorFollowers: user?.public_metrics?.followers_count ?? null,
+    tweetText: tweet?.text ?? null,
+    likeCount: tweet?.public_metrics?.like_count ?? null,
+    retweetCount: tweet?.public_metrics?.retweet_count ?? null,
+    replyCount: tweet?.public_metrics?.reply_count ?? null,
+    quoteCount: tweet?.public_metrics?.quote_count ?? null,
+    isRetweet: false,
+    isQuoteTweet: false,
+    quotedTweetUrl: null,
     mediaUrls,
     hashtags,
     mentions,
-    postedAt: item.created_at ?? null,
+    postedAt: tweet?.created_at ?? null,
   };
 }
 
@@ -144,13 +193,10 @@ function mapApifyItemToFields(item: ApifyTweetItem, tweetId: string): TwitterFie
 
 export class TwitterExtractor extends BaseExtractor {
   readonly name = 'twitter';
-  readonly version = '1.0.0';
-  readonly description = 'Extracts metadata from Twitter/X posts via Apify scraper';
-  readonly priority = 100; // High priority — same as YouTube and GitHub extractors
+  readonly version = '2.0.0';
+  readonly description = 'Extracts metadata from Twitter/X posts via X API v2';
+  readonly priority = 100;
 
-  /**
-   * Handle twitter.com and x.com URLs
-   */
   canHandle(url: URL): boolean {
     const hostname = url.hostname.toLowerCase();
     return (
@@ -161,11 +207,7 @@ export class TwitterExtractor extends BaseExtractor {
     );
   }
 
-  /**
-   * Extract tweet content.
-   * Uses Apify if APIFY_API_KEY is set; otherwise falls back to meta-tag extraction.
-   */
-  async extract(context: ExtractionContext, html: string): Promise<ExtractorResult> {
+  async extract(context: ExtractionContext, _html: string): Promise<ExtractorResult> {
     const tweetId = extractTweetId(context.url);
     const result = this.createDefaultResult(context, 'S' as any);
     result.siteName = 'X (Twitter)';
@@ -176,156 +218,103 @@ export class TwitterExtractor extends BaseExtractor {
       tweetId,
     });
 
-    const apiKey = process.env.APIFY_API_KEY;
-
-    if (apiKey && tweetId) {
-      try {
-        const items = await fetchFromApify(
-          context.normalizedUrl,
-          apiKey,
-          30_000
-        );
-
-        if (items.length > 0) {
-          const item = items[0];
-          const fields = mapApifyItemToFields(item, tweetId);
-
-          const tweetText = fields.tweetText ?? '';
-          const authorDisplay = fields.authorName
-            ? `${fields.authorName} (@${fields.authorHandle})`
-            : fields.authorHandle
-              ? `@${fields.authorHandle}`
-              : 'Unknown';
-
-          result.title = this.truncate(tweetText, 100) ?? `Tweet by ${authorDisplay}`;
-          result.description = tweetText || null;
-          result.author = authorDisplay;
-          result.image = fields.mediaUrls[0] ?? null;
-          result.content = this.buildContentForAi(fields);
-          result.extractedFields = fields as unknown as Record<string, unknown>;
-          result.metadata = this.createMetadata(true, ['Extracted via Apify twitter-scraper']);
-
-          log.info('Twitter/X content extracted via Apify', {
-            tweetId,
-            author: fields.authorHandle,
-            hasMedia: fields.mediaUrls.length > 0,
-          });
-
-          return result;
-        }
-
-        log.warn('Apify returned no items for tweet', { tweetId, url: context.normalizedUrl });
-      } catch (err) {
-        log.warn('Apify extraction failed, falling back to meta-tag extraction', {
-          tweetId,
-          error: err instanceof Error ? err.message : String(err),
-        });
-      }
-    } else if (!apiKey) {
-      log.debug('APIFY_API_KEY not set — using meta-tag extraction for Twitter/X URL');
+    if (!tweetId) {
+      log.warn('Could not extract tweet ID from URL', { url: context.normalizedUrl });
+      result.metadata = this.createMetadata(true, ['No tweet ID found in URL — blank fallback']);
+      return result;
     }
 
-    // Fallback: extract what we can from Open Graph / Twitter meta tags
-    return this.extractFromMetaTags(context, html, tweetId, result);
+    const bearerToken = await keystore.getApiKey('x_api');
+
+    if (!bearerToken) {
+      log.debug('X API Bearer Token not configured — using blank fallback');
+      result.extractedFields = { tweetId } as unknown as Record<string, unknown>;
+      result.metadata = this.createMetadata(true, ['X API Bearer Token not configured — blank fallback']);
+      return result;
+    }
+
+    if (!rateLimiter.canMakeRequest()) {
+      const waitMs = rateLimiter.getWaitTimeMs();
+      log.warn('X API rate limit approaching, using blank fallback', { tweetId, waitMs });
+      result.extractedFields = { tweetId } as unknown as Record<string, unknown>;
+      result.metadata = this.createMetadata(true, [`Rate limited — retry after ${Math.ceil(waitMs / 1000)}s`]);
+      return result;
+    }
+
+    try {
+      const apiResponse = await fetchFromXApi(tweetId, bearerToken, 30_000);
+
+      if (apiResponse.errors && !apiResponse.data) {
+        const errMsg = apiResponse.errors.map(e => e.message).join('; ');
+        log.warn('X API returned errors', { tweetId, errors: errMsg });
+        result.extractedFields = { tweetId } as unknown as Record<string, unknown>;
+        result.metadata = this.createMetadata(true, [`X API error: ${errMsg}`]);
+        return result;
+      }
+
+      if (!apiResponse.data) {
+        log.warn('X API returned no data for tweet', { tweetId });
+        result.extractedFields = { tweetId } as unknown as Record<string, unknown>;
+        result.metadata = this.createMetadata(true, ['X API returned no data — blank fallback']);
+        return result;
+      }
+
+      const fields = mapXApiResponseToFields(apiResponse, tweetId);
+
+      const tweetText = fields.tweetText ?? '';
+      const authorDisplay = fields.authorName
+        ? `${fields.authorName} (@${fields.authorHandle})`
+        : fields.authorHandle
+          ? `@${fields.authorHandle}`
+          : 'Unknown';
+
+      result.title = this.truncate(tweetText, 100) ?? `Tweet by ${authorDisplay}`;
+      result.description = tweetText || null;
+      result.author = authorDisplay;
+      result.image = fields.mediaUrls[0] ?? null;
+      result.content = this.buildContentForAi(fields);
+      result.extractedFields = fields as unknown as Record<string, unknown>;
+      result.metadata = this.createMetadata(true, ['Extracted via X API v2']);
+
+      log.info('Twitter/X content extracted via X API v2', {
+        tweetId,
+        author: fields.authorHandle,
+        hasMedia: fields.mediaUrls.length > 0,
+      });
+
+      return result;
+
+    } catch (err) {
+      log.warn('X API extraction failed, using blank fallback', {
+        tweetId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      result.extractedFields = { tweetId } as unknown as Record<string, unknown>;
+      result.metadata = this.createMetadata(true, ['X API unavailable — blank fallback']);
+      return result;
+    }
   }
 
-  /**
-   * Build a rich content string for the AI enrichment pipeline
-   */
   private buildContentForAi(fields: TwitterFields): string {
     const parts: string[] = [];
-
-    if (fields.tweetText) {
-      parts.push(`Tweet: ${fields.tweetText}`);
-    }
-
+    if (fields.tweetText) parts.push(`Tweet: ${fields.tweetText}`);
     if (fields.authorName || fields.authorHandle) {
       const who = [fields.authorName, fields.authorHandle ? `@${fields.authorHandle}` : null]
-        .filter(Boolean)
-        .join(' ');
+        .filter(Boolean).join(' ');
       parts.push(`Author: ${who}`);
     }
-
-    if (fields.authorFollowers !== null) {
-      parts.push(`Followers: ${fields.authorFollowers.toLocaleString()}`);
-    }
-
-    if (fields.hashtags.length > 0) {
-      parts.push(`Hashtags: ${fields.hashtags.map(h => `#${h}`).join(', ')}`);
-    }
-
-    if (fields.mentions.length > 0) {
-      parts.push(`Mentions: ${fields.mentions.map(m => `@${m}`).join(', ')}`);
-    }
-
+    if (fields.authorFollowers !== null) parts.push(`Followers: ${fields.authorFollowers.toLocaleString()}`);
+    if (fields.hashtags.length > 0) parts.push(`Hashtags: ${fields.hashtags.map(h => `#${h}`).join(', ')}`);
+    if (fields.mentions.length > 0) parts.push(`Mentions: ${fields.mentions.map(m => `@${m}`).join(', ')}`);
     const stats: string[] = [];
     if (fields.likeCount !== null) stats.push(`${fields.likeCount} likes`);
     if (fields.retweetCount !== null) stats.push(`${fields.retweetCount} retweets`);
     if (fields.replyCount !== null) stats.push(`${fields.replyCount} replies`);
-    if (stats.length > 0) {
-      parts.push(`Engagement: ${stats.join(', ')}`);
-    }
-
-    if (fields.postedAt) {
-      parts.push(`Posted: ${fields.postedAt}`);
-    }
-
+    if (stats.length > 0) parts.push(`Engagement: ${stats.join(', ')}`);
+    if (fields.postedAt) parts.push(`Posted: ${fields.postedAt}`);
     return parts.join('\n');
-  }
-
-  /**
-   * Fallback: extract from Open Graph / Twitter meta tags in the HTML
-   */
-  private extractFromMetaTags(
-    context: ExtractionContext,
-    html: string,
-    tweetId: string | null,
-    result: ExtractorResult
-  ): ExtractorResult {
-    const $ = cheerio.load(html);
-
-    const ogTitle = $('meta[property="og:title"]').attr('content');
-    const ogDescription = $('meta[property="og:description"]').attr('content');
-    const twitterTitle = $('meta[name="twitter:title"]').attr('content');
-    const twitterDescription = $('meta[name="twitter:description"]').attr('content');
-    const twitterCreator = $('meta[name="twitter:creator"]').attr('content');
-    const ogImage = $('meta[property="og:image"]').attr('content');
-    const twitterImage = $('meta[name="twitter:image"]').attr('content');
-
-    result.title = this.cleanText(ogTitle ?? twitterTitle ?? $('title').text()) ?? result.title;
-    result.description = this.cleanText(ogDescription ?? twitterDescription);
-    result.author = twitterCreator ?? null;
-    result.image = ogImage ?? twitterImage ?? null;
-    result.content = this.cleanText(ogDescription ?? twitterDescription);
-
-    if (tweetId) {
-      result.extractedFields = {
-        tweetId,
-        authorHandle: twitterCreator ?? null,
-        authorName: null,
-        authorFollowers: null,
-        tweetText: this.cleanText(ogDescription ?? twitterDescription),
-        likeCount: null,
-        retweetCount: null,
-        replyCount: null,
-        quoteCount: null,
-        isRetweet: false,
-        isQuoteTweet: false,
-        quotedTweetUrl: null,
-        mediaUrls: ogImage ? [ogImage] : [],
-        hashtags: [],
-        mentions: [],
-        postedAt: null,
-      } satisfies TwitterFields as unknown as Record<string, unknown>;
-    }
-
-    result.metadata = this.createMetadata(true, ['Fallback meta-tag extraction (no Apify key)']);
-
-    return result;
   }
 }
 
-// Export singleton instance
 export const twitterExtractor = new TwitterExtractor();
-
 export default TwitterExtractor;

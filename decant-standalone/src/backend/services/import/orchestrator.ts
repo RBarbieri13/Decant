@@ -8,6 +8,8 @@ import { log } from '../../logger/index.js';
 import { AppError } from '../../middleware/errorHandler.js';
 import { ErrorCode } from '../../errors/index.js';
 import { scrapeUrl, type ScrapedContent } from '../scraper.js';
+import { extractorRegistry } from '../extractors/index.js';
+import type { ExtractorResult } from '../extractors/base.js';
 import {
   Phase1Classifier,
   type ClassifyInput,
@@ -390,10 +392,36 @@ export class ImportOrchestrator {
   }
 
   /**
-   * Extract content from URL using scraper
+   * Convert ExtractorResult to ScrapedContent for downstream compatibility
+   */
+  private extractorResultToScrapedContent(result: ExtractorResult, url: string): ScrapedContent {
+    return {
+      url,
+      title: result.title,
+      description: result.description,
+      author: result.author,
+      siteName: result.siteName,
+      favicon: result.favicon,
+      image: result.image,
+      content: result.content,
+      domain: result.domain,
+    };
+  }
+
+  /**
+   * Extract content from URL using specialized extractors or generic scraper
    */
   private async extractContent(url: string): Promise<ScrapedContent> {
     try {
+      // Check if a specialized extractor exists for this URL
+      const parsedUrl = new URL(url);
+      if (extractorRegistry.hasSpecializedExtractor(parsedUrl)) {
+        log.debug('Using specialized extractor', { url, module: 'import-orchestrator' });
+        const result = await extractorRegistry.extract(url, url, '', undefined, undefined);
+        return this.extractorResultToScrapedContent(result, url);
+      }
+
+      // Fall back to generic scraper
       return await scrapeUrl(url);
     } catch (error) {
       if (error instanceof AppError) {
