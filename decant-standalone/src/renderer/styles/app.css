@@ -1235,6 +1235,22 @@ body {
   border-radius: 0 4px 4px 0;
 }
 
+.decant-sidebar__resize-handle {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 101;
+}
+
+.decant-sidebar__resize-handle:hover,
+.decant-sidebar__resize-handle:active {
+  background-color: var(--decant-brand-primary);
+  opacity: 0.3;
+}
+
 /* ============================================================================
    TREE NODE - Matching mockup with connector lines
    ============================================================================ */
@@ -1668,6 +1684,31 @@ body {
 
 .decant-table__title-link:hover {
   color: var(--decant-forest-600, #5a7a5a);
+}
+
+.decant-enriching-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 1px 7px 1px 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--decant-forest-600, #5a7a5a);
+  background: var(--decant-forest-50, #f0f5f0);
+  border: 1px solid var(--decant-forest-200, #c8d8c8);
+  border-radius: 10px;
+  white-space: nowrap;
+  animation: decant-enriching-pulse 2s ease-in-out infinite;
+}
+
+.decant-enriching-badge i {
+  font-size: 13px;
+}
+
+@keyframes decant-enriching-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 .decant-table__cell--secondary {

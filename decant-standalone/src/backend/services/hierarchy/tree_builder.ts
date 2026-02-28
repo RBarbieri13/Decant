@@ -176,7 +176,8 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
   for (const node of nodes) {
     const seg = resolveSegment(node);
     const cat = resolveCategory(node);
-    const subcat = node.subcategory_label || 'General';
+    const rawSubcat = node.subcategory_label?.trim();
+    const subcat = (rawSubcat && rawSubcat.length > 2) ? rawSubcat : 'General';
 
     if (!segmentMap.has(seg)) {
       segmentMap.set(seg, new Map());

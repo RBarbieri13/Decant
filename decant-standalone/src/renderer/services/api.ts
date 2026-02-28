@@ -524,13 +524,13 @@ export interface ReclassifyResult {
 
 export const reclassifyAPI = {
   async reclassifyAll(): Promise<ReclassifyResult> {
-    const res = await fetch(`${API_BASE}/nodes/reclassify`, { method: 'POST' });
+    const res = await fetchWithAuth(`${API_BASE}/nodes/reclassify`, { method: 'POST' });
     if (!res.ok) throw new Error('Failed to reclassify nodes');
     return res.json();
   },
 
   async reclassifyNode(id: string): Promise<{ message: string; classification: Record<string, unknown>; node: Node }> {
-    const res = await fetch(`${API_BASE}/nodes/${id}/reclassify`, { method: 'POST' });
+    const res = await fetchWithAuth(`${API_BASE}/nodes/${id}/reclassify`, { method: 'POST' });
     if (!res.ok) throw new Error('Failed to reclassify node');
     return res.json();
   },

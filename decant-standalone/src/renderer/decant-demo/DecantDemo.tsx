@@ -9,7 +9,7 @@
  * - API integration for real data
  */
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import '../styles/app.css';
 // Import logo
 import decantLogoLight from '../assets/decant-logo-light.png';
@@ -22,7 +22,7 @@ import { useApp } from '../context/AppContext';
 // API imports for backend integration
 import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI } from '../services/api';
 // Real-time service for hierarchy updates
-import { createIntegratedSSEClient } from '../services/realtimeService';
+import { createIntegratedSSEClient, getEnrichmentTracker } from '../services/realtimeService';
 // Metadata code colors utility
 import { getMetadataCodeColor, getSegmentColor, formatMetadataCodesForDisplay, parseRawTag } from '../utils/metadataCodeColors';
 // Hierarchy icons
@@ -568,6 +568,8 @@ interface SidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   totalCount: number;
+  width: number;
+  onResizeStart: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -577,6 +579,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed,
   onToggleCollapse,
   totalCount,
+  width,
+  onResizeStart,
 }) => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
     new Set(['decant-core', 'project-phoenix', 'frontend', 'components', 'resources', 'team-space'])
@@ -616,7 +620,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   const filteredData = useMemo(() => filterTree(data, searchQuery), [data, searchQuery, filterTree]);
 
   return (
-    <aside className={`decant-sidebar ${isCollapsed ? 'decant-sidebar--collapsed' : ''}`}>
+    <aside
+      className={`decant-sidebar ${isCollapsed ? 'decant-sidebar--collapsed' : ''}`}
+      style={!isCollapsed ? { width } : undefined}
+    >
       <div className="decant-sidebar__search">
         <i className="bx bx-search" />
         <input
@@ -659,6 +666,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <button className="decant-sidebar__toggle" onClick={onToggleCollapse}>
         <i className={`bx ${isCollapsed ? 'bx-chevron-right' : 'bx-chevron-left'}`} />
       </button>
+      <div className="decant-sidebar__resize-handle" onMouseDown={onResizeStart} />
     </aside>
   );
 };
@@ -680,6 +688,7 @@ interface DataTableRowProps {
   onTagClick?: (tag: string) => void;
   onSegmentClick?: (segCode: string) => void;
   onCategoryClick?: (segCode: string, catCode: string) => void;
+  isEnriching?: boolean;
 }
 
 const DataTableRow: React.FC<DataTableRowProps> = ({
@@ -695,6 +704,7 @@ const DataTableRow: React.FC<DataTableRowProps> = ({
   onTagClick,
   onSegmentClick,
   onCategoryClick,
+  isEnriching,
 }) => {
   const rowColorClass = data.rowColor ? `decant-table__row--${data.rowColor}` : '';
   const [starPulse, setStarPulse] = useState(false);
@@ -743,6 +753,12 @@ const DataTableRow: React.FC<DataTableRowProps> = ({
         {/* Title */}
         <div className="decant-table__cell decant-table__cell--title">
           <span className="decant-table__title-text">{data.title}</span>
+          {isEnriching && (
+            <span className="decant-enriching-badge" title="AI enrichment in progress">
+              <i className="bx bx-loader-circle bx-spin" />
+              <span>Enriching</span>
+            </span>
+          )}
           {data.url && (
             <a
               className="decant-table__title-link"
@@ -1010,6 +1026,7 @@ interface DataTableProps {
   onCategoryClick?: (segCode: string, catCode: string) => void;
   onTagClick?: (tag: string) => void;
   onSegmentClick?: (segCode: string) => void;
+  pendingEnrichmentIds?: Set<string>;
 }
 
 type SortKey = 'title' | 'segment' | 'category' | 'subcategoryLabel' | 'quickPhrase' | 'date' | 'company';
@@ -1037,6 +1054,7 @@ const DataTable: React.FC<DataTableProps> = ({
   onCategoryClick,
   onTagClick,
   onSegmentClick,
+  pendingEnrichmentIds,
 }) => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(['tailwind-css']));
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
@@ -1247,6 +1265,7 @@ const DataTable: React.FC<DataTableProps> = ({
                     onTagClick={onTagClick}
                     onSegmentClick={onSegmentClick}
                     onCategoryClick={onCategoryClick}
+                    isEnriching={pendingEnrichmentIds?.has(row.id)}
                   />
                 ))}
               </React.Fragment>
@@ -1269,6 +1288,7 @@ const DataTable: React.FC<DataTableProps> = ({
               onTagClick={onTagClick}
               onSegmentClick={onSegmentClick}
               onCategoryClick={onCategoryClick}
+              isEnriching={pendingEnrichmentIds?.has(row.id)}
             />
           ))
         )}
@@ -1618,6 +1638,16 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ item, onClose, isVisi
               </div>
             )}
 
+            {/* AI Summary */}
+            {item.aiSummary && (
+              <div className="decant-card">
+                <h3 className="decant-card__title">AI Summary</h3>
+                <p style={{ fontSize: '13px', lineHeight: 1.6, color: 'var(--decant-text-primary)', margin: 0, whiteSpace: 'pre-wrap' }}>
+                  {item.aiSummary}
+                </p>
+              </div>
+            )}
+
             {/* Source Info */}
             <div className="decant-card">
               <h3 className="decant-card__title">Source</h3>
@@ -1749,6 +1779,8 @@ export default function DecantDemo() {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [rightPanelVisible, setRightPanelVisible] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(280);
+  const isResizingRef = useRef(false);
   const [tableData, setTableData] = useState<TableRow[]>(SAMPLE_TABLE_DATA);
   const [treeData, setTreeData] = useState<TreeNodeData[]>(SAMPLE_TREE_DATA);
   const [hierarchyView, setHierarchyView] = useState<'function' | 'organization'>('function');
@@ -1764,6 +1796,36 @@ export default function DecantDemo() {
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
   const [refreshQueuedCount, setRefreshQueuedCount] = useState<number | null>(null);
   const [isReclassifying, setIsReclassifying] = useState(false);
+  const [pendingEnrichmentIds, setPendingEnrichmentIds] = useState<Set<string>>(new Set());
+
+  // Sidebar drag-resize handlers
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizingRef.current) return;
+      const newWidth = Math.min(500, Math.max(180, e.clientX));
+      setSidebarWidth(newWidth);
+      document.documentElement.style.setProperty('--decant-sidebar-width', `${newWidth}px`);
+    };
+    const handleMouseUp = () => {
+      if (isResizingRef.current) {
+        isResizingRef.current = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    };
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
+  const handleSidebarResizeStart = useCallback(() => {
+    isResizingRef.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, []);
 
   // Load real nodes from API
   useEffect(() => {
@@ -1885,6 +1947,13 @@ export default function DecantDemo() {
     const sseClient = createIntegratedSSEClient(
       (nodeId, hierarchyUpdates) => {
         console.log('Node enrichment complete:', nodeId, hierarchyUpdates);
+
+        // Remove from pending enrichment set
+        setPendingEnrichmentIds((prev) => {
+          const next = new Set(prev);
+          next.delete(nodeId);
+          return next;
+        });
 
         // Reload tree when hierarchy updates are received
         if (hierarchyUpdates) {
@@ -2030,7 +2099,10 @@ export default function DecantDemo() {
           item.quickPhrase.toLowerCase().includes(query) ||
           item.segment.toLowerCase().includes(query) ||
           item.category.toLowerCase().includes(query) ||
-          item.tags.some((tag) => tag.label.toLowerCase().includes(query))
+          item.tags.some((tag) => tag.label.toLowerCase().includes(query)) ||
+          (item.aiSummary && item.aiSummary.toLowerCase().includes(query)) ||
+          (item.shortDescription && item.shortDescription.toLowerCase().includes(query)) ||
+          (item.keyConcepts && item.keyConcepts.some((c) => c.toLowerCase().includes(query)))
       );
     }
 
@@ -2183,12 +2255,14 @@ export default function DecantDemo() {
       console.log('Reclassification complete:', result.message, result.segmentDistribution);
       await loadNodes();
       await loadTree();
+      alert(`Reclassification complete: ${result.changedNodes} of ${result.totalNodes} nodes updated.`);
     } catch (error) {
       console.error('Reclassification failed:', error);
+      alert(`Reclassification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsReclassifying(false);
     }
-  }, [isReclassifying, loadTree]);
+  }, [isReclassifying, loadNodes, loadTree]);
 
   return (
     <div className="decant-app">
@@ -2232,6 +2306,8 @@ export default function DecantDemo() {
           isCollapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
           totalCount={tableData.length}
+          width={sidebarWidth}
+          onResizeStart={handleSidebarResizeStart}
         />
 
         <main className="decant-main">
@@ -2246,6 +2322,7 @@ export default function DecantDemo() {
             segmentCode={hierarchyFilter.segmentCode}
             onTagClick={handleTagClick}
             onSegmentClick={handleSegmentBadgeClick}
+            pendingEnrichmentIds={pendingEnrichmentIds}
             onCategoryClick={(segCode, catCode) => {
               const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode;
               const segLabel = SEGMENT_LABELS[segCode] || segCode;
@@ -2281,6 +2358,8 @@ export default function DecantDemo() {
         onClose={() => setIsQuickAddOpen(false)}
         onImported={(nodeId) => {
           console.log('Quick Add imported node:', nodeId);
+          setPendingEnrichmentIds((prev) => new Set(prev).add(nodeId));
+          getEnrichmentTracker().addPendingNode(nodeId);
           loadNodes();
           loadTree();
         }}
