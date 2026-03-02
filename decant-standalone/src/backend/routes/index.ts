@@ -285,7 +285,7 @@ export function registerAPIRoutes(app: Express): void {
     try {
       const db = getDatabase();
       const rows = db.prepare(
-        `SELECT id, url FROM nodes WHERE extraction_quality = 'minimal' AND is_deleted = 0`
+        `SELECT id, url FROM nodes WHERE (extraction_quality = 'minimal' OR extraction_quality IS NULL) AND is_deleted = 0`
       ).all() as { id: string; url: string }[];
 
       if (rows.length === 0) {

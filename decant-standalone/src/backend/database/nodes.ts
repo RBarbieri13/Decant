@@ -177,6 +177,30 @@ export function createNode(data: CreateNodeInput): unknown {
   return result;
 }
 
+export function findNodeByUrl(url: string): Record<string, unknown> | null {
+  const db = getDatabase();
+
+  const node = db.prepare(`
+    SELECT * FROM nodes WHERE url = ? AND is_deleted = 0
+  `).get(url) as Record<string, unknown> | undefined;
+
+  if (!node) return null;
+
+  const concepts = db.prepare(`
+    SELECT concept FROM key_concepts WHERE node_id = ?
+  `).all(node.id as string) as Array<{ concept: string }>;
+
+  const extractedFields = JSON.parse((node.extracted_fields as string) || '{}');
+
+  return {
+    ...node,
+    extracted_fields: extractedFields,
+    metadata_tags: JSON.parse((node.metadata_tags as string) || '[]'),
+    key_concepts: concepts.map(c => c.concept),
+    metadataCodes: extractedFields.metadataCodes || null,
+  };
+}
+
 export function readNode(id: string): Record<string, unknown> | null {
   const db = getDatabase();
 

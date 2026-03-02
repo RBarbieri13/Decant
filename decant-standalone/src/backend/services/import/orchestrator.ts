@@ -21,7 +21,7 @@ import {
   type CodeGenerationResult,
 } from '../hierarchy/code_generator.js';
 import { enqueueForEnrichment, getProcessingQueue } from '../processing_queue.js';
-import { createNode, readNode, type CreateNodeInput } from '../../database/nodes.js';
+import { createNode, readNode, findNodeByUrl, updateNode, type CreateNodeInput } from '../../database/nodes.js';
 import {
   getImportCache,
   normalizeUrlForCache,
@@ -506,13 +506,69 @@ export class ImportOrchestrator {
   }
 
   /**
-   * Create a node from import data
+   * Determine extraction quality from scraped content
+   */
+  private determineExtractionQuality(scraped: ScrapedContent): string {
+    if (scraped.content && scraped.title !== 'Untitled') {
+      return 'full';
+    } else if (scraped.description || (scraped.content && scraped.title === 'Untitled')) {
+      return 'partial';
+    }
+    return 'minimal';
+  }
+
+  /**
+   * Create or update a node from import data
+   * If a node with the same URL already exists, updates it instead of creating a new one
    */
   private async createNodeFromImport(
     url: string,
     scraped: ScrapedContent,
     classification: Phase1Classification
   ): Promise<any> {
+    const extractionQuality = this.determineExtractionQuality(scraped);
+
+    // Check if node already exists for this URL
+    const existingNode = findNodeByUrl(url);
+    if (existingNode) {
+      log.info('Node already exists for URL, updating', {
+        nodeId: existingNode.id,
+        url,
+        module: 'import-orchestrator',
+      });
+
+      updateNode(existingNode.id as string, {
+        title: classification.title || scraped.title,
+        company: classification.organization !== 'UNKN' ? classification.organization : undefined,
+        phrase_description: classification.quickPhrase || classification.reasoning?.slice(0, 100),
+        short_description: scraped.description ?? undefined,
+        logo_url: scraped.favicon ?? undefined,
+        ai_summary: scraped.content?.slice(0, 2000) || scraped.description || undefined,
+        segment_code: classification.segment,
+        category_code: classification.category,
+        content_type_code: classification.contentType,
+        extracted_fields: {
+          author: scraped.author,
+          siteName: scraped.siteName,
+          image: scraped.image,
+          segment: classification.segment,
+          category: classification.category,
+          contentType: classification.contentType,
+          organization: classification.organization,
+          confidence: classification.confidence,
+        },
+        metadata_tags: [
+          `segment:${classification.segment}`,
+          `category:${classification.category}`,
+          `type:${classification.contentType}`,
+          `org:${classification.organization}`,
+        ],
+        extraction_quality: extractionQuality,
+      });
+
+      return readNode(existingNode.id as string) ?? existingNode;
+    }
+
     const nodeInput: CreateNodeInput = {
       title: classification.title || scraped.title,
       url: url,
@@ -544,17 +600,8 @@ export class ImportOrchestrator {
       key_concepts: [],
       function_parent_id: null,
       organization_parent_id: null,
+      extraction_quality: extractionQuality,
     };
-
-    // Determine extraction quality
-    let extractionQuality = 'minimal';
-    if (scraped.content && scraped.title !== 'Untitled') {
-      extractionQuality = 'full';
-    } else if (scraped.description || (scraped.content && scraped.title === 'Untitled')) {
-      extractionQuality = 'partial';
-    }
-
-    nodeInput.extraction_quality = extractionQuality;
 
     return createNode(nodeInput);
   }
