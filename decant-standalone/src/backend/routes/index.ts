@@ -13,9 +13,11 @@ import * as backupRoutes from './backup.js';
 import * as queueRoutes from './queue.js';
 import * as auditRoutes from './audit.js';
 import * as reclassifyRoutes from './reclassify.js';
+import * as collectionRoutes from './collections.js';
 import { importLimiter, settingsLimiter } from '../middleware/rateLimit.js';
 import { enqueueManyForEnrichment } from '../services/processing_queue.js';
 import { getDatabase } from '../database/connection.js';
+import { importUrl as orchestratorImportUrl } from '../services/import/orchestrator.js';
 import { getNotificationService, type NotificationEvent } from '../services/notifications/index.js';
 import { log } from '../logger/index.js';
 import { metricsEndpoint } from '../services/metrics/index.js';
@@ -35,6 +37,9 @@ import {
   MergeNodesSchema,
   UuidParamSchema,
   HierarchyViewParamSchema,
+  CreateCollectionSchema,
+  UpdateCollectionSchema,
+  AddNodeToCollectionSchema,
 } from '../validation/schemas.js';
 
 /**
@@ -274,6 +279,91 @@ export function registerAPIRoutes(app: Express): void {
       res.status(500).json({ error: msg });
     }
   });
+
+  // POST /api/admin/rescrape-poor-quality - Re-import nodes with minimal extraction quality
+  app.post('/api/admin/rescrape-poor-quality', async (_req: Request, res: Response) => {
+    try {
+      const db = getDatabase();
+      const rows = db.prepare(
+        `SELECT id, url FROM nodes WHERE extraction_quality = 'minimal' AND is_deleted = 0`
+      ).all() as { id: string; url: string }[];
+
+      if (rows.length === 0) {
+        res.json({ count: 0, message: 'No nodes with minimal extraction quality found' });
+        return;
+      }
+
+      // Re-queue each node for import with forceRefresh
+      let queued = 0;
+      const errors: string[] = [];
+
+      for (const row of rows) {
+        try {
+          await orchestratorImportUrl(row.url, { forceRefresh: true });
+          queued++;
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : String(error);
+          errors.push(`${row.id}: ${msg}`);
+        }
+      }
+
+      log.info('Rescrape poor quality completed', {
+        queued,
+        total: rows.length,
+        errors: errors.length,
+        module: 'admin',
+      });
+
+      res.json({
+        count: queued,
+        message: `Queued ${queued} nodes for re-scraping`,
+        ...(errors.length > 0 && { errors }),
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      log.error('Rescrape poor quality failed', { error: msg, module: 'admin' });
+      res.status(500).json({ error: msg });
+    }
+  });
+
+  // ============================================================
+  // Collection routes
+  // ============================================================
+
+  // GET /api/collections - Get collection tree
+  app.get('/api/collections', collectionRoutes.listCollections);
+
+  // GET /api/collections/:id - Get single collection
+  app.get('/api/collections/:id', validateParams(UuidParamSchema), collectionRoutes.getCollection);
+
+  // POST /api/collections - Create new collection
+  app.post('/api/collections', validateBody(CreateCollectionSchema), collectionRoutes.createCollection);
+
+  // PUT /api/collections/:id - Update collection
+  app.put(
+    '/api/collections/:id',
+    validate({ params: UuidParamSchema, body: UpdateCollectionSchema }),
+    collectionRoutes.updateCollection
+  );
+
+  // DELETE /api/collections/:id - Delete collection
+  app.delete('/api/collections/:id', validateParams(UuidParamSchema), collectionRoutes.deleteCollection);
+
+  // POST /api/collections/:id/reorder - Reorder children
+  app.post('/api/collections/:id/reorder', collectionRoutes.reorderChildren);
+
+  // GET /api/collections/:id/nodes - Get nodes in collection
+  app.get('/api/collections/:id/nodes', validateParams(UuidParamSchema), collectionRoutes.listCollectionNodes);
+
+  // POST /api/collections/:id/nodes - Add node to collection
+  app.post(
+    '/api/collections/:id/nodes',
+    validate({ params: UuidParamSchema, body: AddNodeToCollectionSchema }),
+    collectionRoutes.addNode
+  );
+
+  // DELETE /api/collections/:id/nodes/:nodeId - Remove node from collection
+  app.delete('/api/collections/:id/nodes/:nodeId', collectionRoutes.removeNode);
 
   // ============================================================
   // Audit routes

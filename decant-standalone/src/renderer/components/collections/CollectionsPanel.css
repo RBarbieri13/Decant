@@ -1,0 +1,461 @@
+/* ============================================================================
+   COLLECTIONS PANEL - Slide-up panel in sidebar bottom
+   ============================================================================ */
+
+/* ---- Panel Container ---- */
+
+.collections-panel {
+  border-top: 1px solid #d5cec3;
+  background-color: var(--decant-zone-sidebar-bg, #e8e4df);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+.collections-panel--expanded {
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* ---- Collapsed Bar / Header ---- */
+
+.collections-panel__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+
+.collections-panel__bar:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.collections-panel__bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.collections-panel__bar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Sage green left accent bar */
+.collections-panel__bar-accent {
+  width: 3px;
+  height: 18px;
+  border-radius: 2px;
+  background-color: var(--decant-brand-primary, #2d5b47);
+  flex-shrink: 0;
+}
+
+.collections-panel__bar-icon {
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.collections-panel__bar-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.collections-panel__bar-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  background-color: rgba(0, 0, 0, 0.06);
+  padding: 1px 7px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.collections-panel__bar-chevron {
+  color: #9ca3af;
+}
+
+.collections-panel__bar-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.collections-panel__bar-add:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: #374151;
+}
+
+/* ---- Expanded Content ---- */
+
+.collections-panel__content {
+  max-height: 40vh;
+  overflow-y: auto;
+  padding-bottom: 4px;
+}
+
+.collections-panel__subtitle {
+  font-size: 11px;
+  color: #9ca3af;
+  padding: 0 12px 4px;
+  font-weight: 500;
+}
+
+/* ---- Collection Tree ---- */
+
+.collection-tree {
+  padding: 0;
+}
+
+.collection-tree-empty {
+  padding: 16px 12px;
+  text-align: center;
+}
+
+.collection-tree-empty__text {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 4px;
+}
+
+.collection-tree-empty__hint {
+  font-size: 11px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+/* ---- Tree Item ---- */
+
+.collection-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding-right: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 1px 4px;
+  transition: background-color 0.1s ease;
+}
+
+.collection-tree-item:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.collection-tree-item--selected {
+  background-color: rgba(45, 91, 71, 0.08);
+}
+
+.collection-tree-item--selected:hover {
+  background-color: rgba(45, 91, 71, 0.12);
+}
+
+/* Chevron */
+.collection-tree-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #9ca3af;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.collection-tree-chevron:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.collection-tree-chevron--hidden {
+  visibility: hidden;
+}
+
+/* Icon */
+.collection-item__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-size: 13px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* Name */
+.collection-tree-item__name {
+  flex: 1;
+  font-size: 13px;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+/* Count badge */
+.collection-tree-item__count {
+  font-size: 11px;
+  color: #9ca3af;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-right: 2px;
+}
+
+/* Three-dot menu button */
+.collection-tree-item__menu {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.collection-tree-item:hover .collection-tree-item__menu {
+  display: flex;
+}
+
+.collection-tree-item__menu:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: #374151;
+}
+
+/* ---- Rename Field ---- */
+
+.collection-rename-field {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: #374151;
+  padding: 2px 6px;
+  border: 1px solid var(--decant-brand-primary, #2d5b47);
+  border-radius: 4px;
+  background-color: #fff;
+  outline: none;
+  font-family: inherit;
+}
+
+.collection-rename-confirm,
+.collection-rename-cancel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.collection-rename-confirm {
+  color: var(--decant-brand-primary, #2d5b47);
+}
+
+.collection-rename-confirm:hover {
+  background-color: rgba(45, 91, 71, 0.1);
+}
+
+.collection-rename-confirm:disabled {
+  color: #d1d5db;
+  cursor: default;
+}
+
+.collection-rename-cancel {
+  color: #9ca3af;
+}
+
+.collection-rename-cancel:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: #6b7280;
+}
+
+/* ---- New Collection Input Row ---- */
+
+.collection-new-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding-right: 8px;
+  margin: 1px 4px;
+}
+
+/* ---- New Collection Button ---- */
+
+.collections-panel__new-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: calc(100% - 8px);
+  padding: 6px 12px;
+  margin: 2px 4px 4px;
+  font-size: 13px;
+  color: #9ca3af;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 1px dashed #d1d5db;
+  background: transparent;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.collections-panel__new-button:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+  border-color: #9ca3af;
+  color: #6b7280;
+}
+
+/* ---- Context Menu ---- */
+
+.collection-context-menu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 4px 0;
+  font-family: inherit;
+}
+
+.collection-context-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  padding: 6px 12px 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-context-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.1s ease;
+}
+
+.collection-context-item:hover {
+  background-color: #f3f4f6;
+}
+
+.collection-context-item--danger {
+  color: #ef4444;
+}
+
+.collection-context-item--danger:hover {
+  background-color: #fef2f2;
+}
+
+.collection-context-separator {
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 4px 0;
+}
+
+/* ---- Icon Picker ---- */
+
+.collection-icon-picker {
+  position: fixed;
+  z-index: 1001;
+  width: 220px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 8px;
+}
+
+.collection-icon-picker__header {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  padding: 2px 4px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.collection-icon-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+
+.collection-icon-picker__item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.collection-icon-picker__item:hover {
+  transform: scale(1.1);
+}
+
+.collection-icon-picker__item--active {
+  border-width: 2px;
+}
+
+/* ---- Scrollbar Styling ---- */
+
+.collections-panel__content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.collections-panel__content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.collections-panel__content::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.12);
+  border-radius: 2px;
+}
+
+.collections-panel__content::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}

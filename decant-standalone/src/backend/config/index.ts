@@ -43,6 +43,9 @@ const ConfigSchema = z.object({
   // Apify Configuration (for Twitter/X scraping)
   APIFY_API_KEY: z.string().optional(),
 
+  // X/Twitter API Configuration
+  X_API_BEARER_TOKEN: z.string().optional(),
+
   // Logging Configuration
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
   LOG_PRETTY: z.coerce.boolean().default(true),
@@ -118,6 +121,8 @@ export function logConfigSummary(): void {
     hasOpenAIKey: !!config.OPENAI_API_KEY,
     openAIModel: config.OPENAI_MODEL,
     hasMasterKey: !!config.DECANT_MASTER_KEY,
+    hasXApiKey: !!config.X_API_BEARER_TOKEN,
+    hasApifyKey: !!config.APIFY_API_KEY,
     scraperTimeout: config.SCRAPER_TIMEOUT_MS,
     scraperMaxSize: config.SCRAPER_MAX_SIZE_BYTES,
   });

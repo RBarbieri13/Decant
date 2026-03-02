@@ -89,3 +89,18 @@ export {
   getChangesByTrigger,
   getChangeStatistics,
 } from './audit.js';
+
+// Collections
+export {
+  getAllCollections,
+  getCollectionById,
+  createCollection,
+  updateCollection,
+  deleteCollection,
+  reorderCollections,
+  getCollectionNodeIds,
+  addNodeToCollection,
+  removeNodeFromCollection,
+  buildCollectionTree,
+} from './collections.js';
+export type { CreateCollectionInput, UpdateCollectionInput, CollectionTreeNode, CollectionRow } from './collections.js';

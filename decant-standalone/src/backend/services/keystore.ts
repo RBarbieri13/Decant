@@ -24,7 +24,7 @@ const KEYS_FILE = path.join(DECANT_CONFIG_DIR, 'keys.enc');
 /**
  * Key identifiers for different API keys
  */
-export type KeyIdentifier = 'openai' | 'anthropic' | 'x_api' | 'custom';
+export type KeyIdentifier = 'openai' | 'anthropic' | 'x_api' | 'apify' | 'custom';
 
 /**
  * Encrypted key storage format
@@ -237,6 +237,9 @@ export async function getApiKey(identifier: KeyIdentifier): Promise<string | nul
       case 'x_api':
         envKey = process.env.X_API_BEARER_TOKEN;
         break;
+      case 'apify':
+        envKey = process.env.APIFY_API_KEY;
+        break;
     }
     if (envKey) {
       return envKey;
@@ -307,6 +310,9 @@ export async function isConfigured(identifier: KeyIdentifier): Promise<boolean> 
     case 'x_api':
       if (process.env.X_API_BEARER_TOKEN) return true;
       break;
+    case 'apify':
+      if (process.env.APIFY_API_KEY) return true;
+      break;
   }
 
   try {
@@ -335,6 +341,9 @@ export async function listConfiguredKeys(): Promise<KeyIdentifier[]> {
   }
   if (process.env.X_API_BEARER_TOKEN) {
     configured.push('x_api');
+  }
+  if (process.env.APIFY_API_KEY) {
+    configured.push('apify');
   }
 
   try {

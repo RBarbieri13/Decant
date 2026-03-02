@@ -20,6 +20,8 @@ import migration009 from './009_add_hierarchy_audit.js';
 import migration010a from './010_add_categories_table.js';
 import migration011 from './011_add_subcategory.js';
 import migration010b from './010_backfill_classification_codes.js';
+import migration012 from './012_add_extraction_quality.js';
+import migration013 from './013_add_collections.js';
 
 /**
  * All available migrations in order of execution
@@ -37,6 +39,8 @@ export const migrations: Migration[] = [
   migration010a,
   migration010b,
   migration011,
+  migration012,
+  migration013,
 ];
 
 /**

@@ -91,7 +91,7 @@ function isPrivateIP(hostname: string): boolean {
  * Validate URL for SSRF protection
  * Throws SSRFError if URL points to a private/blocked address
  */
-function validateUrlForSSRF(url: string): URL {
+export function validateUrlForSSRF(url: string): URL {
   let parsedUrl: URL;
 
   try {
@@ -129,7 +129,7 @@ function validateUrlForSSRF(url: string): URL {
 /**
  * Fetch URL with timeout and size limits
  */
-async function fetchWithLimits(url: string): Promise<string> {
+export async function fetchWithLimits(url: string): Promise<string> {
   const controller = new AbortController();
   const timeoutMs = config.SCRAPER_TIMEOUT_MS;
   const maxSizeBytes = config.SCRAPER_MAX_SIZE_BYTES;

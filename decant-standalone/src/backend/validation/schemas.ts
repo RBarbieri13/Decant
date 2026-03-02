@@ -172,6 +172,48 @@ export const HierarchyViewParamSchema = z.object({
 });
 
 // ============================================================
+// Collection Schemas
+// ============================================================
+
+/**
+ * Schema for creating a new collection
+ */
+export const CreateCollectionSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be 100 characters or less'),
+  icon: z.string().max(10, 'Icon must be 10 characters or less').optional(),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Color must be a valid hex color').optional(),
+  parentId: z.string().uuid('Parent ID must be a valid UUID').nullable().optional(),
+});
+
+/**
+ * Schema for updating an existing collection
+ */
+export const UpdateCollectionSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  icon: z.string().max(10).optional(),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  parentId: z.string().uuid().nullable().optional(),
+  position: z.number().int().min(0).optional(),
+}).refine(
+  (data) => Object.keys(data).length > 0,
+  { message: 'At least one field must be provided for update' }
+);
+
+/**
+ * Schema for reordering collections within a parent
+ */
+export const ReorderCollectionsSchema = z.object({
+  orderedIds: z.array(z.string().uuid()).min(1, 'At least one ID is required'),
+});
+
+/**
+ * Schema for adding a node to a collection
+ */
+export const AddNodeToCollectionSchema = z.object({
+  nodeId: z.string().uuid('Node ID must be a valid UUID'),
+});
+
+// ============================================================
 // Type Exports
 // ============================================================
 

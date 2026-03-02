@@ -7,7 +7,7 @@
 import { log } from '../../logger/index.js';
 import { AppError } from '../../middleware/errorHandler.js';
 import { ErrorCode } from '../../errors/index.js';
-import { scrapeUrl, type ScrapedContent } from '../scraper.js';
+import { scrapeUrl, fetchWithLimits, type ScrapedContent } from '../scraper.js';
 import { extractorRegistry } from '../extractors/index.js';
 import type { ExtractorResult } from '../extractors/base.js';
 import {
@@ -413,11 +413,28 @@ export class ImportOrchestrator {
    */
   private async extractContent(url: string): Promise<ScrapedContent> {
     try {
-      // Check if a specialized extractor exists for this URL
       const parsedUrl = new URL(url);
       if (extractorRegistry.hasSpecializedExtractor(parsedUrl)) {
         log.debug('Using specialized extractor', { url, module: 'import-orchestrator' });
-        const result = await extractorRegistry.extract(url, url, '', undefined, undefined);
+
+        // Fetch HTML for specialized extractors (best-effort)
+        let html = '';
+        try {
+          html = await fetchWithLimits(url);
+          log.debug('Pre-fetched HTML for specialized extractor', {
+            url,
+            htmlLength: html.length,
+            module: 'import-orchestrator',
+          });
+        } catch (fetchError) {
+          log.debug('HTML pre-fetch failed for specialized extractor, proceeding without HTML', {
+            url,
+            error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+            module: 'import-orchestrator',
+          });
+        }
+
+        const result = await extractorRegistry.extract(url, url, html, undefined, undefined);
         return this.extractorResultToScrapedContent(result, url);
       }
 
@@ -504,7 +521,7 @@ export class ImportOrchestrator {
       phrase_description: classification.quickPhrase || classification.reasoning?.slice(0, 100),
       short_description: scraped.description ?? undefined,
       logo_url: scraped.favicon ?? undefined,
-      ai_summary: scraped.description ?? undefined,
+      ai_summary: scraped.content?.slice(0, 2000) || scraped.description || undefined,
       segment_code: classification.segment,
       category_code: classification.category,
       content_type_code: classification.contentType,
@@ -528,6 +545,16 @@ export class ImportOrchestrator {
       function_parent_id: null,
       organization_parent_id: null,
     };
+
+    // Determine extraction quality
+    let extractionQuality = 'minimal';
+    if (scraped.content && scraped.title !== 'Untitled') {
+      extractionQuality = 'full';
+    } else if (scraped.description || (scraped.content && scraped.title === 'Untitled')) {
+      extractionQuality = 'partial';
+    }
+
+    nodeInput.extraction_quality = extractionQuality;
 
     return createNode(nodeInput);
   }

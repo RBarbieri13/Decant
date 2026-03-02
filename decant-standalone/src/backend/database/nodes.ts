@@ -31,6 +31,9 @@ export interface CreateNodeInput {
   category_code?: string | null;
   content_type_code?: string | null;
   subcategory_label?: string | null;
+  extraction_quality?: string | null;
+  extraction_source?: string | null;
+  extraction_notes?: string | null;
 }
 
 export interface UpdateNodeInput {
@@ -49,6 +52,9 @@ export interface UpdateNodeInput {
   category_code?: string | null;
   content_type_code?: string | null;
   subcategory_label?: string | null;
+  extraction_quality?: string | null;
+  extraction_source?: string | null;
+  extraction_notes?: string | null;
 }
 
 /**
@@ -124,8 +130,9 @@ export function createNode(data: CreateNodeInput): unknown {
         id, title, url, source_domain, company, phrase_description,
         short_description, logo_url, ai_summary, extracted_fields,
         metadata_tags, function_parent_id, organization_parent_id,
-        segment_code, category_code, content_type_code, subcategory_label
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        segment_code, category_code, content_type_code, subcategory_label,
+        extraction_quality, extraction_source, extraction_notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -145,7 +152,10 @@ export function createNode(data: CreateNodeInput): unknown {
       data.segment_code || null,
       data.category_code || null,
       data.content_type_code || null,
-      data.subcategory_label || null
+      data.subcategory_label || null,
+      data.extraction_quality || null,
+      data.extraction_source || null,
+      data.extraction_notes || null
     );
 
     // Insert key concepts (within same transaction)
@@ -253,6 +263,18 @@ export function updateNode(id: string, data: UpdateNodeInput): unknown {
     updates.push('subcategory_label = ?');
     const trimmed = data.subcategory_label?.trim();
     values.push((trimmed && trimmed.length > 2) ? trimmed.slice(0, 60) : null);
+  }
+  if (data.extraction_quality !== undefined) {
+    updates.push('extraction_quality = ?');
+    values.push(data.extraction_quality);
+  }
+  if (data.extraction_source !== undefined) {
+    updates.push('extraction_source = ?');
+    values.push(data.extraction_source);
+  }
+  if (data.extraction_notes !== undefined) {
+    updates.push('extraction_notes = ?');
+    values.push(data.extraction_notes);
   }
 
   // If no updates to the node itself and no key_concepts update, just return current state

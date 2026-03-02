@@ -583,3 +583,85 @@ export const auditAPI = {
     return res.json();
   },
 };
+
+// ============================================================
+// Collections API
+// ============================================================
+
+export interface CollectionTreeNode {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  parentId: string | null;
+  position: number;
+  nodeCount: number;
+  children: CollectionTreeNode[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const collectionsAPI = {
+  async getTree(): Promise<CollectionTreeNode[]> {
+    const res = await fetchWithAuth(`${API_BASE}/collections`);
+    if (!res.ok) throw new Error('Failed to fetch collections');
+    return res.json();
+  },
+
+  async create(data: { name: string; icon?: string; color?: string; parentId?: string | null }): Promise<any> {
+    const res = await fetchWithAuth(`${API_BASE}/collections`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to create collection');
+    return res.json();
+  },
+
+  async update(id: string, data: { name?: string; icon?: string; color?: string; parentId?: string | null; position?: number }): Promise<any> {
+    const res = await fetchWithAuth(`${API_BASE}/collections/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to update collection');
+    return res.json();
+  },
+
+  async delete(id: string): Promise<void> {
+    const res = await fetchWithAuth(`${API_BASE}/collections/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete collection');
+  },
+
+  async reorder(parentId: string | null, orderedIds: string[]): Promise<void> {
+    const endpoint = parentId ?? 'root';
+    const res = await fetchWithAuth(`${API_BASE}/collections/${endpoint}/reorder`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderedIds }),
+    });
+    if (!res.ok) throw new Error('Failed to reorder collections');
+  },
+
+  async getNodes(collectionId: string): Promise<string[]> {
+    const res = await fetchWithAuth(`${API_BASE}/collections/${collectionId}/nodes`);
+    if (!res.ok) throw new Error('Failed to fetch collection nodes');
+    return res.json();
+  },
+
+  async addNode(collectionId: string, nodeId: string): Promise<void> {
+    const res = await fetchWithAuth(`${API_BASE}/collections/${collectionId}/nodes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nodeId }),
+    });
+    if (!res.ok) throw new Error('Failed to add node to collection');
+  },
+
+  async removeNode(collectionId: string, nodeId: string): Promise<void> {
+    const res = await fetchWithAuth(`${API_BASE}/collections/${collectionId}/nodes/${nodeId}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error('Failed to remove node from collection');
+  },
+};

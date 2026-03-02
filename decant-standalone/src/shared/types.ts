@@ -86,6 +86,11 @@ export interface Node {
   // Snake_case DB fields (returned directly by REST API)
   subcategory_label?: string | null;
 
+  // Extraction quality tracking
+  extraction_quality?: string | null;
+  extraction_source?: string | null;
+  extraction_notes?: string | null;
+
   // Metadata
   contentTypeCode: ContentTypeCode | null;
   metadataCodes?: {
@@ -181,6 +186,34 @@ export interface CustomSpace {
 }
 
 // ============================================================
+// Collection
+// ============================================================
+
+export interface Collection {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  parentId: string | null;
+  position: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CollectionTreeNode {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  parentId: string | null;
+  position: number;
+  nodeCount: number;
+  children: CollectionTreeNode[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================================
 // Processing Queue Item
 // ============================================================
 
@@ -205,6 +238,9 @@ export interface CreateNodeInput {
   organizationParentId?: string | null;
   sourceUrl?: string | null;
   contentTypeCode?: ContentTypeCode | null;
+  extraction_quality?: string | null;
+  extraction_source?: string | null;
+  extraction_notes?: string | null;
 }
 
 export interface UpdateNodeInput {
@@ -216,6 +252,9 @@ export interface UpdateNodeInput {
   aiSummary?: string | null;
   aiKeyPoints?: string[];
   aiConfidence?: number;
+  extraction_quality?: string | null;
+  extraction_source?: string | null;
+  extraction_notes?: string | null;
 }
 
 export interface SearchFilters {
