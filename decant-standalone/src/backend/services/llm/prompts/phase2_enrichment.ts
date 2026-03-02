@@ -103,7 +103,8 @@ export const METADATA_CODE_CATEGORIES = {
     For T/DEV (Dev Tools): "Testing Frameworks", "IDE Plugins", "Build Tools", "Code Review", "Debugging Tools"
     For T/DAT (Data): "Data Pipelines", "Analytics Platforms", "Data Visualization", "ETL Tools"
     For B/PRD (Product): "Roadmap Planning", "User Feedback", "Feature Prioritization", "Product Analytics"
-    IMPORTANT: Do NOT use the category name as the subcategory. Always be specific to the actual content.`,
+    IMPORTANT: Do NOT use the category name as the subcategory. Always be specific to the actual content.
+    IMPORTANT: The subcategory MUST be a descriptive multi-word label (3+ characters). NEVER return a single letter, abbreviation, or code — always return a human-readable phrase like "Video Generation" or "Code Assistants".`,
   CAT: `Category - Sub-classification within segment. MUST be a valid 3-letter code for the chosen segment:
     For A (AI): LLM, AGT, FND, MLO, NLP, CVS, GEN, ETH, RES, OTH
     For T (Tech): WEB, MOB, DEV, CLD, SEC, DAT, API, OPS, HRD, OTH
@@ -587,8 +588,10 @@ export function normalizeMetadataCodes(codes: Partial<MetadataCodes>): MetadataC
   const catCode = normalizeCategoryCode(codes.CAT?.[0], segCode);
   const typCode = normalizeContentTypeCode(codes.TYP?.[0]);
 
-  // Normalize SUB: keep as-is (human readable label), just trim and clamp length
-  const subLabel = codes.SUB?.[0]?.trim().slice(0, 60) ?? 'General';
+  // Normalize SUB: keep as-is (human readable label), trim and clamp length
+  // Reject single-character or two-character values (likely LLM artifacts, not real subcategories)
+  const rawSub = codes.SUB?.[0]?.trim().slice(0, 60);
+  const subLabel = (rawSub && rawSub.length > 2) ? rawSub : 'General';
 
   const result: MetadataCodes = {
     // Required hierarchy codes - always exactly 1

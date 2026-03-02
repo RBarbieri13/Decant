@@ -323,6 +323,41 @@ export class Phase1Classifier {
       if (domain.includes('anthropic')) organization = 'ANTH';
     }
 
+    // Dev/programming detection
+    if (
+      title.includes('programming') ||
+      title.includes('developer') ||
+      title.includes('software') ||
+      title.includes('code') ||
+      title.includes('api') ||
+      title.includes('framework')
+    ) {
+      segment = 'T';
+      category = 'DEV';
+    }
+
+    // Business/finance detection
+    if (
+      title.includes('startup') ||
+      title.includes('funding') ||
+      title.includes('investment') ||
+      title.includes('revenue')
+    ) {
+      segment = 'B';
+      category = 'OTH';
+    }
+
+    // Science/research detection
+    if (
+      title.includes('research') ||
+      title.includes('study') ||
+      title.includes('paper') ||
+      title.includes('journal')
+    ) {
+      segment = 'X';
+      category = 'OTH';
+    }
+
     // GitHub detection
     if (domain.includes('github')) {
       segment = 'T';
@@ -337,16 +372,13 @@ export class Phase1Classifier {
       organization = 'GOOG';
     }
 
-    // Twitter/X detection
+    // Twitter/X detection (organization only — content type determined by content)
     if (domain.includes('twitter') || domain.includes('x.com')) {
-      contentType = 'S';
       organization = 'TWTR';
     }
 
-    // LinkedIn detection
+    // LinkedIn detection (organization only — segment/category determined by content)
     if (domain.includes('linkedin')) {
-      segment = 'B';
-      category = 'OTH';
       organization = 'LINK';
     }
 

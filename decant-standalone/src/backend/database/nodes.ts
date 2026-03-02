@@ -251,7 +251,8 @@ export function updateNode(id: string, data: UpdateNodeInput): unknown {
   }
   if (data.subcategory_label !== undefined) {
     updates.push('subcategory_label = ?');
-    values.push(data.subcategory_label ? data.subcategory_label.slice(0, 60) : null);
+    const trimmed = data.subcategory_label?.trim();
+    values.push((trimmed && trimmed.length > 2) ? trimmed.slice(0, 60) : null);
   }
 
   // If no updates to the node itself and no key_concepts update, just return current state
@@ -365,7 +366,8 @@ export function updateNodePhase2(id: string, data: Phase2UpdateInput): unknown {
   // 9. Subcategory Label - AI-generated semantic subcategory
   if (data.subcategory_label !== undefined) {
     updates.push('subcategory_label = ?');
-    values.push(data.subcategory_label ? data.subcategory_label.slice(0, 60) : null);
+    const trimmed = data.subcategory_label?.trim();
+    values.push((trimmed && trimmed.length > 2) ? trimmed.slice(0, 60) : null);
   }
 
   // Merge extracted_fields with existing data

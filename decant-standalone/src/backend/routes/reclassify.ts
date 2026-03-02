@@ -4,6 +4,7 @@ import { Phase1Classifier, type ClassifyInput } from '../services/phase1_classif
 import * as keystore from '../services/keystore.js';
 import { log } from '../logger/index.js';
 import * as cache from '../cache/index.js';
+import { enrichNodes } from '../services/phase2_enricher.js';
 
 interface ReclassifyResult {
   nodeId: string;
@@ -104,16 +105,30 @@ export async function reclassifyAll(_req: Request, res: Response): Promise<void>
 
     cache.invalidate('tree:*');
 
+    // Phase 2 re-enrichment for changed nodes
+    const changedNodeIds = results.filter(r => r.changed).map(r => r.nodeId);
+    let enrichmentResults: { success: boolean; nodeId: string; error?: string }[] = [];
+    if (changedNodeIds.length > 0) {
+      log.info(`Running Phase 2 re-enrichment on ${changedNodeIds.length} changed nodes`, {
+        module: 'reclassify',
+      });
+      enrichmentResults = await enrichNodes(changedNodeIds, { concurrency: 2 });
+      cache.invalidate('tree:*');
+    }
+
     const segmentSummary: Record<string, number> = {};
     for (const r of results) {
       segmentSummary[r.newSegment] = (segmentSummary[r.newSegment] || 0) + 1;
     }
 
+    const enrichedCount = enrichmentResults.filter(r => r.success).length;
+
     res.json({
-      message: `Reclassified ${results.length} nodes (${changedCount} changed)`,
+      message: `Reclassified ${results.length} nodes (${changedCount} changed, ${enrichedCount} re-enriched)`,
       durationMs: Date.now() - startTime,
       totalNodes: results.length,
       changedNodes: changedCount,
+      enrichedNodes: enrichedCount,
       segmentDistribution: segmentSummary,
       results,
     });

@@ -52,6 +52,15 @@
   /* Border */
   --decant-border: #e5e5e5;
   --decant-border-dark: #d4d4d4;
+
+  /* Zone backgrounds — visual distinction between layout panels */
+  --decant-zone-sidebar-bg: #e8e4df;
+  --decant-zone-titlebar-bg: #2d5b47;
+  --decant-zone-titlebar-text: #f5f1ed;
+  --decant-zone-panel-bg: #f0ece7;
+  --decant-zone-table-bg: #ffffff;
+  --decant-zone-sidebar-border: #c4bfb8;
+  --decant-zone-panel-border: #d4cfca;
 }
 
 * {
@@ -627,6 +636,45 @@ body {
 }
 
 /* ============================================================================
+   COLUMN FILTERS
+   ============================================================================ */
+
+.decant-table__filter-row {
+  display: grid;
+  position: sticky;
+  top: 36px;
+  z-index: 9;
+  background: var(--decant-gray-50);
+  border-bottom: 1px solid var(--decant-border);
+}
+
+.decant-table__filter-cell {
+  padding: 4px 6px;
+}
+
+.decant-table__filter-input {
+  width: 100%;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid var(--decant-border);
+  border-radius: 4px;
+  background: var(--decant-white);
+  color: var(--decant-gray-900);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.decant-table__filter-input:focus {
+  border-color: var(--decant-brand-primary);
+  box-shadow: 0 0 0 2px rgba(45, 91, 71, 0.1);
+}
+
+.decant-table__filter-input::placeholder {
+  color: var(--decant-gray-400);
+  opacity: 0.7;
+}
+
+/* ============================================================================
    DETAILS PANEL
    ============================================================================ */
 
@@ -867,14 +915,16 @@ body {
   align-items: center;
   height: 48px;
   padding: 0 12px;
-  background-color: #faf8f6;
-  border-bottom: 1px solid #e0dcd4;
+  background-color: var(--decant-zone-titlebar-bg);
+  color: var(--decant-zone-titlebar-text);
+  border-bottom: none;
   flex-shrink: 0;
 }
 
 .decant-topbar--light {
-  background-color: #faf8f6;
-  border-bottom: 1px solid #e0dcd4;
+  background-color: var(--decant-zone-titlebar-bg);
+  color: var(--decant-zone-titlebar-text);
+  border-bottom: none;
 }
 
 .decant-topbar__left {
@@ -900,7 +950,7 @@ body {
 .decant-topbar__brand-name {
   font-size: 18px;
   font-weight: 700;
-  color: #2d5b47;
+  color: var(--decant-zone-titlebar-text);
   letter-spacing: -0.5px;
 }
 
@@ -911,20 +961,20 @@ body {
   width: 320px;
   height: 32px;
   padding: 0 10px;
-  background-color: white;
-  border: 1px solid #e0dcd4;
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 6px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .decant-topbar__search:focus-within {
-  border-color: #2d5b47;
-  box-shadow: 0 0 0 3px rgba(45, 91, 71, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
 }
 
 .decant-topbar__search-icon {
   font-size: 16px;
-  color: #888888;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .decant-topbar__search-input {
@@ -933,12 +983,12 @@ body {
   background: transparent;
   font-size: 14px;
   font-weight: 500;
-  color: #1a1a1a;
+  color: var(--decant-zone-titlebar-text);
   outline: none;
 }
 
 .decant-topbar__search-input::placeholder {
-  color: #999999;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .decant-topbar__clear-btn {
@@ -949,15 +999,15 @@ body {
   height: 20px;
   padding: 0;
   border: none;
-  background: #e5e5e5;
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 50%;
-  color: #666;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 14px;
   cursor: pointer;
 }
 
 .decant-topbar__clear-btn:hover {
-  background: #d5d5d5;
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .decant-topbar__spacer {
@@ -979,20 +1029,20 @@ body {
   padding: 0;
   border: none;
   background: transparent;
-  color: #5c5c5c;
+  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   border-radius: 6px;
   font-size: 18px;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .decant-topbar__icon-btn:hover {
-  background-color: rgba(0, 0, 0, 0.06);
-  color: #333;
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }
 
 .decant-topbar__star-filter {
-  color: #9ca3af;
+  color: rgba(255, 255, 255, 0.5);
   transition: color 0.15s ease;
 }
 
@@ -1017,7 +1067,7 @@ body {
 }
 
 .decant-topbar__user:hover {
-  background-color: rgba(0, 0, 0, 0.06);
+  background-color: rgba(255, 255, 255, 0.12);
 }
 
 .decant-topbar__user-avatar {
@@ -1154,8 +1204,8 @@ body {
   position: relative;
   width: 280px;
   flex-shrink: 0;
-  background-color: #fbf9f5;
-  border-right: 1px solid #e8e5e0;
+  background-color: var(--decant-zone-sidebar-bg);
+  border-right: 1px solid var(--decant-zone-sidebar-border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2351,8 +2401,8 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: #faf8f5;
-  border-left: 1px solid #e0ddd9;
+  background-color: var(--decant-zone-panel-bg);
+  border-left: 1px solid var(--decant-zone-panel-border);
   overflow: hidden;
   transition: width 0.25s ease, opacity 0.2s ease;
   opacity: 1;
@@ -2368,7 +2418,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #faf8f5;
+  background: var(--decant-zone-panel-bg);
 }
 
 .decant-panel__empty-state {

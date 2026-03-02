@@ -552,8 +552,10 @@ export class Phase2Enricher {
         update.content_type_code = enrichment.metadataCodes.TYP[0];
       }
       // Set subcategory_label from first SUB code
+      // Reject values <= 2 chars (single letters or abbreviations are LLM artifacts)
       if (enrichment.metadataCodes.SUB && enrichment.metadataCodes.SUB.length > 0) {
-        update.subcategory_label = enrichment.metadataCodes.SUB[0];
+        const sub = enrichment.metadataCodes.SUB[0]?.trim();
+        update.subcategory_label = (sub && sub.length > 2) ? sub : undefined;
       }
     }
 

@@ -86,6 +86,16 @@ function getTypeBadgeClass(type: string): string {
 type ViewMode = 'table' | 'grid' | 'tree' | 'list';
 type TagColor = 'blue' | 'yellow' | 'pink' | 'green' | 'purple' | 'gray' | 'orange' | 'teal';
 type PanelTab = 'properties' | 'related' | 'backlinks';
+type ColumnFilters = Record<string, string>;
+
+function useDebouncedValue<T>(value: T, delay = 250): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
 
 // Gumroad palette hex colors for tree node icons
 const GUMROAD_ICON_COLORS: Record<string, string> = {
@@ -1027,6 +1037,8 @@ interface DataTableProps {
   onTagClick?: (tag: string) => void;
   onSegmentClick?: (segCode: string) => void;
   pendingEnrichmentIds?: Set<string>;
+  columnFilters?: ColumnFilters;
+  onColumnFilterChange?: (filters: ColumnFilters) => void;
 }
 
 type SortKey = 'title' | 'segment' | 'category' | 'subcategoryLabel' | 'quickPhrase' | 'date' | 'company';
@@ -1055,6 +1067,8 @@ const DataTable: React.FC<DataTableProps> = ({
   onTagClick,
   onSegmentClick,
   pendingEnrichmentIds,
+  columnFilters = {},
+  onColumnFilterChange,
 }) => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(['tailwind-css']));
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
@@ -1220,6 +1234,42 @@ const DataTable: React.FC<DataTableProps> = ({
         </div>
         <div className="decant-table__header-cell"></div>
       </div>
+      {/* Per-column filter row */}
+      {onColumnFilterChange && (
+        <div className="decant-table__filter-row" style={{ gridTemplateColumns: gridTemplate }}>
+          <div className="decant-table__filter-cell" />
+          <div className="decant-table__filter-cell" />
+          <div className="decant-table__filter-cell" />
+          <div className="decant-table__filter-cell">
+            <input type="text" placeholder="Filter title..." value={columnFilters.title || ''} onChange={e => onColumnFilterChange({ ...columnFilters, title: e.target.value })} className="decant-table__filter-input" />
+          </div>
+          <div className="decant-table__filter-cell">
+            <input type="text" placeholder="Filter segment..." value={columnFilters.segment || ''} onChange={e => onColumnFilterChange({ ...columnFilters, segment: e.target.value })} className="decant-table__filter-input" />
+          </div>
+          <div className="decant-table__filter-cell">
+            <input type="text" placeholder="Filter type..." value={columnFilters.type || ''} onChange={e => onColumnFilterChange({ ...columnFilters, type: e.target.value })} className="decant-table__filter-input" />
+          </div>
+          <div className="decant-table__filter-cell">
+            <input type="text" placeholder="Filter category..." value={columnFilters.category || ''} onChange={e => onColumnFilterChange({ ...columnFilters, category: e.target.value })} className="decant-table__filter-input" />
+          </div>
+          <div className="decant-table__filter-cell">
+            <input type="text" placeholder="Filter subcategory..." value={columnFilters.subcategoryLabel || ''} onChange={e => onColumnFilterChange({ ...columnFilters, subcategoryLabel: e.target.value })} className="decant-table__filter-input" />
+          </div>
+          <div className="decant-table__filter-cell">
+            <input type="text" placeholder="Filter phrase..." value={columnFilters.quickPhrase || ''} onChange={e => onColumnFilterChange({ ...columnFilters, quickPhrase: e.target.value })} className="decant-table__filter-input" />
+          </div>
+          <div className="decant-table__filter-cell">
+            <input type="text" placeholder="Filter tags..." value={columnFilters.tags || ''} onChange={e => onColumnFilterChange({ ...columnFilters, tags: e.target.value })} className="decant-table__filter-input" />
+          </div>
+          <div className="decant-table__filter-cell">
+            <input type="text" placeholder="Filter date..." value={columnFilters.date || ''} onChange={e => onColumnFilterChange({ ...columnFilters, date: e.target.value })} className="decant-table__filter-input" />
+          </div>
+          <div className="decant-table__filter-cell">
+            <input type="text" placeholder="Filter company..." value={columnFilters.company || ''} onChange={e => onColumnFilterChange({ ...columnFilters, company: e.target.value })} className="decant-table__filter-input" />
+          </div>
+          <div className="decant-table__filter-cell" />
+        </div>
+      )}
       <div className="decant-table__body">
         {groupedData ? (
           // Render with subcategory group headers
@@ -1797,6 +1847,8 @@ export default function DecantDemo() {
   const [refreshQueuedCount, setRefreshQueuedCount] = useState<number | null>(null);
   const [isReclassifying, setIsReclassifying] = useState(false);
   const [pendingEnrichmentIds, setPendingEnrichmentIds] = useState<Set<string>>(new Set());
+  const [columnFilters, setColumnFilters] = useState<ColumnFilters>({});
+  const debouncedColumnFilters = useDebouncedValue(columnFilters);
 
   // Sidebar drag-resize handlers
   useEffect(() => {
@@ -1840,15 +1892,8 @@ export default function DecantDemo() {
             const segLabel = SEGMENT_LABELS[segCode] || segCode || 'Uncategorized';
             const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode || 'General';
             const domain = (node.source_domain || '').toLowerCase();
-            let typeLabel = CONTENT_TYPE_LABELS[ctCode] || 'Website';
-            let typeSymbol = CONTENT_TYPE_SYMBOLS[ctCode] || '\u{1F4C4}';
-            if (domain.includes('twitter.com') || domain.includes('x.com')) {
-              typeLabel = 'X';
-              typeSymbol = '\u{1D54F}';
-            } else if (domain.includes('youtube.com') || domain.includes('youtu.be')) {
-              typeLabel = 'Video';
-              typeSymbol = '\u{1F3AC}';
-            }
+            const typeLabel = CONTENT_TYPE_LABELS[ctCode] || 'Website';
+            const typeSymbol = CONTENT_TYPE_SYMBOLS[ctCode] || '\u{1F4C4}';
             return {
               id: node.id,
               segmentCode: segCode,
@@ -2089,7 +2134,22 @@ export default function DecantDemo() {
       );
     }
 
-    // Step 2: Apply search filter
+    // Step 2: Apply per-column filters
+    const activeColFilters = Object.entries(debouncedColumnFilters).filter(([_, v]) => v.trim());
+    if (activeColFilters.length > 0) {
+      filtered = filtered.filter(row =>
+        activeColFilters.every(([col, query]) => {
+          const q = query.trim().toLowerCase();
+          if (col === 'tags') {
+            return row.tags.some(tag => tag.label.toLowerCase().includes(q));
+          }
+          const value = String((row as unknown as Record<string, unknown>)[col] || '').toLowerCase();
+          return value.includes(q);
+        })
+      );
+    }
+
+    // Step 3: Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -2106,11 +2166,11 @@ export default function DecantDemo() {
       );
     }
 
-    // Step 3: Apply starred filter
+    // Step 4: Apply starred filter
     if (showStarredOnly) filtered = filtered.filter(item => item.starred);
 
     return filtered;
-  }, [tableData, hierarchyFilter, searchQuery, showStarredOnly]);
+  }, [tableData, hierarchyFilter, debouncedColumnFilters, searchQuery, showStarredOnly]);
 
   // Group items by subcategory when viewing a segment (for group headers in table)
   const groupedTableData = useMemo(() => {
@@ -2323,6 +2383,8 @@ export default function DecantDemo() {
             onTagClick={handleTagClick}
             onSegmentClick={handleSegmentBadgeClick}
             pendingEnrichmentIds={pendingEnrichmentIds}
+            columnFilters={columnFilters}
+            onColumnFilterChange={setColumnFilters}
             onCategoryClick={(segCode, catCode) => {
               const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode;
               const segLabel = SEGMENT_LABELS[segCode] || segCode;
