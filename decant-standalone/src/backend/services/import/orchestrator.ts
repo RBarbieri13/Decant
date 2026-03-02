@@ -531,9 +531,28 @@ export class ImportOrchestrator {
     // Check if node already exists for this URL
     const existingNode = findNodeByUrl(url);
     if (existingNode) {
-      log.info('Node already exists for URL, updating', {
+      const existingQuality = (existingNode.extraction_quality as string) ?? 'minimal';
+      const qualityRank: Record<string, number> = { minimal: 0, partial: 1, full: 2 };
+      const newRank = qualityRank[extractionQuality] ?? 0;
+      const oldRank = qualityRank[existingQuality] ?? 0;
+
+      // Only update if new extraction quality is equal or better
+      if (newRank < oldRank) {
+        log.info('Skipping update — existing node has better extraction quality', {
+          nodeId: existingNode.id,
+          url,
+          existingQuality,
+          newQuality: extractionQuality,
+          module: 'import-orchestrator',
+        });
+        return existingNode;
+      }
+
+      log.info('Node already exists for URL, updating with better data', {
         nodeId: existingNode.id,
         url,
+        existingQuality,
+        newQuality: extractionQuality,
         module: 'import-orchestrator',
       });
 
