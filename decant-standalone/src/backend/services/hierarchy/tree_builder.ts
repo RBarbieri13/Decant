@@ -227,7 +227,7 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
             contentTypeCode: node.content_type_code as ContentTypeCode | null,
             sourceUrl: node.url,
             faviconPath: node.logo_url,
-            iconHint: getIconByKeyword(node.title) || CONTENT_TYPE_ICONS[node.content_type_code || 'A'] || 'bxs-file',
+            iconHint: CONTENT_TYPE_ICONS[node.content_type_code || 'A'] || getIconByKeyword(node.title) || 'bxs-file',
           }));
           return {
             id: `subcat-${segCode}-${catCode}-${subcatLabel.replace(/\s+/g, '_')}`,
@@ -251,7 +251,7 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
           contentTypeCode: node.content_type_code as ContentTypeCode | null,
           sourceUrl: node.url,
           faviconPath: node.logo_url,
-          iconHint: getIconByKeyword(node.title) || CONTENT_TYPE_ICONS[node.content_type_code || 'A'] || 'bxs-file',
+          iconHint: CONTENT_TYPE_ICONS[node.content_type_code || 'A'] || getIconByKeyword(node.title) || 'bxs-file',
         }));
       }
 
@@ -322,7 +322,7 @@ function buildOrganizationTree(nodes: DatabaseNode[]): TreeNode[] {
         contentTypeCode: node.content_type_code as ContentTypeCode | null,
         sourceUrl: node.url,
         faviconPath: node.logo_url,
-        iconHint: getIconByKeyword(node.title) || CONTENT_TYPE_ICONS[node.content_type_code || 'A'] || 'bxs-file',
+        iconHint: CONTENT_TYPE_ICONS[node.content_type_code || 'A'] || getIconByKeyword(node.title) || 'bxs-file',
       }));
 
       categoryChildren.push({
