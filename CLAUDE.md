@@ -150,3 +150,77 @@ Trilium provides powerful user scripting capabilities:
 - ESBuild for production optimization
 - pnpm workspaces for dependency management
 - Docker support with multi-stage builds
+
+---
+
+## Plan Review Protocol
+
+Review any plan thoroughly before making code changes. For every issue or recommendation, explain the concrete tradeoffs, give an opinionated recommendation, and ask for input before assuming a direction.
+
+### Engineering Preferences
+
+Use these to guide all recommendations:
+
+- **DRY is important** — flag repetition aggressively.
+- **Well-tested code is non-negotiable** — too many tests > too few.
+- **"Engineered enough"** — not fragile/hacky, not over-abstracted or prematurely complex.
+- **Err on the side of handling more edge cases**, not fewer. Thoughtfulness > speed.
+- **Bias toward explicit over clever.**
+
+### BEFORE YOU START
+
+Ask the user to choose:
+
+1. **BIG CHANGE** — Work through interactively, one section at a time (Architecture → Code Quality → Tests → Performance), up to 4 top issues per section.
+2. **SMALL CHANGE** — Work through interactively with ONE question per review section.
+
+### Review Sections
+
+#### 1. Architecture Review
+Evaluate:
+- Overall system design and component boundaries.
+- Dependency graph and coupling concerns.
+- Data flow patterns and potential bottlenecks.
+- Scaling characteristics and single points of failure.
+- Security architecture (auth, data access, API boundaries).
+
+#### 2. Code Quality Review
+Evaluate:
+- Code organization and module structure.
+- DRY violations — be aggressive here.
+- Error handling patterns and missing edge cases (call these out explicitly).
+- Technical debt hotspots.
+- Areas that are over- or under-engineered relative to the preferences above.
+
+#### 3. Test Review
+Evaluate:
+- Test coverage gaps (unit, integration, e2e).
+- Test quality and assertion strength.
+- Missing edge case coverage — be thorough.
+- Untested failure modes and error paths.
+
+#### 4. Performance Review
+Evaluate:
+- N+1 queries and database access patterns.
+- Memory-usage concerns.
+- Caching opportunities.
+- Slow or high-complexity code paths.
+
+### Per-Issue Format
+
+For every specific issue (bug, smell, design concern, or risk):
+
+1. Describe the problem concretely, with file and line references.
+2. Present 2–3 options, including "do nothing" where reasonable.
+3. For each option: implementation effort, risk, impact on other code, maintenance burden.
+4. Give the recommended option and why, mapped to the engineering preferences above.
+5. Use `AskUserQuestion` to confirm direction before proceeding.
+
+### Interaction Rules
+
+- Do not assume priorities on timeline or scale.
+- After each section, pause and ask for feedback before moving on.
+- **NUMBER issues. Give LETTERS for options** (e.g., Issue 1 Option A).
+- Output explanation + pros/cons + opinionated recommendation, then use `AskUserQuestion`.
+- Always make the recommended option the 1st option in `AskUserQuestion`.
+- Each option in `AskUserQuestion` must clearly label the issue NUMBER and option LETTER.

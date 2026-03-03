@@ -28,6 +28,7 @@ import { getMetadataCodeColor, getSegmentColor, formatMetadataCodesForDisplay, p
 // Hierarchy icons
 import { getTreeNodeIcon, getIconProps, getCategoryIcon } from '../utils/hierarchyIcons';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
+import { CollectionsPanel } from '../components/collections/CollectionsPanel';
 
 const SEGMENT_LABELS: Record<string, string> = {
   A: 'AI & ML', T: 'Technology', F: 'Finance', S: 'Sports',
@@ -673,6 +674,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           />
         ))}
       </div>
+      {!isCollapsed && <CollectionsPanel />}
       <button className="decant-sidebar__toggle" onClick={onToggleCollapse}>
         <i className={`bx ${isCollapsed ? 'bx-chevron-right' : 'bx-chevron-left'}`} />
       </button>
