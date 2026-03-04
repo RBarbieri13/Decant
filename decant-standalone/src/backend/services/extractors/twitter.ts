@@ -1,7 +1,7 @@
 // ============================================================
 // Twitter/X Extractor
 // Specialized extractor for Twitter/X posts
-// Fallback chain: X API v2 → Apify Tweet Scraper → HTML OG tags → blank
+// Fallback chain: X API v2 → Apify → FxTwitter → oEmbed → OG tags → blank
 // ============================================================
 
 import {
@@ -13,6 +13,8 @@ import {
 import { log } from '../../logger/index.js';
 import * as keystore from '../keystore.js';
 import { fetchTweetViaApify } from './apify-twitter.js';
+import { fetchTweetViaFxTwitter } from './fxtwitter-fallback.js';
+import { fetchTweetViaOEmbed } from './twitter-oembed-fallback.js';
 import { fetchTweetViaOgTags } from './twitter-og-fallback.js';
 
 // ============================================================
@@ -195,8 +197,8 @@ function mapXApiResponseToFields(
 
 export class TwitterExtractor extends BaseExtractor {
   readonly name = 'twitter';
-  readonly version = '2.0.0';
-  readonly description = 'Extracts metadata from Twitter/X posts via X API v2';
+  readonly version = '3.0.0';
+  readonly description = 'Extracts metadata from Twitter/X posts via 5-tier fallback chain';
   readonly priority = 100;
 
   canHandle(url: URL): boolean {
@@ -230,27 +232,13 @@ export class TwitterExtractor extends BaseExtractor {
 
     if (!bearerToken) {
       log.debug('X API Bearer Token not configured — trying fallbacks');
-      const apifyResult = await this.tryApifyFallback(context, tweetId, result);
-      if (apifyResult) return apifyResult;
-      const ogResult = await this.tryOgFallback(context, tweetId, result);
-      if (ogResult) return ogResult;
-
-      result.extractedFields = { tweetId } as unknown as Record<string, unknown>;
-      result.metadata = this.createMetadata(true, ['X API Bearer Token not configured, all fallbacks failed — blank']);
-      return result;
+      return this.tryAllFallbacks(context, tweetId, result, 'X API Bearer Token not configured');
     }
 
     if (!rateLimiter.canMakeRequest()) {
       const waitMs = rateLimiter.getWaitTimeMs();
       log.warn('X API rate limit approaching, trying fallbacks', { tweetId, waitMs });
-      const apifyResult = await this.tryApifyFallback(context, tweetId, result);
-      if (apifyResult) return apifyResult;
-      const ogResult = await this.tryOgFallback(context, tweetId, result);
-      if (ogResult) return ogResult;
-
-      result.extractedFields = { tweetId } as unknown as Record<string, unknown>;
-      result.metadata = this.createMetadata(true, [`Rate limited, all fallbacks failed — retry after ${Math.ceil(waitMs / 1000)}s`]);
-      return result;
+      return this.tryAllFallbacks(context, tweetId, result, `Rate limited — retry after ${Math.ceil(waitMs / 1000)}s`);
     }
 
     try {
@@ -259,26 +247,12 @@ export class TwitterExtractor extends BaseExtractor {
       if (apiResponse.errors && !apiResponse.data) {
         const errMsg = apiResponse.errors.map(e => e.message).join('; ');
         log.warn('X API returned errors, trying fallbacks', { tweetId, errors: errMsg });
-        const apifyResult = await this.tryApifyFallback(context, tweetId, result);
-        if (apifyResult) return apifyResult;
-        const ogResult = await this.tryOgFallback(context, tweetId, result);
-        if (ogResult) return ogResult;
-
-        result.extractedFields = { tweetId } as unknown as Record<string, unknown>;
-        result.metadata = this.createMetadata(true, [`X API error: ${errMsg}, all fallbacks failed`]);
-        return result;
+        return this.tryAllFallbacks(context, tweetId, result, `X API error: ${errMsg}`);
       }
 
       if (!apiResponse.data) {
         log.warn('X API returned no data, trying fallbacks', { tweetId });
-        const apifyResult = await this.tryApifyFallback(context, tweetId, result);
-        if (apifyResult) return apifyResult;
-        const ogResult = await this.tryOgFallback(context, tweetId, result);
-        if (ogResult) return ogResult;
-
-        result.extractedFields = { tweetId } as unknown as Record<string, unknown>;
-        result.metadata = this.createMetadata(true, ['X API returned no data, all fallbacks failed — blank']);
-        return result;
+        return this.tryAllFallbacks(context, tweetId, result, 'X API returned no data');
       }
 
       const fields = mapXApiResponseToFields(apiResponse, tweetId);
@@ -289,15 +263,46 @@ export class TwitterExtractor extends BaseExtractor {
         tweetId,
         error: err instanceof Error ? err.message : String(err),
       });
-      const apifyResult = await this.tryApifyFallback(context, tweetId, result);
-      if (apifyResult) return apifyResult;
-      const ogResult = await this.tryOgFallback(context, tweetId, result);
-      if (ogResult) return ogResult;
-
-      result.extractedFields = { tweetId } as unknown as Record<string, unknown>;
-      result.metadata = this.createMetadata(true, ['X API unavailable, all fallbacks failed — blank']);
-      return result;
+      return this.tryAllFallbacks(context, tweetId, result, 'X API unavailable');
     }
+  }
+
+  /**
+   * Try all fallback tiers in order:
+   * 1. Apify Tweet Scraper (paid, full data)
+   * 2. FxTwitter API (free, full data — no auth required)
+   * 3. Twitter oEmbed API (official, basic data — no auth required)
+   * 4. HTML OG tags (last resort, minimal data)
+   *
+   * Returns the first successful result, or a blank result if all fail.
+   */
+  private async tryAllFallbacks(
+    context: ExtractionContext,
+    tweetId: string,
+    baseResult: ExtractorResult,
+    reason: string
+  ): Promise<ExtractorResult> {
+    // Tier 2: Apify
+    const apifyResult = await this.tryApifyFallback(context, tweetId, baseResult);
+    if (apifyResult) return apifyResult;
+
+    // Tier 3: FxTwitter (free, no API key needed)
+    const fxResult = await this.tryFxTwitterFallback(context, tweetId, baseResult);
+    if (fxResult) return fxResult;
+
+    // Tier 4: Twitter oEmbed (official, no API key needed)
+    const oembedResult = await this.tryOEmbedFallback(context, tweetId, baseResult);
+    if (oembedResult) return oembedResult;
+
+    // Tier 5: OG tags from HTML
+    const ogResult = await this.tryOgFallback(context, tweetId, baseResult);
+    if (ogResult) return ogResult;
+
+    // All fallbacks failed
+    const result = { ...baseResult };
+    result.extractedFields = { tweetId } as unknown as Record<string, unknown>;
+    result.metadata = this.createMetadata(true, [`${reason}, all fallbacks failed — blank`]);
+    return result;
   }
 
   /**
@@ -368,6 +373,60 @@ export class TwitterExtractor extends BaseExtractor {
       );
     } catch (error) {
       log.debug('Apify fallback failed', {
+        tweetId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Try FxTwitter API as a fallback (free, no API key required)
+   * Provides full tweet data including text, author, metrics, and media
+   */
+  private async tryFxTwitterFallback(
+    context: ExtractionContext,
+    tweetId: string,
+    baseResult: ExtractorResult
+  ): Promise<ExtractorResult | null> {
+    try {
+      const fxFields = await fetchTweetViaFxTwitter(tweetId, context.normalizedUrl);
+      if (!fxFields) return null;
+
+      return this.populateResultFromFields(
+        { ...baseResult },
+        fxFields,
+        'Extracted via FxTwitter API fallback'
+      );
+    } catch (error) {
+      log.debug('FxTwitter fallback failed', {
+        tweetId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Try Twitter oEmbed API as a fallback (official, no API key required)
+   * Provides tweet text and author info, but no metrics or media
+   */
+  private async tryOEmbedFallback(
+    context: ExtractionContext,
+    tweetId: string,
+    baseResult: ExtractorResult
+  ): Promise<ExtractorResult | null> {
+    try {
+      const oembedFields = await fetchTweetViaOEmbed(tweetId, context.normalizedUrl);
+      if (!oembedFields) return null;
+
+      return this.populateResultFromFields(
+        { ...baseResult },
+        oembedFields,
+        'Extracted via Twitter oEmbed fallback'
+      );
+    } catch (error) {
+      log.debug('oEmbed fallback failed', {
         tweetId,
         error: error instanceof Error ? error.message : String(error),
       });
