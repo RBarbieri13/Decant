@@ -310,10 +310,9 @@ export async function withRetry<T>(
         });
       }
 
-      // Call onRetry callback
-      if (error instanceof Error) {
-        opts.onRetry(error, attempt + 1, delayMs);
-      }
+      // Call onRetry callback (cast non-Error throws to Error for the callback signature)
+      const retryError = error instanceof Error ? error : new Error(String(error));
+      opts.onRetry(retryError, attempt + 1, delayMs);
 
       // Log retry attempt
       log.warn('Retrying after error', {
