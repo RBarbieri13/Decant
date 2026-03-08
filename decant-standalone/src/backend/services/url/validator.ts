@@ -208,6 +208,14 @@ function parseUrl(url: string): URL {
 
   // Check for basic URL format
   if (!trimmed.match(/^https?:\/\//i)) {
+    // Reject explicit non-http/https schemes (ftp://, file://, javascript:, etc.)
+    if (trimmed.match(/^[a-zA-Z][a-zA-Z0-9+\-.]*:/)) {
+      throw new AppError(
+        'Invalid URL protocol. Only HTTP and HTTPS are allowed.',
+        400,
+        ErrorCode.INVALID_PROTOCOL
+      );
+    }
     // Try to prepend https:// if no protocol
     try {
       return new URL(`https://${trimmed}`);
@@ -284,19 +292,19 @@ function validateSSRF(url: URL): void {
  */
 function removeTrackingParams(url: URL): URL {
   const params = new URLSearchParams(url.search);
-  let modified = false;
 
-  for (const param of params.keys()) {
-    if (TRACKING_PARAMS.has(param.toLowerCase())) {
-      params.delete(param);
-      modified = true;
-    }
+  // Collect keys to remove first to avoid mutation-during-iteration issues
+  const toDelete = [...params.keys()].filter(k => TRACKING_PARAMS.has(k.toLowerCase()));
+
+  if (toDelete.length === 0) {
+    return url;
   }
 
-  if (modified) {
-    url.search = params.toString();
+  for (const key of toDelete) {
+    params.delete(key);
   }
 
+  url.search = params.toString();
   return url;
 }
 
@@ -338,8 +346,9 @@ function upgradeToHttps(url: URL): URL {
  * Remove empty fragments but keep meaningful ones
  */
 function normalizeFragment(url: URL): URL {
-  // Remove empty or whitespace-only fragments
-  if (url.hash === '#' || url.hash.trim() === '#') {
+  // url.hash is '' when the original URL had a bare '#' with nothing after it,
+  // but URL.href still retains the trailing '#'. Assigning '' explicitly strips it.
+  if (url.hash === '') {
     url.hash = '';
   }
   return url;
