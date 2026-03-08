@@ -137,9 +137,6 @@ export class ArticleExtractor extends BaseExtractor {
             const author = item.author;
             if (typeof author === 'string') {
               result.author = author;
-            } else if (typeof author === 'object') {
-              const authorObj = author as Record<string, unknown>;
-              result.author = (authorObj.name as string) || null;
             } else if (Array.isArray(author) && author.length > 0) {
               const firstAuthor = author[0];
               if (typeof firstAuthor === 'string') {
@@ -147,6 +144,9 @@ export class ArticleExtractor extends BaseExtractor {
               } else if (typeof firstAuthor === 'object') {
                 result.author = (firstAuthor as Record<string, unknown>).name as string || null;
               }
+            } else if (typeof author === 'object') {
+              const authorObj = author as Record<string, unknown>;
+              result.author = (authorObj.name as string) || null;
             }
           }
 
