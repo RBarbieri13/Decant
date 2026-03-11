@@ -112,6 +112,19 @@ const rateLimiter = new XApiRateLimiter();
 // Helpers
 // ============================================================
 
+/** Known garbage titles that X serves to bots/unauthenticated requests */
+const GARBAGE_TITLES = [
+  'user update on x',
+  'post on x',
+  'x',
+  'twitter',
+];
+
+function isGarbageTitle(title: string | null): boolean {
+  if (!title) return false;
+  return GARBAGE_TITLES.includes(title.toLowerCase().trim());
+}
+
 function extractTweetId(url: URL): string | null {
   const match = url.pathname.match(/\/status\/(\d+)/);
   return match ? match[1] : null;
@@ -320,7 +333,8 @@ export class TwitterExtractor extends BaseExtractor {
       const result = { ...baseResult };
       const authorDisplay = ogData.authorHandle ? `@${ogData.authorHandle}` : 'Unknown';
 
-      result.title = ogData.title || (ogData.description ? this.truncate(ogData.description, 100) ?? `Tweet by ${authorDisplay}` : `Tweet by ${authorDisplay}`);
+      const ogTitle = ogData.title && !isGarbageTitle(ogData.title) ? ogData.title : null;
+      result.title = ogTitle || (ogData.description ? this.truncate(ogData.description, 100) ?? `Tweet by ${authorDisplay}` : `Tweet by ${authorDisplay}`);
       result.description = ogData.description || null;
       result.author = authorDisplay;
       result.image = ogData.image || null;
@@ -449,7 +463,10 @@ export class TwitterExtractor extends BaseExtractor {
         ? `@${fields.authorHandle}`
         : 'Unknown';
 
-    result.title = this.truncate(tweetText, 100) ?? `Tweet by ${authorDisplay}`;
+    const truncatedTitle = this.truncate(tweetText, 100);
+    result.title = (truncatedTitle && !isGarbageTitle(truncatedTitle))
+      ? truncatedTitle
+      : `Tweet by ${authorDisplay}`;
     result.description = tweetText || null;
     result.author = authorDisplay;
     result.image = fields.mediaUrls[0] ?? null;

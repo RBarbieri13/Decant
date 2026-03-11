@@ -1623,196 +1623,195 @@ const HybridDetailCard: React.FC<HybridDetailCardProps> = ({ item, isOpen, onClo
 interface PropertiesPanelProps {
   item: TableRow | null;
   onClose: () => void;
+  onToggle: () => void;
   isVisible: boolean;
 }
 
-const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ item, onClose, isVisible }) => {
+const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ item, onClose, onToggle, isVisible }) => {
   const [activeTab, setActiveTab] = useState<PanelTab>('properties');
 
-  if (!item) {
-    return (
-      <aside className={`decant-panel decant-panel--empty${!isVisible ? ' decant-panel--hidden' : ''}`}>
-        <div className="decant-panel__empty-state">
-          <i className="bx bx-info-circle" />
-          <p>Select an item to view its properties</p>
-        </div>
-      </aside>
-    );
-  }
-
   return (
-    <aside className={`decant-panel${!isVisible ? ' decant-panel--hidden' : ''}`}>
-      <div className="decant-panel__header">
-        <button className="decant-panel__close" onClick={onClose}>
-          <i className="bx bx-x" />
-        </button>
-        <img src={item.logo} alt={item.title} className="decant-panel__logo" />
-        <h2 className="decant-panel__title">{item.title}</h2>
-        <span className="decant-panel__badge">{item.type}</span>
-        <div className="decant-panel__quick-stats">
-          {item.stars && `★ ${item.stars}`}
-          {item.forks && ` • 🍴 ${item.forks}`}
-          {item.license && ` • ${item.license}`}
-        </div>
-      </div>
+    <div className="decant-panel__wrapper">
+      <button className="decant-panel__toggle" onClick={onToggle} title={isVisible ? 'Hide properties' : 'Show properties'}>
+        <i className={`bx ${isVisible ? 'bx-chevron-right' : 'bx-chevron-left'}`} />
+      </button>
+      {isVisible && !item && (
+        <aside className="decant-panel decant-panel--empty">
+          <div className="decant-panel__empty-state">
+            <i className="bx bx-info-circle" />
+            <p>Select an item to view its properties</p>
+          </div>
+        </aside>
+      )}
+      {isVisible && item && (
+        <aside className="decant-panel">
+          <div className="decant-panel__header">
+            <button className="decant-panel__close" onClick={onClose}>
+              <i className="bx bx-x" />
+            </button>
+            <img src={item.logo} alt={item.title} className="decant-panel__logo" />
+            <h2 className="decant-panel__title">{item.title}</h2>
+            <span className="decant-panel__badge">{item.type}</span>
+            <div className="decant-panel__quick-stats">
+              {item.stars && `★ ${item.stars}`}
+              {item.forks && ` • 🍴 ${item.forks}`}
+              {item.license && ` • ${item.license}`}
+            </div>
+          </div>
 
-      <div className="decant-panel__tabs">
-        <button
-          className={`decant-panel__tab ${activeTab === 'properties' ? 'decant-panel__tab--active' : ''}`}
-          onClick={() => setActiveTab('properties')}
-        >
-          Properties
-        </button>
-        <button
-          className={`decant-panel__tab ${activeTab === 'related' ? 'decant-panel__tab--active' : ''}`}
-          onClick={() => setActiveTab('related')}
-        >
-          Related
-        </button>
-        <button
-          className={`decant-panel__tab ${activeTab === 'backlinks' ? 'decant-panel__tab--active' : ''}`}
-          onClick={() => setActiveTab('backlinks')}
-        >
-          Backlinks
-        </button>
-      </div>
+          <div className="decant-panel__tabs">
+            <button
+              className={`decant-panel__tab ${activeTab === 'properties' ? 'decant-panel__tab--active' : ''}`}
+              onClick={() => setActiveTab('properties')}
+            >
+              Properties
+            </button>
+            <button
+              className={`decant-panel__tab ${activeTab === 'related' ? 'decant-panel__tab--active' : ''}`}
+              onClick={() => setActiveTab('related')}
+            >
+              Related
+            </button>
+            <button
+              className={`decant-panel__tab ${activeTab === 'backlinks' ? 'decant-panel__tab--active' : ''}`}
+              onClick={() => setActiveTab('backlinks')}
+            >
+              Backlinks
+            </button>
+          </div>
 
-      <div className="decant-panel__content">
-        {activeTab === 'properties' && (
-          <>
-            {/* Description */}
-            {(item.shortDescription || item.quickPhrase) && (
+          <div className="decant-panel__content">
+            {activeTab === 'properties' && (
+              <>
+                {(item.shortDescription || item.quickPhrase) && (
+                  <div className="decant-card">
+                    <h3 className="decant-card__title">Description</h3>
+                    <p style={{ fontSize: '13px', lineHeight: 1.5, color: 'var(--decant-text-primary)', margin: 0 }}>
+                      {item.shortDescription || item.quickPhrase}
+                    </p>
+                  </div>
+                )}
+
+                {item.aiSummary && (
+                  <div className="decant-card">
+                    <h3 className="decant-card__title">AI Summary</h3>
+                    <p style={{ fontSize: '13px', lineHeight: 1.6, color: 'var(--decant-text-primary)', margin: 0, whiteSpace: 'pre-wrap' }}>
+                      {item.aiSummary}
+                    </p>
+                  </div>
+                )}
+
+                <div className="decant-card">
+                  <h3 className="decant-card__title">Source</h3>
+                  {item.url && (
+                    <div className="decant-card__row">
+                      <span className="decant-card__label">URL</span>
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="decant-card__value decant-card__value--link"
+                        style={{ fontSize: '12px', wordBreak: 'break-all' }}
+                      >
+                        {item.sourceDomain || item.url}
+                      </a>
+                    </div>
+                  )}
+                  {item.company && item.company !== 'Unknown' && (
+                    <div className="decant-card__row">
+                      <span className="decant-card__label">Company</span>
+                      <span className="decant-card__value">{item.company}</span>
+                    </div>
+                  )}
+                  <div className="decant-card__row">
+                    <span className="decant-card__label">Added</span>
+                    <span className="decant-card__value">{formatDate(item.date)}</span>
+                  </div>
+                </div>
+
+                <div className="decant-card">
+                  <h3 className="decant-card__title">Classification</h3>
+                  <div className="decant-card__row">
+                    <span className="decant-card__label">Segment</span>
+                    <span className="decant-card__value">{item.segment}</span>
+                  </div>
+                  <div className="decant-card__row">
+                    <span className="decant-card__label">Category</span>
+                    <span className="decant-card__value">{item.category}</span>
+                  </div>
+                  <div className="decant-card__row">
+                    <span className="decant-card__label">Type</span>
+                    <span className="decant-card__value">{item.typeSymbol} {item.type}</span>
+                  </div>
+                </div>
+
+                {item.keyConcepts && item.keyConcepts.length > 0 && (
+                  <div className="decant-card">
+                    <h3 className="decant-card__title">Key Concepts</h3>
+                    <div className="decant-panel__tags">
+                      {item.keyConcepts.map((concept, i) => (
+                        <Tag key={i} label={concept.replace(/_/g, ' ')} color="purple" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {item.tags.length > 0 && (
+                  <div className="decant-card">
+                    <h3 className="decant-card__title">Tags</h3>
+                    <div className="decant-panel__tags">
+                      {item.tags.map((tag, i) => (
+                        <Tag key={i} label={tag.label} color={tag.color} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTab === 'related' && (
               <div className="decant-card">
-                <h3 className="decant-card__title">Description</h3>
-                <p style={{ fontSize: '13px', lineHeight: 1.5, color: 'var(--decant-text-primary)', margin: 0 }}>
-                  {item.shortDescription || item.quickPhrase}
+                <h3 className="decant-card__title">Related Items</h3>
+                <p style={{ fontSize: '13px', color: 'var(--decant-text-secondary)' }}>
+                  Items related to {item.title} based on tags and category.
+                </p>
+                {item.usedBy && (
+                  <div style={{ marginTop: '12px' }}>
+                    <div className="decant-panel__tags">
+                      {item.usedBy.map((company, i) => (
+                        <Tag key={i} label={company} color="gray" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'backlinks' && (
+              <div className="decant-card">
+                <h3 className="decant-card__title">Backlinks</h3>
+                <p style={{ fontSize: '13px', color: 'var(--decant-text-secondary)' }}>
+                  Items that reference {item.title}.
                 </p>
               </div>
             )}
-
-            {/* AI Summary */}
-            {item.aiSummary && (
-              <div className="decant-card">
-                <h3 className="decant-card__title">AI Summary</h3>
-                <p style={{ fontSize: '13px', lineHeight: 1.6, color: 'var(--decant-text-primary)', margin: 0, whiteSpace: 'pre-wrap' }}>
-                  {item.aiSummary}
-                </p>
-              </div>
-            )}
-
-            {/* Source Info */}
-            <div className="decant-card">
-              <h3 className="decant-card__title">Source</h3>
-              {item.url && (
-                <div className="decant-card__row">
-                  <span className="decant-card__label">URL</span>
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="decant-card__value decant-card__value--link"
-                    style={{ fontSize: '12px', wordBreak: 'break-all' }}
-                  >
-                    {item.sourceDomain || item.url}
-                  </a>
-                </div>
-              )}
-              {item.company && item.company !== 'Unknown' && (
-                <div className="decant-card__row">
-                  <span className="decant-card__label">Company</span>
-                  <span className="decant-card__value">{item.company}</span>
-                </div>
-              )}
-              <div className="decant-card__row">
-                <span className="decant-card__label">Added</span>
-                <span className="decant-card__value">{formatDate(item.date)}</span>
-              </div>
-            </div>
-
-            {/* Classification */}
-            <div className="decant-card">
-              <h3 className="decant-card__title">Classification</h3>
-              <div className="decant-card__row">
-                <span className="decant-card__label">Segment</span>
-                <span className="decant-card__value">{item.segment}</span>
-              </div>
-              <div className="decant-card__row">
-                <span className="decant-card__label">Category</span>
-                <span className="decant-card__value">{item.category}</span>
-              </div>
-              <div className="decant-card__row">
-                <span className="decant-card__label">Type</span>
-                <span className="decant-card__value">{item.typeSymbol} {item.type}</span>
-              </div>
-            </div>
-
-            {/* Key Concepts */}
-            {item.keyConcepts && item.keyConcepts.length > 0 && (
-              <div className="decant-card">
-                <h3 className="decant-card__title">Key Concepts</h3>
-                <div className="decant-panel__tags">
-                  {item.keyConcepts.map((concept, i) => (
-                    <Tag key={i} label={concept.replace(/_/g, ' ')} color="purple" />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Tags */}
-            {item.tags.length > 0 && (
-              <div className="decant-card">
-                <h3 className="decant-card__title">Tags</h3>
-                <div className="decant-panel__tags">
-                  {item.tags.map((tag, i) => (
-                    <Tag key={i} label={tag.label} color={tag.color} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {activeTab === 'related' && (
-          <div className="decant-card">
-            <h3 className="decant-card__title">Related Items</h3>
-            <p style={{ fontSize: '13px', color: 'var(--decant-text-secondary)' }}>
-              Items related to {item.title} based on tags and category.
-            </p>
-            {item.usedBy && (
-              <div style={{ marginTop: '12px' }}>
-                <div className="decant-panel__tags">
-                  {item.usedBy.map((company, i) => (
-                    <Tag key={i} label={company} color="gray" />
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
-        )}
 
-        {activeTab === 'backlinks' && (
-          <div className="decant-card">
-            <h3 className="decant-card__title">Backlinks</h3>
-            <p style={{ fontSize: '13px', color: 'var(--decant-text-secondary)' }}>
-              Items that reference {item.title}.
-            </p>
+          <div className="decant-panel__actions">
+            <button
+              className="decant-panel__action-btn decant-panel__action-btn--primary"
+              onClick={() => item.url && window.open(item.url, '_blank', 'noopener,noreferrer')}
+              disabled={!item.url}
+            >
+              Open
+            </button>
+            <button className="decant-panel__action-btn">Edit</button>
+            <button className="decant-panel__action-btn">Link</button>
+            <button className="decant-panel__action-btn">Share</button>
           </div>
-        )}
-      </div>
-
-      <div className="decant-panel__actions">
-        <button
-          className="decant-panel__action-btn decant-panel__action-btn--primary"
-          onClick={() => item.url && window.open(item.url, '_blank', 'noopener,noreferrer')}
-          disabled={!item.url}
-        >
-          Open
-        </button>
-        <button className="decant-panel__action-btn">Edit</button>
-        <button className="decant-panel__action-btn">Link</button>
-        <button className="decant-panel__action-btn">Share</button>
-      </div>
-    </aside>
+        </aside>
+      )}
+    </div>
   );
 };
 
@@ -1829,7 +1828,7 @@ export default function DecantDemo() {
   const [panelTab, setPanelTab] = useState<PanelTab>('properties');
   const [selectedTreeId, setSelectedTreeId] = useState<string | null>('project-phoenix');
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
-  const [rightPanelVisible, setRightPanelVisible] = useState(true);
+  const [rightPanelVisible, setRightPanelVisible] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(280);
   const isResizingRef = useRef(false);
@@ -2302,7 +2301,10 @@ export default function DecantDemo() {
 
   const handleClosePanel = useCallback(() => {
     setRightPanelVisible(false);
-    setSelectedRowId(null);
+  }, []);
+
+  const handleTogglePanel = useCallback(() => {
+    setRightPanelVisible((prev) => !prev);
   }, []);
 
   const handleCloseModal = useCallback(() => {
@@ -2405,6 +2407,7 @@ export default function DecantDemo() {
         <PropertiesPanel
           item={selectedItem}
           onClose={handleClosePanel}
+          onToggle={handleTogglePanel}
           isVisible={rightPanelVisible}
         />
       </div>

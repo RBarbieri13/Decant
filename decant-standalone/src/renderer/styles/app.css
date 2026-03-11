@@ -2408,6 +2408,38 @@ body {
   opacity: 1;
 }
 
+.decant-panel__wrapper {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  height: 100%;
+}
+
+.decant-panel__toggle {
+  position: absolute;
+  top: 50%;
+  left: -12px;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 4px 0 0 4px;
+  font-size: 14px;
+  z-index: 100;
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.decant-panel__toggle:hover {
+  background-color: #f9fafb;
+  color: #374151;
+}
+
 .decant-panel--hidden {
   width: 0 !important;
   opacity: 0;

@@ -84,16 +84,38 @@ export async function fetchTweetViaOgTags(tweetUrl: string): Promise<OgTweetData
     const description = ogDescription || twitterDescription;
     const image = ogImage || twitterImage;
 
-    // If we got nothing useful, return null
-    if (!title && !description) {
-      log.debug('OG tag fallback found no useful metadata', { module: 'twitter-og-fallback' });
+    // Reject known generic/garbage titles that X serves to bots
+    const GARBAGE_TITLES = [
+      'user update on x',
+      'post on x',
+      'x',
+      'twitter',
+    ];
+    const normalizedTitle = (title || '').toLowerCase().trim();
+    const isGarbageTitle = GARBAGE_TITLES.includes(normalizedTitle);
+
+    // If we got nothing useful, or only a garbage title with no description, return null
+    if ((!title && !description) || (isGarbageTitle && !description)) {
+      log.debug('OG tag fallback found no useful metadata', {
+        title,
+        isGarbageTitle,
+        module: 'twitter-og-fallback',
+      });
       return null;
+    }
+
+    // If we have a garbage title but valid description, replace title with description
+    if (isGarbageTitle && description) {
+      log.debug('OG tag fallback replacing garbage title with description', {
+        originalTitle: title,
+        module: 'twitter-og-fallback',
+      });
     }
 
     const authorHandle = extractAuthorFromUrl(tweetUrl);
 
     const result: OgTweetData = {
-      title,
+      title: isGarbageTitle ? null : title,
       description,
       image,
       authorHandle,
