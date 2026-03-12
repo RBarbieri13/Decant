@@ -14,6 +14,7 @@ import * as queueRoutes from './queue.js';
 import * as auditRoutes from './audit.js';
 import * as reclassifyRoutes from './reclassify.js';
 import * as collectionRoutes from './collections.js';
+import { getSegmentLabels, getCategoryLabels } from '../database/taxonomy_ops.js';
 import { importLimiter, settingsLimiter } from '../middleware/rateLimit.js';
 import { enqueueManyForEnrichment } from '../services/processing_queue.js';
 import { getDatabase } from '../database/connection.js';
@@ -133,6 +134,18 @@ export function registerAPIRoutes(app: Express): void {
 
   // GET /api/hierarchy/organizations - Get all organizations (no validation needed)
   app.get('/api/hierarchy/organizations', hierarchyRoutes.getOrganizations);
+
+  // GET /api/taxonomy/labels - Get current segment and category display labels
+  app.get('/api/taxonomy/labels', (_req: Request, res: Response) => {
+    try {
+      res.json({
+        segments: getSegmentLabels(),
+        categories: getCategoryLabels(),
+      });
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
 
   // ============================================================
   // Search routes

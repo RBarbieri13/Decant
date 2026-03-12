@@ -120,10 +120,28 @@ const GARBAGE_TITLES = [
   'twitter',
 ];
 
+/** Regex patterns that match LLM-generated boilerplate titles for X/Twitter posts */
+const BOILERPLATE_TITLE_PATTERNS = [
+  /^(user|personal)\s+(status\s+)?update\s+on\s+x$/i,
+  /^trending\s+topic(s)?\s+(analysis\s+)?on\s+x$/i,
+  /^(recent\s+)?advancements?\s+in\s+\w+(\s+\w+)?\s+(discussion|technology)?$/i,
+  /^(personal\s+)?insights?\s+on\s+current\s+events$/i,
+  /^media\s+trends\s+and\s+insights$/i,
+  /^(a\s+)?(status|update)\s+(update\s+)?on\s+x$/i,
+  /^x\s+platform\s+\w+\s+update$/i,
+  /^\w+\s+status\s+update$/i,
+  /^(cognition|engagement|social\s+media)\s+status\s+update$/i,
+];
+
 function isGarbageTitle(title: string | null): boolean {
-  if (!title) return false;
-  return GARBAGE_TITLES.includes(title.toLowerCase().trim());
+  if (!title) return true;
+  const t = title.toLowerCase().trim();
+  if (GARBAGE_TITLES.includes(t)) return true;
+  return BOILERPLATE_TITLE_PATTERNS.some(p => p.test(t));
 }
+
+/** Exported version for use by reclassify to detect nodes needing re-enrichment */
+export { isGarbageTitle, BOILERPLATE_TITLE_PATTERNS };
 
 function extractTweetId(url: URL): string | null {
   const match = url.pathname.match(/\/status\/(\d+)/);

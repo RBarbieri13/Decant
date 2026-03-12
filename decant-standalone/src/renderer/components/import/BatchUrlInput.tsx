@@ -27,10 +27,6 @@ export function BatchUrlInput({
     }
   }, [disabled]);
 
-  // Calculate line numbers
-  const lines = urlText.split('\n');
-  const lineCount = Math.max(lines.length, 5); // Minimum 5 lines
-
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
@@ -71,29 +67,19 @@ export function BatchUrlInput({
       </div>
 
       <div className="batch-url-input-container">
-        {/* Line numbers */}
-        <div className="batch-url-line-numbers" aria-hidden="true">
-          {Array.from({ length: lineCount }, (_, i) => (
-            <div key={i + 1} className="batch-url-line-number">
-              {i + 1}
-            </div>
-          ))}
-        </div>
-
         {/* Textarea */}
         <textarea
           ref={textareaRef}
           className="batch-url-textarea"
           value={urlText}
           onChange={(e) => onUrlTextChange(e.target.value)}
-          placeholder={`Paste URLs here, one per line...
+          placeholder={`Paste URLs here — any format works (newlines, spaces, commas, or just a continuous block of URLs). Up to 10 URLs per batch.
 
-https://github.com/example/repo
-https://docs.example.com/guide
+https://github.com/example/repo https://docs.example.com/guide
 https://medium.com/@author/article`}
           disabled={disabled}
           spellCheck={false}
-          aria-label="URLs to import, one per line"
+          aria-label="URLs to import"
         />
       </div>
 
@@ -174,25 +160,6 @@ https://medium.com/@author/article`}
           overflow: hidden;
           background: var(--gum-white);
           min-height: 200px;
-        }
-
-        .batch-url-line-numbers {
-          width: 40px;
-          padding: var(--space-sm) var(--space-xs);
-          background: var(--gum-gray-100);
-          border-right: 1px solid var(--gum-gray-200);
-          font-family: var(--font-mono);
-          font-size: var(--font-size-sm);
-          color: var(--gum-gray-500);
-          user-select: none;
-          overflow: hidden;
-        }
-
-        .batch-url-line-number {
-          height: 1.5em;
-          line-height: 1.5em;
-          text-align: right;
-          padding-right: var(--space-xs);
         }
 
         .batch-url-textarea {

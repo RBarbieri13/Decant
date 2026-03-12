@@ -262,7 +262,7 @@ interface AppContextValue {
     setSearchQuery: (query: string, resultIds: Set<string>) => void;
     clearSearch: () => void;
     refreshTree: () => Promise<void>;
-    importUrl: (url: string, importId: string) => Promise<{ success: boolean; nodeId?: string; error?: string }>;
+    importUrl: (url: string, importId: string) => Promise<{ success: boolean; nodeId?: string; error?: string; code?: string; details?: { existingNodeId?: string; existingTitle?: string } }>;
     setApiKey: (apiKey: string) => Promise<void>;
     checkApiKeyStatus: () => Promise<boolean>;
     openImportDialog: () => void;

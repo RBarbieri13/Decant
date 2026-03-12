@@ -83,8 +83,10 @@ export interface Node {
   descriptorString: string | null;
   phase2Completed: boolean;
   subcategoryLabel: string | null;
+  functionTags: string | null;
   // Snake_case DB fields (returned directly by REST API)
   subcategory_label?: string | null;
+  function_tags?: string | null;
 
   // Extraction quality tracking
   extraction_quality?: string | null;

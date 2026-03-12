@@ -257,6 +257,21 @@ export const Phase1ClassificationSchema = z.object({
     .max(100)
     .describe('Ultra-brief tagline capturing the essence of this content, like a subtitle. No period at end. Max 100 chars. Examples: "Anthropic flagship reasoning model", "Python framework for building AI agents", "Real-time stock market analytics dashboard"'),
 
+  subcategory: z
+    .string()
+    .max(40)
+    .describe('Specific subcategory within the chosen category. 2-4 words, Title Case. Must be unique and specific to the parent category. Examples: A/LLM → "Chat Interfaces", "Code Assistants", "Reasoning Models"; T/WEB → "Frontend Frameworks", "Static Site Generators"; A/GEN → "Image Synthesis", "Video Generation"'),
+
+  description: z
+    .string()
+    .max(300)
+    .describe('1-2 sentence factual summary of what this content is about. No marketing language. Max 300 chars.'),
+
+  functionTags: z
+    .string()
+    .max(200)
+    .describe('Comma-separated use-case phrases (2-5 phrases, each 2-4 words) describing what this content enables or is used for. Examples: "App Development, Deployment Automation, CI/CD Pipelines" or "Text Generation, Code Completion, Document Summarization"'),
+
   reasoning: z
     .string()
     .max(200)
@@ -345,9 +360,32 @@ Respond with a JSON object containing:
   "organization": "XXXX",   // 4 uppercase letters
   "confidence": 0.0-1.0,    // How confident you are
   "quickPhrase": "...",     // Ultra-brief tagline (max 100 chars, no period, title case)
+  "subcategory": "...",     // Specific subcategory within category (2-4 words, Title Case)
+  "description": "...",     // 1-2 sentence factual summary (max 300 chars)
+  "functionTags": "...",    // Comma-separated use-case phrases (2-5 phrases, max 200 chars)
   "reasoning": "Brief explanation (optional, max 200 chars)",
   "title": "True subject/name (optional, max 200 chars)"
 }
+
+## SUBCATEGORY GUIDELINES:
+subcategory must be specific to the chosen category. Use 2-4 words in Title Case.
+Examples by segment/category:
+- A/LLM: "Chat Interfaces", "Code Assistants", "Reasoning Models", "Embedding Models"
+- A/AGT: "Coding Agents", "Research Agents", "Workflow Automation", "Browser Agents"
+- A/GEN: "Image Synthesis", "Video Generation", "Audio Generation", "Code Generation"
+- T/WEB: "Frontend Frameworks", "Static Site Generators", "CSS Libraries", "Web Components"
+- T/DEV: "IDE Plugins", "Testing Frameworks", "Build Tools", "Package Managers"
+- T/CLD: "Serverless Platforms", "Container Orchestration", "Edge Computing"
+- B/STP: "Fundraising", "Pitch Decks", "Startup Metrics", "Founder Resources"
+- F/INV: "Stock Analysis", "Portfolio Management", "Index Funds", "Dividend Investing"
+Be consistent — reuse the same subcategory label for similar content.
+
+## FUNCTION TAGS GUIDELINES:
+functionTags describes what the content enables or is used for. 2-5 comma-separated phrases, each 2-4 words.
+Examples:
+- For a CI/CD tool: "App Development, Deployment Automation, CI/CD Pipelines, Build Optimization"
+- For an LLM chat app: "Text Generation, Code Completion, Question Answering"
+- For a fitness tracker: "Workout Tracking, Health Monitoring, Goal Setting"
 
 ## GUIDELINES:
 1. Choose the MOST RELEVANT segment, even if content spans multiple
@@ -355,7 +393,9 @@ Respond with a JSON object containing:
 3. For content type, analyze the format not just the topic
 4. Confidence: >0.9 for clear cases, 0.7-0.9 for typical, <0.7 if uncertain
 5. Be decisive - avoid "Unknown" unless truly ambiguous
-6. quickPhrase should be a concise tagline that captures the essence/function of the content (like a subtitle). No period at end. Examples: "Anthropic's flagship reasoning model", "Open-source vector database for AI apps", "NFL fantasy draft rankings and analysis"`;
+6. quickPhrase should be a concise tagline that captures the essence/function of the content (like a subtitle). No period at end. Examples: "Anthropic's flagship reasoning model", "Open-source vector database for AI apps", "NFL fantasy draft rankings and analysis"
+7. description should be factual, not marketing copy. 1-2 sentences summarizing the content.
+8. subcategory must be specific to the parent category — do not repeat the category name`;
 
 // ============================================================
 // User Prompt Builder
@@ -422,6 +462,9 @@ export const DEFAULT_CLASSIFICATION: Phase1Classification = {
   organization: 'UNKN',
   confidence: 0,
   quickPhrase: '',
+  subcategory: '',
+  description: '',
+  functionTags: '',
   reasoning: 'Fallback classification - AI classification failed',
 };
 
@@ -436,6 +479,9 @@ export function createFallbackClassification(
     ...partial,
     confidence: partial?.confidence ?? 0,
     quickPhrase: partial?.quickPhrase ?? '',
+    subcategory: partial?.subcategory ?? '',
+    description: partial?.description ?? '',
+    functionTags: partial?.functionTags ?? '',
     reasoning: partial?.reasoning ?? 'Fallback classification applied',
   };
 }

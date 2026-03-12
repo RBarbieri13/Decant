@@ -289,6 +289,9 @@ function getStatusCodeFromErrorCode(code: string): number {
     // 404 Not Found
     NOT_FOUND: 404,
 
+    // 409 Conflict
+    DUPLICATE_URL: 409,
+
     // 408 Request Timeout
     TIMEOUT: 408,
 

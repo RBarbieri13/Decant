@@ -318,3 +318,17 @@ export function getIconByKeyword(text: string): string | null {
   }
   return null;
 }
+
+/**
+ * Resolve segment icon with fallback for dynamic codes not in the hardcoded map.
+ */
+export function resolveSegmentIcon(code: string): string {
+  return SEGMENT_ICONS[code] || getIconByKeyword(code) || 'bxs-category';
+}
+
+/**
+ * Resolve category icon with fallback for dynamic codes not in the hardcoded map.
+ */
+export function resolveCategoryIcon(segCode: string, catCode: string): string {
+  return CATEGORY_ICONS[segCode]?.[catCode] || getIconByKeyword(catCode) || 'bxs-folder';
+}

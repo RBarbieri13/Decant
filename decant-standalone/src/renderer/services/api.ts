@@ -49,6 +49,7 @@ export interface Node {
   category_code?: string | null;
   content_type_code?: string | null;
   subcategory_label?: string | null;
+  function_tags?: string | null;
   metadataCodes?: Record<string, string[]> | null;
 }
 
@@ -221,6 +222,12 @@ export const hierarchyAPI = {
     if (!res.ok) throw new Error('Failed to fetch organizations');
     return res.json();
   },
+
+  async getTaxonomyLabels(): Promise<{ segments: Record<string, string>; categories: Record<string, Record<string, string>> }> {
+    const res = await fetchWithAuth(`${API_BASE}/taxonomy/labels`);
+    if (!res.ok) throw new Error('Failed to fetch taxonomy labels');
+    return res.json();
+  },
 };
 
 // ============================================================
@@ -296,6 +303,11 @@ export interface ImportResult {
     jobId?: string;
   };
   error?: string;
+  code?: string;
+  details?: {
+    existingNodeId?: string;
+    existingTitle?: string;
+  };
 }
 
 export const importAPI = {
@@ -307,7 +319,12 @@ export const importAPI = {
     });
     const data = await res.json();
     if (!res.ok) {
-      return { success: false, error: data.error || 'Import failed' };
+      return {
+        success: false,
+        error: data.error || 'Import failed',
+        code: data.code,
+        details: data.details,
+      };
     }
     return data;
   },

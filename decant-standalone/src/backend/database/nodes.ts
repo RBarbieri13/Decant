@@ -31,6 +31,7 @@ export interface CreateNodeInput {
   category_code?: string | null;
   content_type_code?: string | null;
   subcategory_label?: string | null;
+  function_tags?: string | null;
   extraction_quality?: string | null;
   extraction_source?: string | null;
   extraction_notes?: string | null;
@@ -52,6 +53,7 @@ export interface UpdateNodeInput {
   category_code?: string | null;
   content_type_code?: string | null;
   subcategory_label?: string | null;
+  function_tags?: string | null;
   extraction_quality?: string | null;
   extraction_source?: string | null;
   extraction_notes?: string | null;
@@ -131,8 +133,8 @@ export function createNode(data: CreateNodeInput): unknown {
         short_description, logo_url, ai_summary, extracted_fields,
         metadata_tags, function_parent_id, organization_parent_id,
         segment_code, category_code, content_type_code, subcategory_label,
-        extraction_quality, extraction_source, extraction_notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        function_tags, extraction_quality, extraction_source, extraction_notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -153,6 +155,7 @@ export function createNode(data: CreateNodeInput): unknown {
       data.category_code || null,
       data.content_type_code || null,
       data.subcategory_label || null,
+      data.function_tags || null,
       data.extraction_quality || null,
       data.extraction_source || null,
       data.extraction_notes || null
@@ -185,6 +188,58 @@ export function findNodeByUrl(url: string): Record<string, unknown> | null {
   `).get(url) as Record<string, unknown> | undefined;
 
   if (!node) return null;
+
+  return hydrateNode(node);
+}
+
+/**
+ * Find a node by normalized URL — strips tracking params, fragments,
+ * trailing slashes, and lowercases the hostname before comparing.
+ * Uses SQL LIKE on the hostname+path portion for broader matching.
+ */
+export function findNodeByNormalizedUrl(normalizedUrl: string): Record<string, unknown> | null {
+  const db = getDatabase();
+
+  // First try exact match on normalized form
+  const exact = db.prepare(`
+    SELECT * FROM nodes WHERE url = ? AND is_deleted = 0
+  `).get(normalizedUrl) as Record<string, unknown> | undefined;
+
+  if (exact) return hydrateNode(exact);
+
+  // Extract the core of the URL (protocol + hostname + pathname) for fuzzy matching
+  // This catches URLs that differ only in query params or fragments
+  try {
+    const parsed = new URL(normalizedUrl);
+    const corePath = `${parsed.protocol}//${parsed.hostname.toLowerCase()}${parsed.pathname.replace(/\/$/, '')}`;
+
+    // Find any non-deleted node whose URL starts with the same core path
+    const fuzzy = db.prepare(`
+      SELECT * FROM nodes
+      WHERE is_deleted = 0
+        AND (
+          url = ?
+          OR url LIKE ?
+          OR url LIKE ?
+        )
+      LIMIT 1
+    `).get(
+      corePath,
+      `${corePath}?%`,
+      `${corePath}/%`
+    ) as Record<string, unknown> | undefined;
+
+    if (fuzzy) return hydrateNode(fuzzy);
+  } catch {
+    // URL parsing failed, skip fuzzy match
+  }
+
+  return null;
+}
+
+/** Hydrate a raw node row with parsed JSON fields and key_concepts */
+function hydrateNode(node: Record<string, unknown>): Record<string, unknown> {
+  const db = getDatabase();
 
   const concepts = db.prepare(`
     SELECT concept FROM key_concepts WHERE node_id = ?
@@ -287,6 +342,10 @@ export function updateNode(id: string, data: UpdateNodeInput): unknown {
     updates.push('subcategory_label = ?');
     const trimmed = data.subcategory_label?.trim();
     values.push((trimmed && trimmed.length > 2) ? trimmed.slice(0, 60) : null);
+  }
+  if (data.function_tags !== undefined) {
+    updates.push('function_tags = ?');
+    values.push(data.function_tags || null);
   }
   if (data.extraction_quality !== undefined) {
     updates.push('extraction_quality = ?');

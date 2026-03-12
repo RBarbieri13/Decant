@@ -63,22 +63,39 @@ export interface UseBatchImportReturn {
 // URL Parsing Helper
 // ============================================================
 
+const MAX_BATCH_URLS = 10;
+
 function parseUrls(text: string): Array<{ url: string; lineNumber: number }> {
-  return text
-    .split('\n')
-    .map((line, index) => ({
-      url: line.trim(),
-      lineNumber: index + 1,
-    }))
-    .filter(({ url }) => {
-      if (!url) return false;
-      try {
-        const parsed = new URL(url);
-        return ['http:', 'https:'].includes(parsed.protocol);
-      } catch {
-        return false;
-      }
-    });
+  // First, insert a space before any "http(s)://" that is directly preceded by a non-whitespace char.
+  // This handles URLs pasted as a continuous block with no separator between them.
+  const separated = text.replace(/(?<=\S)(https?:\/\/)/gi, ' $1');
+
+  // Extract URLs from the now-separated text
+  const urlRegex = /https?:\/\/[^\s,<>"']+/gi;
+  const matches: Array<{ url: string; lineNumber: number }> = [];
+  const seen = new Set<string>();
+  let match: RegExpExecArray | null;
+
+  while ((match = urlRegex.exec(separated)) !== null) {
+    // Clean trailing punctuation that's likely not part of the URL
+    let url = match[0].replace(/[.)}\]]+$/, '');
+    try {
+      const parsed = new URL(url);
+      if (!['http:', 'https:'].includes(parsed.protocol)) continue;
+      const normalized = parsed.href;
+      if (seen.has(normalized)) continue;
+      seen.add(normalized);
+      // Compute approximate line number from original text
+      // Map position back roughly — good enough for display
+      const originalPos = text.indexOf(parsed.origin);
+      const lineNumber = text.substring(0, originalPos >= 0 ? originalPos : 0).split('\n').length;
+      matches.push({ url: normalized, lineNumber });
+    } catch {
+      // Not a valid URL, skip
+    }
+  }
+
+  return matches.slice(0, MAX_BATCH_URLS);
 }
 
 // ============================================================

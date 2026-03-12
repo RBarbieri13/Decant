@@ -8,12 +8,13 @@
 import { getDatabase } from '../../database/connection.js';
 import { HierarchyView, TreeNode, NodeType, GumroadColor, ContentTypeCode } from '../../../shared/types.js';
 import {
-  SEGMENT_ICONS as SHARED_SEGMENT_ICONS,
-  CATEGORY_ICONS as SHARED_CATEGORY_ICONS,
   CONTENT_TYPE_ICONS as SHARED_CONTENT_TYPE_ICONS,
   ORGANIZATION_ICONS,
   getIconByKeyword,
+  resolveSegmentIcon,
+  resolveCategoryIcon,
 } from '../../../shared/iconDatabase.js';
+import { getSegmentLabels, getCategoryLabels } from '../../database/taxonomy_ops.js';
 
 interface DatabaseNode {
   id: string;
@@ -75,31 +76,9 @@ function resolveContentType(node: DatabaseNode): string | null {
   return null;
 }
 
-const SEGMENT_LABELS: Record<string, string> = {
-  A: 'AI & Machine Learning',
-  T: 'Technology & Development',
-  F: 'Finance & Economics',
-  S: 'Sports & Fitness',
-  H: 'Health & Wellness',
-  B: 'Business & Productivity',
-  E: 'Entertainment & Media',
-  L: 'Lifestyle & Personal',
-  X: 'Science & Research',
-  C: 'Creative & Design',
-};
-
-const CATEGORY_LABELS: Record<string, Record<string, string>> = {
-  A: { LLM: 'Large Language Models', AGT: 'AI Agents', FND: 'Foundation Models', MLO: 'MLOps', NLP: 'Natural Language Processing', CVS: 'Computer Vision', GEN: 'Generative AI', ETH: 'AI Ethics', RES: 'AI Research', OTH: 'Other AI' },
-  T: { WEB: 'Web Development', MOB: 'Mobile Development', DEV: 'Developer Tools', CLD: 'Cloud & Infrastructure', SEC: 'Security', DAT: 'Data Engineering', API: 'APIs & Integrations', OPS: 'DevOps', HRD: 'Hardware', OTH: 'Other Tech' },
-  F: { INV: 'Investing', CRY: 'Crypto & Blockchain', FPA: 'FP&A', BNK: 'Banking', TAX: 'Tax & Accounting', PFN: 'Personal Finance', MKT: 'Markets', REL: 'Real Estate', ECN: 'Economics', OTH: 'Other Finance' },
-  S: { NFL: 'NFL Football', FAN: 'Fantasy Sports', FIT: 'Fitness', RUN: 'Running', GYM: 'Gym & Training', NBA: 'Basketball', MLB: 'Baseball', SOC: 'Soccer', OLY: 'Olympics', OTH: 'Other Sports' },
-  H: { MED: 'Medical', MNT: 'Mental Health', NUT: 'Nutrition', SLP: 'Sleep', ACC: 'Accessibility', WEL: 'Wellness', FRT: 'Fertility', AGE: 'Aging', DIS: 'Disease', OTH: 'Other Health' },
-  B: { STR: 'Strategy', MNG: 'Management', PRD: 'Product', MKT: 'Marketing', SAL: 'Sales', OPS: 'Operations', HRS: 'HR & People', STP: 'Startups', ENT: 'Enterprise', OTH: 'Other Business' },
-  E: { GAM: 'Gaming', MUS: 'Music', MOV: 'Movies & TV', STR: 'Streaming', SOC: 'Social Media', POP: 'Pop Culture', POD: 'Podcasts', CEL: 'Celebrities', EVT: 'Events', OTH: 'Other Entertainment' },
-  L: { HOM: 'Home', FAS: 'Fashion', FOD: 'Food & Cooking', TRV: 'Travel', REL: 'Relationships', PAR: 'Parenting', PET: 'Pets', HOB: 'Hobbies', GAR: 'Garden', OTH: 'Other Lifestyle' },
-  X: { PHY: 'Physics', BIO: 'Biology', CHM: 'Chemistry', AST: 'Astronomy', ENV: 'Environment', MAT: 'Mathematics', ENG: 'Engineering', SOC: 'Social Sciences', PSY: 'Psychology', OTH: 'Other Science' },
-  C: { UXD: 'UX Design', GRD: 'Graphic Design', WRT: 'Writing', PHO: 'Photography', VID: 'Video Production', AUD: 'Audio Production', ART: 'Fine Art', ANI: 'Animation', TYP: 'Typography', OTH: 'Other Creative' },
-};
+// Segment and category labels are now read dynamically from the DB
+// via getSegmentLabels() and getCategoryLabels() from taxonomy_ops.ts.
+// This enables the dynamic reclassification system to generate emergent taxonomies.
 
 const CONTENT_TYPE_LABELS: Record<string, string> = {
   T: 'Tools & Software',
@@ -116,8 +95,6 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
   U: 'Other',
 };
 
-const SEGMENT_ICONS = SHARED_SEGMENT_ICONS;
-const CATEGORY_ICONS = SHARED_CATEGORY_ICONS;
 const CONTENT_TYPE_ICONS = SHARED_CONTENT_TYPE_ICONS;
 
 /**
@@ -170,6 +147,10 @@ function resolveClassification(node: DatabaseNode): { seg: string; cat: string; 
 }
 
 function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
+  // Load dynamic labels from DB (with hardcoded fallbacks)
+  const segLabels = getSegmentLabels();
+  const catLabels = getCategoryLabels();
+
   // Segment → Category → Subcategory → Items
   const segmentMap = new Map<string, Map<string, Map<string, DatabaseNode[]>>>();
 
@@ -197,14 +178,14 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
   const sortedSegments = [...segmentMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
   for (const [segCode, catMap] of sortedSegments) {
-    const segLabel = SEGMENT_LABELS[segCode] || segCode;
+    const segLabel = segLabels[segCode] || segCode;
     const segColor = getSegmentColor(segCode);
 
     const categoryChildren: TreeNode[] = [];
     const sortedCategories = [...catMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
     for (const [catCode, subcatMap] of sortedCategories) {
-      const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode;
+      const catLabel = catLabels[segCode]?.[catCode] || catCode;
       const sortedSubcats = [...subcatMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
       const totalInCat = [...subcatMap.values()].reduce((sum, arr) => sum + arr.length, 0);
 
@@ -262,7 +243,7 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
         color: segColor,
         children: catChildren,
         isExpanded: false,
-        iconHint: CATEGORY_ICONS[segCode]?.[catCode] || 'bxs-folder',
+        iconHint: resolveCategoryIcon(segCode, catCode),
       });
     }
 
@@ -277,7 +258,7 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
       color: segColor,
       children: categoryChildren,
       isExpanded: false,
-      iconHint: SEGMENT_ICONS[segCode] || 'bxs-folder',
+      iconHint: resolveSegmentIcon(segCode),
     });
   }
 
@@ -285,6 +266,7 @@ function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
 }
 
 function buildOrganizationTree(nodes: DatabaseNode[]): TreeNode[] {
+  const catLabels = getCategoryLabels();
   const orgMap = new Map<string, Map<string, DatabaseNode[]>>();
 
   for (const node of nodes) {
@@ -310,7 +292,7 @@ function buildOrganizationTree(nodes: DatabaseNode[]): TreeNode[] {
 
     for (const [catCode, catNodes] of sortedCategories) {
       const segCode = resolveSegment(catNodes[0]);
-      const catLabel = CATEGORY_LABELS[segCode]?.[catCode] || catCode;
+      const catLabel = catLabels[segCode]?.[catCode] || catCode;
 
       const itemChildren: TreeNode[] = catNodes.map(node => ({
         id: node.id,
@@ -331,7 +313,7 @@ function buildOrganizationTree(nodes: DatabaseNode[]): TreeNode[] {
         nodeType: 'category' as NodeType,
         children: itemChildren,
         isExpanded: false,
-        iconHint: CATEGORY_ICONS[segCode]?.[catCode] || 'bxs-folder',
+        iconHint: resolveCategoryIcon(segCode, catCode),
       });
     }
 
@@ -352,7 +334,8 @@ function buildOrganizationTree(nodes: DatabaseNode[]): TreeNode[] {
 function getSegmentColor(segmentCode: string | null): GumroadColor | undefined {
   if (!segmentCode) return undefined;
 
-  const colorMap: Record<string, GumroadColor> = {
+  // Known codes keep their assigned colors for visual stability
+  const knownColors: Record<string, GumroadColor> = {
     'A': 'pink',
     'T': 'blue',
     'F': 'green',
@@ -364,8 +347,11 @@ function getSegmentColor(segmentCode: string | null): GumroadColor | undefined {
     'X': 'blue',
     'C': 'pink',
   };
+  if (knownColors[segmentCode]) return knownColors[segmentCode];
 
-  return colorMap[segmentCode];
+  // Dynamic codes get colors from rotation
+  const colors: GumroadColor[] = ['pink', 'blue', 'green', 'yellow'];
+  return colors[segmentCode.charCodeAt(0) % colors.length];
 }
 
 /**

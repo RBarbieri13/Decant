@@ -11,6 +11,8 @@ interface ImportState {
   url: string;
   importId: string | null;
   canClose: boolean;
+  duplicateNodeId: string | null;
+  duplicateTitle: string | null;
 }
 
 const PHASE_STEPS = [
@@ -30,6 +32,8 @@ export function ImportDialog(): React.ReactElement | null {
     url: '',
     importId: null,
     canClose: true,
+    duplicateNodeId: null,
+    duplicateTitle: null,
   });
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -90,6 +94,15 @@ export function ImportDialog(): React.ReactElement | null {
           actions.selectNode(result.nodeId!);
           handleClose();
         });
+      } else if (!result.success && result.code === 'DUPLICATE_URL') {
+        // Duplicate — store existing node info for "View Existing" button
+        setImportState((prev) => ({
+          ...prev,
+          canClose: true,
+          duplicateNodeId: result.details?.existingNodeId ?? null,
+          duplicateTitle: result.details?.existingTitle ?? null,
+        }));
+        return result;
       } else if (!result.success) {
         showImportError(toast, result.error || 'Unknown error', () => {
           // Retry by re-submitting
@@ -115,6 +128,8 @@ export function ImportDialog(): React.ReactElement | null {
       url: '',
       importId: null,
       canClose: true,
+      duplicateNodeId: null,
+      duplicateTitle: null,
     });
     actions.closeImportDialog();
   }, [importState.canClose, isImporting, actions]);
@@ -125,6 +140,13 @@ export function ImportDialog(): React.ReactElement | null {
       handleClose();
     }
   }, [currentProgress, actions, handleClose]);
+
+  const handleViewExistingNode = useCallback(() => {
+    if (importState.duplicateNodeId) {
+      actions.selectNode(importState.duplicateNodeId);
+      handleClose();
+    }
+  }, [importState.duplicateNodeId, actions, handleClose]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -149,6 +171,7 @@ export function ImportDialog(): React.ReactElement | null {
   const showProgress = currentProgress && currentProgress.phase !== 'idle';
   const showSuccess = currentProgress?.phase === 'complete';
   const showError = currentProgress?.phase === 'error';
+  const showDuplicate = Boolean(importState.duplicateNodeId);
 
   return (
     <div className="import-dialog-overlay" onClick={handleClose} onKeyDown={handleKeyDown}>
@@ -243,8 +266,21 @@ export function ImportDialog(): React.ReactElement | null {
             </div>
           )}
 
+          {/* Duplicate state */}
+          {showDuplicate && (
+            <div className="import-dialog-duplicate">
+              <span className="duplicate-icon">&#x1F4CB;</span>
+              <div className="duplicate-message">
+                <div className="duplicate-title">Already in your library</div>
+                <div className="duplicate-subtitle">
+                  This URL was previously imported as &ldquo;{importState.duplicateTitle}&rdquo;
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Error state */}
-          {showError && (
+          {showError && !showDuplicate && (
             <div className="import-dialog-error">
               <span className="error-icon">⚠️</span>
               <span>{currentProgress?.error || 'Import failed'}</span>
@@ -271,7 +307,24 @@ export function ImportDialog(): React.ReactElement | null {
           )}
 
           <div className="import-dialog-actions">
-            {showSuccess ? (
+            {showDuplicate ? (
+              <>
+                <button
+                  type="button"
+                  className="gum-button"
+                  onClick={handleClose}
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  className="gum-button gum-button--pink"
+                  onClick={handleViewExistingNode}
+                >
+                  View Existing
+                </button>
+              </>
+            ) : showSuccess ? (
               <>
                 <button
                   type="button"
@@ -563,6 +616,33 @@ export function ImportDialog(): React.ReactElement | null {
         .classification-tag.content-type {
           background: #fff3e0;
           color: #f57c00;
+        }
+
+        /* Duplicate State */
+        .import-dialog-duplicate {
+          display: flex;
+          align-items: center;
+          gap: var(--space-md);
+          padding: var(--space-lg);
+          background: #fff8e1;
+          border: 1px solid #ffe082;
+          border-radius: var(--border-radius);
+        }
+
+        .duplicate-icon {
+          font-size: 28px;
+        }
+
+        .duplicate-title {
+          font-size: var(--font-size-base);
+          font-weight: var(--font-weight-semibold);
+          color: #f57f17;
+          margin-bottom: var(--space-xs);
+        }
+
+        .duplicate-subtitle {
+          font-size: var(--font-size-sm);
+          color: #827717;
         }
 
         /* Error State */

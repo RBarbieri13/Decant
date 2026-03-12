@@ -216,7 +216,7 @@ export class Phase1Classifier {
         {
           model: this.model,
           temperature: this.temperature,
-          maxTokens: 500, // Phase 1 responses are small
+          maxTokens: 800, // Phase 1 responses include subcategory, description, functionTags
         }
       );
 
@@ -256,7 +256,10 @@ export class Phase1Classifier {
   private validateAndFixClassification(
     classification: Phase1Classification
   ): Phase1Classification {
-    const { segment, category, contentType, organization, confidence, quickPhrase, reasoning } = classification;
+    const {
+      segment, category, contentType, organization, confidence,
+      quickPhrase, subcategory, description, functionTags, reasoning,
+    } = classification;
 
     // Validate segment
     const validSegment = segment in SEGMENTS ? segment : 'T';
@@ -286,6 +289,9 @@ export class Phase1Classifier {
       organization: validOrganization,
       confidence: validConfidence,
       quickPhrase: (quickPhrase || '').slice(0, 100),
+      subcategory: (subcategory || '').slice(0, 40),
+      description: (description || '').slice(0, 300),
+      functionTags: (functionTags || '').slice(0, 200),
       reasoning: reasoning?.slice(0, 200),
     };
   }

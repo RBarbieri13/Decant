@@ -368,6 +368,10 @@ export class Phase2Enricher {
       // Update the node with enrichment data
       try {
         const updateData = this.mapEnrichmentToNodeUpdate(result.enrichment, node.source_domain as string);
+        // Don't overwrite subcategory_label if Phase 1 already set it
+        if (node.subcategory_label && (node.subcategory_label as string).trim().length > 2) {
+          delete updateData.subcategory_label;
+        }
         updateNodePhase2(nodeId, updateData);
 
         log.info('Node updated with Phase 2 enrichment', {

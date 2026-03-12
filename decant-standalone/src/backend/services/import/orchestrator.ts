@@ -21,7 +21,7 @@ import {
   type CodeGenerationResult,
 } from '../hierarchy/code_generator.js';
 import { enqueueForEnrichment, getProcessingQueue } from '../processing_queue.js';
-import { createNode, readNode, findNodeByUrl, updateNode, type CreateNodeInput } from '../../database/nodes.js';
+import { createNode, readNode, findNodeByUrl, findNodeByNormalizedUrl, updateNode, type CreateNodeInput } from '../../database/nodes.js';
 import {
   getImportCache,
   normalizeUrlForCache,
@@ -202,6 +202,28 @@ export class ImportOrchestrator {
             hierarchyCodes: cached.hierarchyCodes,
             metadata: cached.metadata,
             phase2Queued: false,
+          };
+        }
+      }
+
+      // Step 2b: Check database for existing node with same URL (normalized)
+      if (!request.forceRefresh) {
+        const existingNode = findNodeByNormalizedUrl(normalizedUrl);
+        if (existingNode) {
+          log.info('Duplicate URL detected — node already exists', {
+            url: normalizedUrl,
+            existingNodeId: existingNode.id,
+            existingTitle: existingNode.title,
+            module: 'import-orchestrator',
+          });
+          return {
+            success: false,
+            error: `This URL is already in your library as "${existingNode.title}"`,
+            code: 'DUPLICATE_URL',
+            details: {
+              existingNodeId: existingNode.id,
+              existingTitle: existingNode.title,
+            },
           };
         }
       }
@@ -498,6 +520,9 @@ export class ImportOrchestrator {
           organization: 'UNKN',
           confidence: 0.1,
           quickPhrase: '',
+          subcategory: '',
+          description: '',
+          functionTags: '',
           reasoning: 'Fallback due to classification error',
         },
         fromCache: false,
@@ -560,12 +585,14 @@ export class ImportOrchestrator {
         title: classification.title || scraped.title,
         company: classification.organization !== 'UNKN' ? classification.organization : undefined,
         phrase_description: classification.quickPhrase || classification.reasoning?.slice(0, 100),
-        short_description: scraped.description ?? undefined,
+        short_description: classification.description || scraped.description || undefined,
         logo_url: scraped.favicon ?? undefined,
         ai_summary: scraped.content?.slice(0, 2000) || scraped.description || undefined,
         segment_code: classification.segment,
         category_code: classification.category,
         content_type_code: classification.contentType,
+        subcategory_label: classification.subcategory || undefined,
+        function_tags: classification.functionTags || undefined,
         extracted_fields: {
           author: scraped.author,
           siteName: scraped.siteName,
@@ -594,12 +621,14 @@ export class ImportOrchestrator {
       source_domain: scraped.domain,
       company: classification.organization !== 'UNKN' ? classification.organization : undefined,
       phrase_description: classification.quickPhrase || classification.reasoning?.slice(0, 100),
-      short_description: scraped.description ?? undefined,
+      short_description: classification.description || scraped.description || undefined,
       logo_url: scraped.favicon ?? undefined,
       ai_summary: scraped.content?.slice(0, 2000) || scraped.description || undefined,
       segment_code: classification.segment,
       category_code: classification.category,
       content_type_code: classification.contentType,
+      subcategory_label: classification.subcategory || null,
+      function_tags: classification.functionTags || null,
       extracted_fields: {
         author: scraped.author,
         siteName: scraped.siteName,
