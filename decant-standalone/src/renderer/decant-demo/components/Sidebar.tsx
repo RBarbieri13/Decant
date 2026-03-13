@@ -16,6 +16,8 @@ interface TreeNodeProps {
   expandedIds: Set<string>;
   onSelect: (id: string, node: TreeNodeData) => void;
   onToggle: (id: string) => void;
+  itemCounts?: Map<string, number>;
+  onDropItem?: (itemId: string, targetNodeId: string) => void;
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({
@@ -25,7 +27,10 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   expandedIds,
   onSelect,
   onToggle,
+  itemCounts,
+  onDropItem,
 }) => {
+  const [isDragOver, setIsDragOver] = useState(false);
   const hasChildren = node.children && node.children.length > 0;
   const isExpanded = expandedIds.has(node.id);
   const isSelected = selectedId === node.id;
@@ -47,9 +52,25 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   return (
     <div className="decant-tree-node">
       <div
-        className={`decant-tree-node__row ${levelClass} ${segmentColorClass} ${isSelected ? 'decant-tree-node__row--selected' : ''} ${isAncestor ? 'decant-tree-node__row--ancestor' : ''}`}
+        className={`decant-tree-node__row ${levelClass} ${segmentColorClass} ${isSelected ? 'decant-tree-node__row--selected' : ''} ${isAncestor ? 'decant-tree-node__row--ancestor' : ''} ${isDragOver ? 'decant-tree-node__row--drop-target' : ''}`}
         style={{ paddingLeft: `${level * 20 + 12}px` }}
         onClick={() => onSelect(node.id, node)}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          setIsDragOver(true);
+        }}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setIsDragOver(false);
+          try {
+            const payload = JSON.parse(e.dataTransfer.getData('text/plain'));
+            if (payload.id) {
+              onDropItem?.(payload.id, node.id);
+            }
+          } catch {}
+        }}
       >
         {isSegment && <span className="decant-tree-node__accent" style={{ backgroundColor: iconColor }} />}
         {hasChildren ? (
@@ -71,9 +92,13 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           style={{ color: node.iconColor || '#6b7280' }}
         />
         <span className="decant-tree-node__label">{node.name}</span>
+        {itemCounts?.get(node.id) != null && itemCounts.get(node.id)! > 0 && (
+          <span className="decant-tree-node__count">{itemCounts.get(node.id)}</span>
+        )}
       </div>
       {hasChildren && isExpanded && (
         <div className="decant-tree-node__children">
+          <span className="decant-tree-node__guide" style={{ left: `${level * 20 + 24}px` }} />
           {node.children!.map((child) => (
             <TreeNode
               key={child.id}
@@ -83,6 +108,8 @@ const TreeNode: React.FC<TreeNodeProps> = ({
               expandedIds={expandedIds}
               onSelect={onSelect}
               onToggle={onToggle}
+              itemCounts={itemCounts}
+              onDropItem={onDropItem}
             />
           ))}
         </div>
@@ -104,6 +131,8 @@ interface SidebarProps {
   totalCount: number;
   width: number;
   onResizeStart: () => void;
+  itemCounts?: Map<string, number>;
+  onDropItem?: (itemId: string, targetNodeId: string) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -115,6 +144,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   totalCount,
   width,
   onResizeStart,
+  itemCounts,
+  onDropItem,
 }) => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
     new Set(['decant-core', 'project-phoenix', 'frontend', 'components', 'resources', 'team-space'])
@@ -213,6 +244,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             expandedIds={expandedIds}
             onSelect={onSelect}
             onToggle={handleToggle}
+            itemCounts={itemCounts}
+            onDropItem={onDropItem}
           />
         ))}
       </div>

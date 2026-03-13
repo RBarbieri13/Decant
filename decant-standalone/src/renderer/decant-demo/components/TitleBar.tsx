@@ -23,7 +23,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({
       <div className="decant-titlebar__spacer" />
 
       <div className="decant-view-toggle">
-        {(['table', 'grid', 'tree', 'list'] as ViewMode[]).map((mode) => (
+        {(['table', 'grid', 'tree', 'list', 'dashboard'] as ViewMode[]).map((mode) => (
           <button
             key={mode}
             className={`decant-view-toggle__option ${viewMode === mode ? 'decant-view-toggle__option--active' : ''}`}
@@ -38,6 +38,8 @@ export const TitleBar: React.FC<TitleBarProps> = ({
                   ? 'bx-grid-alt'
                   : mode === 'tree'
                   ? 'bx-sitemap'
+                  : mode === 'dashboard'
+                  ? 'bx-bar-chart-alt-2'
                   : 'bx-list-ul'
               }`}
             />

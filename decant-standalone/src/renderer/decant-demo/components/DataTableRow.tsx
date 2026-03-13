@@ -25,6 +25,9 @@ interface DataTableRowProps {
   isColVisible: (col: string) => boolean;
   getColOrder: (col: string) => number;
   onCellEdit?: (rowId: string, field: string, value: string) => void;
+  onOpenUrl?: (url: string) => void;
+  onReclassify?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 /** Maps frontend TableRow fields to backend API fields */
@@ -56,6 +59,9 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
   isColVisible,
   getColOrder,
   onCellEdit,
+  onOpenUrl,
+  onReclassify,
+  onDelete,
 }) => {
   const rowColorClass = data.rowColor ? `decant-table__row--${data.rowColor}` : '';
   const [starPulse, setStarPulse] = useState(false);
@@ -120,6 +126,16 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
         className={`decant-table__row ${rowColorClass} ${isSelected ? 'decant-table__row--selected' : ''}`}
         style={{ gridTemplateColumns: gridTemplate, '--row-segment-color': rowSegmentColor } as React.CSSProperties}
         onClick={() => onSelect(data.id)}
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.setData('text/plain', JSON.stringify({ id: data.id, title: data.title }));
+          e.dataTransfer.effectAllowed = 'move';
+          const el = e.currentTarget;
+          el.classList.add('decant-table__row--dragging');
+        }}
+        onDragEnd={(e) => {
+          e.currentTarget.classList.remove('decant-table__row--dragging');
+        }}
       >
         {/* Checkbox */}
         <div className="decant-table__cell decant-table__cell--center" style={{ order: -3 }}>
@@ -300,6 +316,39 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
             </>
           )}
         </div>}
+        {/* Quick Actions - visible on hover */}
+        <div className="decant-row-actions" onClick={(e) => e.stopPropagation()}>
+          {data.url && (
+            <button
+              className="decant-row-actions__btn"
+              title="Open URL"
+              onClick={() => onOpenUrl?.(data.url!) ?? window.open(data.url, '_blank')}
+            >
+              <i className="bx bx-link-external" />
+            </button>
+          )}
+          <button
+            className="decant-row-actions__btn"
+            title={data.starred ? 'Unstar' : 'Star'}
+            onClick={() => onToggleStar(data.id)}
+          >
+            <i className={`bx ${data.starred ? 'bxs-star' : 'bx-star'}`} />
+          </button>
+          <button
+            className="decant-row-actions__btn"
+            title="Reclassify"
+            onClick={() => onReclassify?.(data.id)}
+          >
+            <i className="bx bx-refresh" />
+          </button>
+          <button
+            className="decant-row-actions__btn decant-row-actions__btn--danger"
+            title="Delete"
+            onClick={() => onDelete?.(data.id)}
+          >
+            <i className="bx bx-trash" />
+          </button>
+        </div>
         {/* Star */}
         <div className="decant-table__cell decant-table__cell--center" style={{ order: 100 }}>
           <button

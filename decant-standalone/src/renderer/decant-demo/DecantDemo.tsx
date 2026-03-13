@@ -33,6 +33,7 @@ import { DataTable } from './components/DataTable';
 import { FIELD_TO_API } from './components/DataTableRow';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { HybridDetailCard } from './components/HybridDetailCard';
+import { Dashboard } from './components/Dashboard';
 
 // ============================================================================
 // HOOKS
@@ -345,6 +346,18 @@ export default function DecantDemo() {
 
   // ---- Derived data ----
 
+  const sidebarItemCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    counts.set('all', tableData.length);
+    for (const item of tableData) {
+      const segKey = `seg-${item.segmentCode}`;
+      const catKey = `cat-${item.segmentCode}-${item.categoryCode}`;
+      counts.set(segKey, (counts.get(segKey) || 0) + 1);
+      counts.set(catKey, (counts.get(catKey) || 0) + 1);
+    }
+    return counts;
+  }, [tableData]);
+
   const selectedItem = useMemo(
     () => tableData.find((item) => item.id === selectedRowId) || null,
     [tableData, selectedRowId]
@@ -544,6 +557,67 @@ export default function DecantDemo() {
     }
   }, []);
 
+  const handleBatchDelete = useCallback(async (ids: string[]) => {
+    try {
+      await Promise.all(ids.map(id => nodesAPI.delete(id)));
+      setTableData(prev => prev.filter(row => !ids.includes(row.id)));
+      loadTree();
+    } catch (error) {
+      console.error('Batch delete failed:', error);
+    }
+  }, [loadTree]);
+
+  const handleBatchReclassify = useCallback(async (ids: string[]) => {
+    try {
+      await Promise.all(ids.map(id => reclassifyAPI.reclassifyNode(id)));
+      await loadNodes();
+      await loadTree();
+    } catch (error) {
+      console.error('Batch reclassify failed:', error);
+    }
+  }, [loadNodes, loadTree]);
+
+  const handleBatchExport = useCallback((ids: string[]) => {
+    const items = tableData.filter(row => ids.includes(row.id));
+    const csv = [
+      ['Title', 'Segment', 'Category', 'Type', 'URL', 'Date'].join(','),
+      ...items.map(item =>
+        [item.title, item.segment, item.category, item.type, item.url, item.date]
+          .map(v => `"${(v || '').replace(/"/g, '""')}"`)
+          .join(',')
+      ),
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `decant-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [tableData]);
+
+  const handleDropItem = useCallback(async (itemId: string, targetNodeId: string) => {
+    // Parse target node to extract segment/category codes
+    let segCode = '';
+    let catCode = '';
+    if (targetNodeId.startsWith('cat-')) {
+      const parts = targetNodeId.replace('cat-', '').split('-');
+      segCode = parts[0];
+      catCode = parts[1];
+    } else if (targetNodeId.startsWith('seg-')) {
+      segCode = targetNodeId.replace('seg-', '');
+    } else {
+      return; // Can't drop on root
+    }
+    try {
+      await nodesAPI.update(itemId, { segment_code: segCode, category_code: catCode });
+      await loadNodes();
+      await loadTree();
+    } catch (error) {
+      console.error('Drop reclassify failed:', error);
+    }
+  }, [loadNodes, loadTree]);
+
   const handleClosePanel = useCallback(() => setRightPanelVisible(false), []);
   const handleTogglePanel = useCallback(() => setRightPanelVisible(prev => !prev), []);
   const handleCloseModal = useCallback(() => setIsModalOpen(false), []);
@@ -589,26 +663,42 @@ export default function DecantDemo() {
           totalCount={tableData.length}
           width={sidebarWidth}
           onResizeStart={handleSidebarResizeStart}
+          itemCounts={sidebarItemCounts}
+          onDropItem={handleDropItem}
         />
 
         <main className="decant-main">
-          <DataTable
-            data={filteredTableData}
-            selectedId={selectedRowId}
-            onSelect={handleRowSelect}
-            onToggleStar={handleToggleStar}
-            categoryName={currentCategoryTitle}
-            totalCount={tableData.length}
-            groupedData={groupedTableData}
-            segmentCode={hierarchyFilter.segmentCode}
-            onTagClick={handleTagClick}
-            onSegmentClick={handleSegmentBadgeClick}
-            onCategoryClick={handleCategoryClick}
-            pendingEnrichmentIds={pendingEnrichmentIds}
-            columnFilters={columnFilters}
-            onColumnFilterChange={setColumnFilters}
-            onCellEdit={handleCellEdit}
-          />
+          {viewMode === 'dashboard' ? (
+            <Dashboard
+              data={tableData}
+              onNavigateSegment={handleSegmentBadgeClick}
+              onNavigateCategory={handleCategoryClick}
+              onToggleStarred={() => setShowStarredOnly(prev => !prev)}
+            />
+          ) : (
+            <DataTable
+              data={filteredTableData}
+              selectedId={selectedRowId}
+              onSelect={handleRowSelect}
+              onToggleStar={handleToggleStar}
+              categoryName={currentCategoryTitle}
+              totalCount={tableData.length}
+              groupedData={groupedTableData}
+              segmentCode={hierarchyFilter.segmentCode}
+              onTagClick={handleTagClick}
+              onSegmentClick={handleSegmentBadgeClick}
+              onCategoryClick={handleCategoryClick}
+              pendingEnrichmentIds={pendingEnrichmentIds}
+              columnFilters={columnFilters}
+              onColumnFilterChange={setColumnFilters}
+              onCellEdit={handleCellEdit}
+              showStarredOnly={showStarredOnly}
+              onToggleStarredFilter={() => setShowStarredOnly(prev => !prev)}
+              onBatchDelete={handleBatchDelete}
+              onBatchReclassify={handleBatchReclassify}
+              onBatchExport={handleBatchExport}
+            />
+          )}
         </main>
 
         <PropertiesPanel

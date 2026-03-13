@@ -1,4 +1,4 @@
-export type ViewMode = 'table' | 'grid' | 'tree' | 'list';
+export type ViewMode = 'table' | 'grid' | 'tree' | 'list' | 'dashboard';
 export type TagColor = 'blue' | 'yellow' | 'pink' | 'green' | 'purple' | 'gray' | 'orange' | 'teal';
 export type PanelTab = 'properties' | 'related' | 'backlinks';
 export type ColumnFilters = Record<string, string>;

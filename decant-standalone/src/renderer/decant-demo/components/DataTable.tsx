@@ -21,6 +21,11 @@ interface DataTableProps {
   columnFilters?: ColumnFilters;
   onColumnFilterChange?: (filters: ColumnFilters) => void;
   onCellEdit?: (rowId: string, field: string, value: string) => void;
+  onBatchDelete?: (ids: string[]) => void;
+  onBatchReclassify?: (ids: string[]) => void;
+  onBatchExport?: (ids: string[]) => void;
+  showStarredOnly?: boolean;
+  onToggleStarredFilter?: () => void;
 }
 
 /** Columns that the user can toggle on/off */
@@ -69,7 +74,20 @@ export const DataTable: React.FC<DataTableProps> = ({
   columnFilters = {},
   onColumnFilterChange,
   onCellEdit,
+  onBatchDelete,
+  onBatchReclassify,
+  onBatchExport,
+  showStarredOnly,
+  onToggleStarredFilter,
 }) => {
+  const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
+  const [savedViews, setSavedViews] = useState<Array<{ name: string; filters: Record<string, string> }>>(() => {
+    try {
+      const saved = localStorage.getItem('decant-saved-views');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(['tailwind-css']));
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [sortKey, setSortKey] = useState<SortKey | null>(
@@ -252,6 +270,18 @@ export const DataTable: React.FC<DataTableProps> = ({
     });
   }, [data, sortKey, sortDir]);
 
+  const quickFilteredData = useMemo(() => {
+    let result = sortedData;
+    if (activeQuickFilter === 'recent') {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      result = result.filter(item => new Date(item.date) >= sevenDaysAgo);
+    } else if (activeQuickFilter === 'unclassified') {
+      result = result.filter(item => !item.segmentCode || !item.categoryCode || item.segment === 'Uncategorized');
+    }
+    return result;
+  }, [sortedData, activeQuickFilter]);
+
   const SortIcon = ({ col }: { col: SortKey }) => {
     if (sortKey !== col) return <i className="bx bx-sort-alt-2 decant-table__sort-icon" />;
     return <i className={`bx ${sortDir === 'asc' ? 'bx-sort-up' : 'bx-sort-down'} decant-table__sort-icon decant-table__sort-icon--active`} />;
@@ -323,9 +353,103 @@ export const DataTable: React.FC<DataTableProps> = ({
           </div>
         </div>
       </div>
+      {/* Quick Filters */}
+      <div className="decant-quick-filters">
+        <div className="decant-quick-filters__chips">
+          <button
+            className={`decant-quick-filter ${!activeQuickFilter && !showStarredOnly ? 'decant-quick-filter--active' : ''}`}
+            onClick={() => {
+              setActiveQuickFilter(null);
+              if (showStarredOnly) onToggleStarredFilter?.();
+            }}
+          >
+            All
+          </button>
+          <button
+            className={`decant-quick-filter ${activeQuickFilter === 'recent' ? 'decant-quick-filter--active' : ''}`}
+            onClick={() => setActiveQuickFilter(activeQuickFilter === 'recent' ? null : 'recent')}
+          >
+            <i className="bx bx-time-five" /> Recent
+          </button>
+          <button
+            className={`decant-quick-filter ${showStarredOnly ? 'decant-quick-filter--active' : ''}`}
+            onClick={() => {
+              onToggleStarredFilter?.();
+              setActiveQuickFilter(null);
+            }}
+          >
+            <i className="bx bxs-star" /> Starred
+          </button>
+          <button
+            className={`decant-quick-filter ${activeQuickFilter === 'unclassified' ? 'decant-quick-filter--active' : ''}`}
+            onClick={() => setActiveQuickFilter(activeQuickFilter === 'unclassified' ? null : 'unclassified')}
+          >
+            <i className="bx bx-question-mark" /> Unclassified
+          </button>
+          {savedViews.map((view, idx) => (
+            <button
+              key={idx}
+              className={`decant-quick-filter decant-quick-filter--saved ${activeQuickFilter === `saved-${idx}` ? 'decant-quick-filter--active' : ''}`}
+              onClick={() => {
+                if (activeQuickFilter === `saved-${idx}`) {
+                  setActiveQuickFilter(null);
+                } else {
+                  setActiveQuickFilter(`saved-${idx}`);
+                  if (onColumnFilterChange) onColumnFilterChange(view.filters);
+                }
+              }}
+            >
+              <i className="bx bx-bookmark" /> {view.name}
+              <span
+                className="decant-quick-filter__remove"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSavedViews(prev => {
+                    const next = prev.filter((_, i) => i !== idx);
+                    localStorage.setItem('decant-saved-views', JSON.stringify(next));
+                    return next;
+                  });
+                  if (activeQuickFilter === `saved-${idx}`) setActiveQuickFilter(null);
+                }}
+              >
+                <i className="bx bx-x" />
+              </span>
+            </button>
+          ))}
+        </div>
+        {/* Save current filter as view */}
+        {Object.values(columnFilters).some(v => v.trim()) && (
+          <button
+            className="decant-quick-filter decant-quick-filter--save"
+            onClick={() => {
+              const name = prompt('Name this view:');
+              if (name) {
+                setSavedViews(prev => {
+                  const next = [...prev, { name, filters: { ...columnFilters } }];
+                  localStorage.setItem('decant-saved-views', JSON.stringify(next));
+                  return next;
+                });
+              }
+            }}
+          >
+            <i className="bx bx-save" /> Save view
+          </button>
+        )}
+      </div>
       {/* Column headers */}
       <div className="decant-table__header" style={{ gridTemplateColumns: gridTemplate }}>
-        <div className="decant-table__header-cell" style={{ order: -3 }}></div>
+        <div className="decant-table__header-cell" style={{ order: -3 }}>
+          <div
+            className={`decant-checkbox ${checkedIds.size > 0 && checkedIds.size === data.length ? 'decant-checkbox--checked' : checkedIds.size > 0 ? 'decant-checkbox--indeterminate' : ''}`}
+            onClick={() => {
+              if (checkedIds.size === data.length) {
+                setCheckedIds(new Set());
+              } else {
+                setCheckedIds(new Set(data.map(r => r.id)));
+              }
+            }}
+          />
+        </div>
         <div className="decant-table__header-cell" style={{ order: -2 }}></div>
         {columnOrder.filter(col => visibleColumns.has(col)).map(col => {
           const colDef = TOGGLEABLE_COLUMNS.find(c => c.key === col)!;
@@ -463,7 +587,7 @@ export const DataTable: React.FC<DataTableProps> = ({
           })
         ) : (
           // Render flat list
-          sortedData.map((row) => (
+          quickFilteredData.map((row) => (
             <DataTableRow
               key={row.id}
               data={row}
@@ -487,25 +611,74 @@ export const DataTable: React.FC<DataTableProps> = ({
         )}
       </div>
       {checkedIds.size > 0 && (
-        <div className="decant-bulk-bar">
-          <span className="decant-bulk-bar__count">
-            {checkedIds.size} {checkedIds.size === 1 ? 'item' : 'items'} selected
-          </span>
-          <div className="decant-bulk-bar__actions">
+        <div className="decant-batch-bar">
+          <div className="decant-batch-bar__left">
+            <span className="decant-batch-bar__count">
+              {checkedIds.size} {checkedIds.size === 1 ? 'item' : 'items'} selected
+            </span>
             <button
-              className="decant-bulk-bar__btn decant-bulk-bar__btn--star"
+              className="decant-batch-bar__select-all"
+              onClick={() => {
+                const allIds = new Set(data.map(r => r.id));
+                setCheckedIds(allIds);
+              }}
+            >
+              Select all {data.length}
+            </button>
+          </div>
+          <div className="decant-batch-bar__actions">
+            <button
+              className="decant-batch-bar__btn"
               onClick={() => {
                 checkedIds.forEach(id => onToggleStar(id));
                 setCheckedIds(new Set());
               }}
+              title="Star selected"
             >
-              <i className="bx bxs-star" /> Star All
+              <i className="bx bxs-star" />
+              <span>Star</span>
             </button>
             <button
-              className="decant-bulk-bar__btn decant-bulk-bar__btn--clear"
+              className="decant-batch-bar__btn"
+              onClick={() => {
+                onBatchReclassify?.([...checkedIds]);
+                setCheckedIds(new Set());
+              }}
+              title="Reclassify selected"
+            >
+              <i className="bx bx-refresh" />
+              <span>Reclassify</span>
+            </button>
+            <button
+              className="decant-batch-bar__btn"
+              onClick={() => {
+                onBatchExport?.([...checkedIds]);
+                setCheckedIds(new Set());
+              }}
+              title="Export selected"
+            >
+              <i className="bx bx-export" />
+              <span>Export</span>
+            </button>
+            <div className="decant-batch-bar__divider" />
+            <button
+              className="decant-batch-bar__btn decant-batch-bar__btn--danger"
+              onClick={() => {
+                if (confirm(`Delete ${checkedIds.size} items?`)) {
+                  onBatchDelete?.([...checkedIds]);
+                  setCheckedIds(new Set());
+                }
+              }}
+              title="Delete selected"
+            >
+              <i className="bx bx-trash" />
+              <span>Delete</span>
+            </button>
+            <button
+              className="decant-batch-bar__btn decant-batch-bar__btn--clear"
               onClick={() => setCheckedIds(new Set())}
             >
-              <i className="bx bx-x" /> Clear
+              <i className="bx bx-x" />
             </button>
           </div>
         </div>

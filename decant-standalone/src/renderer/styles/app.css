@@ -1866,6 +1866,7 @@ body {
   border-bottom: 1px solid #e0ddd8;
   border-left: 3px solid transparent;
   transition: border-left-color 0.15s ease, background-color 0.15s ease;
+  position: relative;
 }
 
 /* Row background colors - clean white */
@@ -1893,6 +1894,69 @@ body {
   background-color: #e8f0eb !important;
   border-left: 3px solid #2d5b47;
   padding-left: 9px;
+}
+
+/* ============================================================================
+   ROW QUICK ACTIONS
+   ============================================================================ */
+
+.decant-row-actions {
+  position: absolute;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  padding: 3px 6px;
+  background: linear-gradient(90deg, transparent, #ffffff 12%, #ffffff);
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 2;
+}
+
+.decant-table__row:hover .decant-row-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.decant-table__row--selected .decant-row-actions {
+  background: linear-gradient(90deg, transparent, #e8f0eb 12%, #e8f0eb);
+}
+
+.decant-table__row:nth-child(even) .decant-row-actions {
+  background: linear-gradient(90deg, transparent, #fafafa 12%, #fafafa);
+}
+
+.decant-table__row:hover .decant-row-actions {
+  background: linear-gradient(90deg, transparent, #f5f7fa 12%, #f5f7fa);
+}
+
+.decant-row-actions__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--decant-gray-500);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.decant-row-actions__btn:hover {
+  background: rgba(45, 91, 71, 0.08);
+  color: var(--decant-gray-900);
+}
+
+.decant-row-actions__btn--danger:hover {
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
 }
 
 .decant-table__cell {
@@ -2104,60 +2168,121 @@ body {
   flex-shrink: 0;
 }
 
-.decant-bulk-bar {
+/* ============================================================================
+   BATCH OPERATIONS BAR
+   ============================================================================ */
+
+.decant-batch-bar {
+  position: sticky;
+  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 8px 16px;
-  background-color: #1a3a2f;
-  border-top: 1px solid #0f2219;
-  flex-shrink: 0;
-  animation: bulkBarSlideUp 0.18s ease-out;
+  background: #2d5b47;
+  color: #ffffff;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  z-index: 10;
+  animation: batch-bar-slide-up 0.2s ease;
 }
 
-@keyframes bulkBarSlideUp {
+@keyframes batch-bar-slide-up {
   from { transform: translateY(100%); opacity: 0; }
-  to   { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
-.decant-bulk-bar__count {
+.decant-batch-bar__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.decant-batch-bar__count {
   font-size: 13px;
   font-weight: 600;
-  color: #d4ead8;
 }
 
-.decant-bulk-bar__actions {
+.decant-batch-bar__select-all {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.decant-batch-bar__select-all:hover {
+  color: #ffffff;
+}
+
+.decant-batch-bar__actions {
   display: flex;
-  gap: 8px;
-}
-
-.decant-bulk-bar__btn {
-  display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 5px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 4px;
-  background: transparent;
-  color: #d4ead8;
+}
+
+.decant-batch-bar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-radius: 5px;
+  cursor: pointer;
   font-size: 12px;
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease;
 }
 
-.decant-bulk-bar__btn:hover {
-  background-color: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.4);
+.decant-batch-bar__btn:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
-.decant-bulk-bar__btn--star {
-  color: #f5c842;
-  border-color: rgba(245, 200, 66, 0.4);
+.decant-batch-bar__btn--danger {
+  color: #fca5a5;
 }
 
-.decant-bulk-bar__btn--star:hover {
-  background-color: rgba(245, 200, 66, 0.15);
+.decant-batch-bar__btn--danger:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.decant-batch-bar__btn--clear {
+  background: none;
+  font-size: 16px;
+  padding: 4px;
+  opacity: 0.6;
+}
+
+.decant-batch-bar__btn--clear:hover {
+  opacity: 1;
+}
+
+.decant-batch-bar__divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 0 4px;
+}
+
+.decant-checkbox--indeterminate {
+  position: relative;
+  background: rgba(45, 91, 71, 0.15);
+  border-color: #2d5b47;
+}
+
+.decant-checkbox--indeterminate::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 2px;
+  background: #2d5b47;
+  border-radius: 1px;
 }
 
 .decant-logo-icon {
@@ -4045,14 +4170,25 @@ body {
 
 /* Child count badge */
 .decant-tree-node__count {
-  font-size: 10px;
-  font-weight: 600;
-  color: #78716c;
-  background: rgba(0, 0, 0, 0.06);
-  padding: 1px 5px;
-  border-radius: 8px;
   margin-left: auto;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--decant-gray-400, #9ca3af);
+  padding-right: 8px;
+  min-width: 20px;
+  text-align: right;
   flex-shrink: 0;
+}
+
+/* Indentation guide line */
+.decant-tree-node__guide {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: var(--decant-gray-200, #e5e7eb);
+  pointer-events: none;
 }
 
 /* Segment-specific background tints */
@@ -4304,4 +4440,362 @@ body {
   padding: 2px 8px;
   flex-shrink: 0;
   white-space: nowrap;
+}
+
+/* ============================================================================
+   QUICK FILTERS
+   ============================================================================ */
+
+.decant-quick-filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--decant-gray-200);
+  background: var(--decant-gray-50);
+  gap: 8px;
+}
+
+.decant-quick-filters__chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.decant-quick-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--decant-gray-200);
+  background: #ffffff;
+  color: var(--decant-gray-600);
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.decant-quick-filter:hover {
+  border-color: var(--decant-gray-300);
+  background: var(--decant-gray-100);
+}
+
+.decant-quick-filter--active {
+  background: #2d5b47;
+  color: #ffffff;
+  border-color: #2d5b47;
+}
+
+.decant-quick-filter--active:hover {
+  background: #245a3e;
+  border-color: #245a3e;
+}
+
+.decant-quick-filter--saved {
+  border-style: dashed;
+}
+
+.decant-quick-filter--save {
+  border-style: dashed;
+  border-color: var(--decant-brand-primary);
+  color: var(--decant-brand-primary);
+}
+
+.decant-quick-filter--save:hover {
+  background: rgba(45, 91, 71, 0.05);
+}
+
+.decant-quick-filter__remove {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 2px;
+  font-size: 14px;
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.decant-quick-filter__remove:hover {
+  opacity: 1;
+}
+
+/* ============================================================================
+   DRAG-AND-DROP
+   ============================================================================ */
+
+.decant-table__row--dragging {
+  opacity: 0.4;
+  background: var(--decant-gray-100) !important;
+}
+
+.decant-table__row[draggable="true"] {
+  cursor: grab;
+}
+
+.decant-table__row[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.decant-tree-node__row--drop-target {
+  background: rgba(45, 91, 71, 0.12) !important;
+  outline: 2px dashed #2d5b47;
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+/* ============================================================================
+   DASHBOARD
+   ============================================================================ */
+
+.decant-dashboard {
+  padding: 24px;
+  overflow-y: auto;
+  max-height: calc(100vh - 100px);
+}
+
+.decant-dashboard__stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.decant-dashboard__stat-card {
+  background: #ffffff;
+  border: 1px solid var(--decant-gray-200);
+  border-radius: 10px;
+  padding: 18px 20px;
+  text-align: center;
+}
+
+.decant-dashboard__stat-card--accent {
+  background: linear-gradient(135deg, #2d5b47, #3d7a5f);
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.decant-dashboard__stat-card--accent .decant-dashboard__stat-label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.decant-dashboard__stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--decant-gray-900);
+}
+
+.decant-dashboard__stat-card--accent .decant-dashboard__stat-value {
+  color: #ffffff;
+}
+
+.decant-dashboard__stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--decant-gray-500);
+  margin-top: 4px;
+}
+
+.decant-dashboard__progress-bar {
+  margin-top: 8px;
+  height: 4px;
+  background: var(--decant-gray-100);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.decant-dashboard__progress-fill {
+  height: 100%;
+  background: #2d5b47;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.decant-dashboard__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.decant-dashboard__card {
+  background: #ffffff;
+  border: 1px solid var(--decant-gray-200);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+
+.decant-dashboard__card--wide {
+  grid-column: 1 / -1;
+}
+
+.decant-dashboard__card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--decant-gray-900);
+  margin: 0 0 14px 0;
+}
+
+.decant-dashboard__segments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.decant-dashboard__segment-row {
+  display: grid;
+  grid-template-columns: 10px 1fr auto 80px;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.decant-dashboard__segment-row:hover {
+  background: var(--decant-gray-50);
+  border-radius: 4px;
+}
+
+.decant-dashboard__segment-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.decant-dashboard__segment-label {
+  font-size: 13px;
+  color: var(--decant-gray-700);
+}
+
+.decant-dashboard__segment-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--decant-gray-600);
+  text-align: right;
+}
+
+.decant-dashboard__segment-bar {
+  height: 6px;
+  background: var(--decant-gray-100);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.decant-dashboard__segment-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.decant-dashboard__categories {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.decant-dashboard__category-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.decant-dashboard__category-row:hover {
+  background: var(--decant-gray-50);
+}
+
+.decant-dashboard__category-rank {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--decant-gray-400);
+  min-width: 22px;
+}
+
+.decant-dashboard__category-label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--decant-gray-700);
+}
+
+.decant-dashboard__category-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--decant-gray-500);
+}
+
+.decant-dashboard__types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.decant-dashboard__type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--decant-gray-50);
+  border: 1px solid var(--decant-gray-200);
+  border-radius: 20px;
+}
+
+.decant-dashboard__type-name {
+  font-size: 12px;
+  color: var(--decant-gray-700);
+}
+
+.decant-dashboard__type-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--decant-gray-500);
+}
+
+.decant-dashboard__recent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.decant-dashboard__recent-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.decant-dashboard__recent-item:hover {
+  background: var(--decant-gray-50);
+}
+
+.decant-dashboard__recent-favicon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.decant-dashboard__recent-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.decant-dashboard__recent-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--decant-gray-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.decant-dashboard__recent-meta {
+  font-size: 11px;
+  color: var(--decant-gray-400);
 }
