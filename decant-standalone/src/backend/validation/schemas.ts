@@ -214,6 +214,44 @@ export const AddNodeToCollectionSchema = z.object({
 });
 
 // ============================================================
+// User Tag Schemas
+// ============================================================
+
+/**
+ * Schema for creating a new user tag
+ */
+export const CreateUserTagSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(50, 'Name must be 50 characters or less'),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Color must be a valid hex color').optional(),
+});
+
+/**
+ * Schema for updating an existing user tag
+ */
+export const UpdateUserTagSchema = z.object({
+  name: z.string().min(1).max(50).optional(),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  position: z.number().int().min(0).optional(),
+}).refine(
+  (data) => Object.keys(data).length > 0,
+  { message: 'At least one field must be provided for update' }
+);
+
+/**
+ * Schema for assigning a tag to a node
+ */
+export const AssignUserTagSchema = z.object({
+  tagId: z.string().uuid('Tag ID must be a valid UUID'),
+});
+
+/**
+ * Schema for setting all tags on a node at once
+ */
+export const SetNodeTagsSchema = z.object({
+  tagIds: z.array(z.string().uuid('Each tag ID must be a valid UUID')),
+});
+
+// ============================================================
 // Type Exports
 // ============================================================
 

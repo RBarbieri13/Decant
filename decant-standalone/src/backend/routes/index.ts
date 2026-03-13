@@ -14,6 +14,7 @@ import * as queueRoutes from './queue.js';
 import * as auditRoutes from './audit.js';
 import * as reclassifyRoutes from './reclassify.js';
 import * as collectionRoutes from './collections.js';
+import * as userTagRoutes from './user-tags.js';
 import { getSegmentLabels, getCategoryLabels } from '../database/taxonomy_ops.js';
 import { importLimiter, settingsLimiter } from '../middleware/rateLimit.js';
 import { enqueueManyForEnrichment } from '../services/processing_queue.js';
@@ -41,6 +42,10 @@ import {
   CreateCollectionSchema,
   UpdateCollectionSchema,
   AddNodeToCollectionSchema,
+  CreateUserTagSchema,
+  UpdateUserTagSchema,
+  AssignUserTagSchema,
+  SetNodeTagsSchema,
 } from '../validation/schemas.js';
 
 /**
@@ -377,6 +382,49 @@ export function registerAPIRoutes(app: Express): void {
 
   // DELETE /api/collections/:id/nodes/:nodeId - Remove node from collection
   app.delete('/api/collections/:id/nodes/:nodeId', collectionRoutes.removeNode);
+
+  // ============================================================
+  // User Tag routes
+  // ============================================================
+
+  // GET /api/user-tags - Get all user tags
+  app.get('/api/user-tags', userTagRoutes.listUserTags);
+
+  // GET /api/user-tags/:id - Get single user tag
+  app.get('/api/user-tags/:id', validateParams(UuidParamSchema), userTagRoutes.getUserTag);
+
+  // POST /api/user-tags - Create new user tag
+  app.post('/api/user-tags', validateBody(CreateUserTagSchema), userTagRoutes.createUserTag);
+
+  // PUT /api/user-tags/:id - Update user tag
+  app.put(
+    '/api/user-tags/:id',
+    validate({ params: UuidParamSchema, body: UpdateUserTagSchema }),
+    userTagRoutes.updateUserTag
+  );
+
+  // DELETE /api/user-tags/:id - Delete user tag
+  app.delete('/api/user-tags/:id', validateParams(UuidParamSchema), userTagRoutes.deleteUserTag);
+
+  // GET /api/nodes/:id/user-tags - Get tags for a node
+  app.get('/api/nodes/:id/user-tags', validateParams(UuidParamSchema), userTagRoutes.getNodeUserTags);
+
+  // POST /api/nodes/:id/user-tags - Assign tag to node
+  app.post(
+    '/api/nodes/:id/user-tags',
+    validate({ params: UuidParamSchema, body: AssignUserTagSchema }),
+    userTagRoutes.assignNodeTag
+  );
+
+  // PUT /api/nodes/:id/user-tags - Set all tags on node
+  app.put(
+    '/api/nodes/:id/user-tags',
+    validate({ params: UuidParamSchema, body: SetNodeTagsSchema }),
+    userTagRoutes.setNodeUserTags
+  );
+
+  // DELETE /api/nodes/:id/user-tags/:tagId - Remove tag from node
+  app.delete('/api/nodes/:id/user-tags/:tagId', userTagRoutes.removeNodeTag);
 
   // ============================================================
   // Audit routes

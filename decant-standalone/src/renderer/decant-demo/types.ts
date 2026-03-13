@@ -63,6 +63,7 @@ export interface TableRow {
   lastUpdated?: string;
   usedBy?: string[];
   description?: string;
+  userTags?: { id: string; name: string; color: string }[];
 }
 
 export const DEFAULT_SEGMENT_LABELS: Record<string, string> = {

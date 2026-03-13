@@ -11,10 +11,12 @@ import { BatchImportModal } from '../components/import/BatchImportModal';
 import { QuickAddModal } from '../components/import/QuickAddModal';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
 import { useApp } from '../context/AppContext';
-import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI } from '../services/api';
+import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI, userTagsAPI } from '../services/api';
+import type { UserTag } from '../services/api';
 import { createIntegratedSSEClient, getEnrichmentTracker } from '../services/realtimeService';
 import { getSegmentColor, formatMetadataCodesForDisplay } from '../utils/metadataCodeColors';
 import { CommandPalette } from '../components/CommandPalette';
+import { UserTagManager } from './components/UserTagManager';
 
 import type {
   ViewMode, PanelTab, TagColor, RowColor, ColumnFilters,
@@ -127,6 +129,7 @@ function mapNodeToTableRow(
     sourceDomain: node.source_domain || '',
     aiSummary: node.ai_summary || '',
     keyConcepts: node.key_concepts || [],
+    userTags: node.user_tags || [],
   };
 }
 
@@ -168,6 +171,8 @@ export default function DecantDemo() {
   const debouncedColumnFilters = useDebouncedValue(columnFilters);
   const [SEGMENT_LABELS, setSegmentLabels] = useState<Record<string, string>>(DEFAULT_SEGMENT_LABELS);
   const [CATEGORY_LABELS, setCategoryLabels] = useState<Record<string, Record<string, string>>>(DEFAULT_CATEGORY_LABELS);
+  const [allUserTags, setAllUserTags] = useState<UserTag[]>([]);
+  const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
 
   // ---- Keyboard shortcuts ----
 
@@ -324,6 +329,20 @@ export default function DecantDemo() {
   useEffect(() => {
     loadTree();
   }, [loadTree]);
+
+  // Load user tags on mount
+  const loadUserTags = useCallback(async () => {
+    try {
+      const tags = await userTagsAPI.getAll();
+      setAllUserTags(tags);
+    } catch {
+      // user_tags table may not exist yet
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUserTags();
+  }, [loadUserTags]);
 
   // SSE client for real-time enrichment updates
   useEffect(() => {
@@ -622,6 +641,39 @@ export default function DecantDemo() {
   const handleTogglePanel = useCallback(() => setRightPanelVisible(prev => !prev), []);
   const handleCloseModal = useCallback(() => setIsModalOpen(false), []);
 
+  // ---- User tag handlers ----
+
+  const handleUserTagChange = useCallback(async (nodeId: string, tagIds: string[]) => {
+    try {
+      await userTagsAPI.setNodeTags(nodeId, tagIds);
+      // Optimistic update: update local state immediately
+      setTableData(prev => prev.map(row => {
+        if (row.id !== nodeId) return row;
+        const newTags = tagIds.map(tid => allUserTags.find(t => t.id === tid)).filter(Boolean) as { id: string; name: string; color: string }[];
+        return { ...row, userTags: newTags };
+      }));
+    } catch (error) {
+      console.error('Failed to update node tags:', error);
+    }
+  }, [allUserTags]);
+
+  const handleCreateUserTag = useCallback(async (name: string, color: string) => {
+    await userTagsAPI.create({ name, color });
+    await loadUserTags();
+  }, [loadUserTags]);
+
+  const handleUpdateUserTag = useCallback(async (id: string, data: { name?: string; color?: string }) => {
+    await userTagsAPI.update(id, data);
+    await loadUserTags();
+    await loadNodes(); // refresh tag data on rows
+  }, [loadUserTags, loadNodes]);
+
+  const handleDeleteUserTag = useCallback(async (id: string) => {
+    await userTagsAPI.delete(id);
+    await loadUserTags();
+    await loadNodes(); // refresh tag data on rows
+  }, [loadUserTags, loadNodes]);
+
   // ---- Render ----
 
   return (
@@ -697,6 +749,9 @@ export default function DecantDemo() {
               onBatchDelete={handleBatchDelete}
               onBatchReclassify={handleBatchReclassify}
               onBatchExport={handleBatchExport}
+              allUserTags={allUserTags}
+              onUserTagChange={handleUserTagChange}
+              onManageUserTags={() => setIsTagManagerOpen(true)}
             />
           )}
         </main>
@@ -736,6 +791,15 @@ export default function DecantDemo() {
       />
 
       <SettingsDialog isOpen={appState.settingsDialogOpen} onClose={appActions.closeSettingsDialog} />
+
+      <UserTagManager
+        isOpen={isTagManagerOpen}
+        onClose={() => setIsTagManagerOpen(false)}
+        tags={allUserTags}
+        onCreate={handleCreateUserTag}
+        onUpdate={handleUpdateUserTag}
+        onDelete={handleDeleteUserTag}
+      />
 
       <CommandPalette
         isOpen={isCommandPaletteOpen}

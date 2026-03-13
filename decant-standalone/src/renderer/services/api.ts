@@ -682,3 +682,60 @@ export const collectionsAPI = {
     if (!res.ok) throw new Error('Failed to remove node from collection');
   },
 };
+
+// ============================================================
+// User Tags API
+// ============================================================
+
+export interface UserTag {
+  id: string;
+  name: string;
+  color: string;
+  position: number;
+  created_at: string;
+}
+
+export const userTagsAPI = {
+  async getAll(): Promise<UserTag[]> {
+    const res = await fetchWithAuth(`${API_BASE}/user-tags`);
+    if (!res.ok) throw new Error('Failed to fetch user tags');
+    return res.json();
+  },
+
+  async create(data: { name: string; color?: string }): Promise<UserTag> {
+    const res = await fetchWithAuth(`${API_BASE}/user-tags`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Failed to create tag' }));
+      throw new Error(err.error || 'Failed to create tag');
+    }
+    return res.json();
+  },
+
+  async update(id: string, data: { name?: string; color?: string; position?: number }): Promise<UserTag> {
+    const res = await fetchWithAuth(`${API_BASE}/user-tags/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to update tag');
+    return res.json();
+  },
+
+  async delete(id: string): Promise<void> {
+    const res = await fetchWithAuth(`${API_BASE}/user-tags/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete tag');
+  },
+
+  async setNodeTags(nodeId: string, tagIds: string[]): Promise<void> {
+    const res = await fetchWithAuth(`${API_BASE}/nodes/${nodeId}/user-tags`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tagIds }),
+    });
+    if (!res.ok) throw new Error('Failed to set node tags');
+  },
+};

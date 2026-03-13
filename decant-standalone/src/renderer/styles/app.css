@@ -4799,3 +4799,447 @@ body {
   font-size: 11px;
   color: var(--decant-gray-400);
 }
+
+/* ============================================================
+   USER TAGS — inline pills, picker dropdown, manager modal
+   ============================================================ */
+
+/* Inline tag pills in table cell */
+.decant-table__cell--user-tags {
+  position: relative;
+  overflow: visible !important;
+}
+
+.decant-user-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.decant-user-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 1px 8px;
+  border-radius: 10px;
+  border: 1px solid;
+  white-space: nowrap;
+  line-height: 18px;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.decant-user-tag--preview {
+  max-width: none;
+  cursor: default;
+}
+
+.decant-user-tag__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 2px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  font-size: 12px;
+  color: inherit;
+}
+
+.decant-user-tag:hover .decant-user-tag__remove {
+  opacity: 0.7;
+}
+
+.decant-user-tag__remove:hover {
+  opacity: 1 !important;
+}
+
+.decant-user-tags__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1px dashed var(--decant-gray-300);
+  border-radius: 50%;
+  background: none;
+  color: var(--decant-gray-400);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.decant-user-tags__add:hover {
+  border-color: var(--decant-brand-primary, #2d5b47);
+  color: var(--decant-brand-primary, #2d5b47);
+  background: rgba(45, 91, 71, 0.06);
+}
+
+/* Tag Picker Dropdown */
+.decant-tag-picker {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  min-width: 200px;
+  max-width: 260px;
+  background: #fff;
+  border: 1px solid var(--decant-gray-200);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 4px 0;
+  margin-top: 4px;
+}
+
+.decant-tag-picker__empty {
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--decant-gray-400);
+  text-align: center;
+}
+
+.decant-tag-picker__manage-link {
+  display: block;
+  margin-top: 6px;
+  background: none;
+  border: none;
+  color: var(--decant-brand-primary, #2d5b47);
+  cursor: pointer;
+  font-size: 12px;
+  text-decoration: underline;
+}
+
+.decant-tag-picker__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--decant-gray-700);
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.decant-tag-picker__option:hover {
+  background: var(--decant-gray-50, #f9f7f4);
+}
+
+.decant-tag-picker__option--active {
+  background: rgba(45, 91, 71, 0.06);
+  font-weight: 500;
+}
+
+.decant-tag-picker__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.decant-tag-picker__label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.decant-tag-picker__check {
+  color: var(--decant-brand-primary, #2d5b47);
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.decant-tag-picker__divider {
+  height: 1px;
+  background: var(--decant-gray-200);
+  margin: 4px 0;
+}
+
+.decant-tag-picker__manage {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--decant-gray-500);
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.decant-tag-picker__manage:hover {
+  background: var(--decant-gray-50, #f9f7f4);
+  color: var(--decant-gray-700);
+}
+
+/* Tag Manager Modal */
+.decant-tag-manager {
+  background: #fff;
+  border-radius: 12px;
+  width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.decant-tag-manager__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--decant-gray-200);
+}
+
+.decant-tag-manager__header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--decant-gray-800);
+  margin: 0;
+  flex: 1;
+}
+
+.decant-tag-manager__count {
+  font-size: 12px;
+  color: var(--decant-gray-400);
+}
+
+.decant-tag-manager__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--decant-gray-400);
+  font-size: 20px;
+}
+
+.decant-tag-manager__close:hover {
+  background: var(--decant-gray-100);
+  color: var(--decant-gray-700);
+}
+
+.decant-tag-manager__error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 12px;
+}
+
+.decant-tag-manager__error button {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+/* Create section */
+.decant-tag-manager__create {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--decant-gray-200);
+}
+
+.decant-tag-manager__input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--decant-gray-200);
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  background: var(--decant-gray-50, #f9f7f4);
+  color: var(--decant-gray-800);
+  box-sizing: border-box;
+}
+
+.decant-tag-manager__input:focus {
+  border-color: var(--decant-brand-primary, #2d5b47);
+  box-shadow: 0 0 0 2px rgba(45, 91, 71, 0.15);
+}
+
+.decant-tag-manager__colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.decant-tag-manager__color-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.decant-tag-manager__color-btn:hover {
+  transform: scale(1.15);
+}
+
+.decant-tag-manager__color-btn--active {
+  border-color: var(--decant-gray-800);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--decant-gray-400);
+}
+
+.decant-tag-manager__create-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  background: var(--decant-brand-primary, #2d5b47);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.decant-tag-manager__create-btn:hover:not(:disabled) {
+  background: #1e4333;
+}
+
+.decant-tag-manager__create-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Tag list */
+.decant-tag-manager__list {
+  padding: 8px 0;
+}
+
+.decant-tag-manager__empty {
+  padding: 24px 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--decant-gray-400);
+}
+
+.decant-tag-manager__item {
+  padding: 0 20px;
+}
+
+.decant-tag-manager__display-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--decant-gray-100);
+}
+
+.decant-tag-manager__display-row:last-child {
+  border-bottom: none;
+}
+
+.decant-tag-manager__actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.decant-tag-manager__display-row:hover .decant-tag-manager__actions {
+  opacity: 1;
+}
+
+.decant-tag-manager__action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  color: var(--decant-gray-400);
+  font-size: 14px;
+}
+
+.decant-tag-manager__action-btn:hover {
+  background: var(--decant-gray-100);
+  color: var(--decant-gray-700);
+}
+
+.decant-tag-manager__action-btn--danger:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.decant-tag-manager__edit-row {
+  padding: 12px 0;
+}
+
+.decant-tag-manager__edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.decant-tag-manager__save-btn {
+  padding: 5px 14px;
+  border: none;
+  border-radius: 6px;
+  background: var(--decant-brand-primary, #2d5b47);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.decant-tag-manager__save-btn:hover {
+  background: #1e4333;
+}
+
+.decant-tag-manager__cancel-btn {
+  padding: 5px 14px;
+  border: 1px solid var(--decant-gray-200);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--decant-gray-600);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.decant-tag-manager__cancel-btn:hover {
+  background: var(--decant-gray-50);
+}
+
+/* Modal backdrop (reused if not already defined) */
+.decant-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+}

@@ -554,7 +554,10 @@ export function getAllNodes(): unknown[] {
   // Step 3: Batch load all key concepts in one query
   const conceptsMap = batchLoadKeyConcepts(nodeIds);
 
-  // Step 4: Map over nodes and attach concepts from the Map
+  // Step 4: Batch load user tags
+  const userTagsMap = batchLoadUserTags(nodeIds);
+
+  // Step 5: Map over nodes and attach concepts + user tags
   return nodes.map(node => {
     const extractedFields = JSON.parse((node.extracted_fields as string) || '{}');
     return {
@@ -563,8 +566,38 @@ export function getAllNodes(): unknown[] {
       metadata_tags: JSON.parse((node.metadata_tags as string) || '[]'),
       key_concepts: conceptsMap.get(node.id as string) || [],
       metadataCodes: extractedFields.metadataCodes || null,
+      user_tags: userTagsMap.get(node.id as string) || [],
     };
   });
+}
+
+/**
+ * Batch load user tags for multiple nodes in a single query.
+ * Returns a Map of nodeId -> tag[]
+ */
+function batchLoadUserTags(nodeIds: string[]): Map<string, Array<{ id: string; name: string; color: string }>> {
+  const result = new Map<string, Array<{ id: string; name: string; color: string }>>();
+  if (nodeIds.length === 0) return result;
+
+  const db = getDatabase();
+  try {
+    const placeholders = nodeIds.map(() => '?').join(', ');
+    const rows = db.prepare(`
+      SELECT nut.node_id, ut.id, ut.name, ut.color
+      FROM node_user_tags nut
+      JOIN user_tags ut ON ut.id = nut.tag_id
+      WHERE nut.node_id IN (${placeholders})
+      ORDER BY ut.position ASC
+    `).all(...nodeIds) as Array<{ node_id: string; id: string; name: string; color: string }>;
+
+    for (const row of rows) {
+      if (!result.has(row.node_id)) result.set(row.node_id, []);
+      result.get(row.node_id)!.push({ id: row.id, name: row.name, color: row.color });
+    }
+  } catch {
+    // user_tags table may not exist yet (pre-migration)
+  }
+  return result;
 }
 
 /**

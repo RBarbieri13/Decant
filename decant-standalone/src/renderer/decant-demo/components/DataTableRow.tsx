@@ -1,5 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { TableRow, TagColor } from '../types';
+import type { UserTag } from '../../services/api';
 import { getTypeBadgeClass, formatRelativeDate, SEGMENT_COLOR_HEX } from '../helpers';
 import { getSegmentColor, getMetadataCodeColor, formatMetadataCodesForDisplay, parseRawTag } from '../../utils/metadataCodeColors';
 import { getCategoryIcon } from '../../utils/hierarchyIcons';
@@ -28,6 +29,9 @@ interface DataTableRowProps {
   onOpenUrl?: (url: string) => void;
   onReclassify?: (id: string) => void;
   onDelete?: (id: string) => void;
+  allUserTags?: UserTag[];
+  onUserTagChange?: (nodeId: string, tagIds: string[]) => void;
+  onManageUserTags?: () => void;
 }
 
 /** Maps frontend TableRow fields to backend API fields */
@@ -62,12 +66,29 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
   onOpenUrl,
   onReclassify,
   onDelete,
+  allUserTags,
+  onUserTagChange,
+  onManageUserTags,
 }) => {
   const rowColorClass = data.rowColor ? `decant-table__row--${data.rowColor}` : '';
   const [starPulse, setStarPulse] = useState(false);
   const [faviconError, setFaviconError] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [showTagPicker, setShowTagPicker] = useState(false);
+  const tagPickerRef = useRef<HTMLDivElement>(null);
+
+  // Close tag picker on outside click
+  useEffect(() => {
+    if (!showTagPicker) return;
+    const handler = (e: MouseEvent) => {
+      if (tagPickerRef.current && !tagPickerRef.current.contains(e.target as Node)) {
+        setShowTagPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showTagPicker]);
 
   const handleStartEdit = useCallback((field: string, currentValue: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -316,6 +337,94 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
             </>
           )}
         </div>}
+        {/* User Tags */}
+        {isColVisible('userTags') && (
+          <div
+            className="decant-table__cell decant-table__cell--user-tags"
+            style={{ order: getColOrder('userTags') }}
+            onClick={(e) => e.stopPropagation()}
+            ref={tagPickerRef}
+          >
+            <div className="decant-user-tags">
+              {(data.userTags || []).map((tag) => (
+                <span
+                  key={tag.id}
+                  className="decant-user-tag"
+                  style={{ backgroundColor: tag.color + '22', color: tag.color, borderColor: tag.color + '44' }}
+                >
+                  {tag.name}
+                  {onUserTagChange && (
+                    <button
+                      className="decant-user-tag__remove"
+                      onClick={() => {
+                        const newIds = (data.userTags || []).filter(t => t.id !== tag.id).map(t => t.id);
+                        onUserTagChange(data.id, newIds);
+                      }}
+                    >
+                      <i className="bx bx-x" />
+                    </button>
+                  )}
+                </span>
+              ))}
+              <button
+                className="decant-user-tags__add"
+                onClick={() => setShowTagPicker(prev => !prev)}
+                title="Add user tag"
+              >
+                <i className="bx bx-plus" />
+              </button>
+            </div>
+            {showTagPicker && allUserTags && (
+              <div className="decant-tag-picker">
+                {allUserTags.length === 0 ? (
+                  <div className="decant-tag-picker__empty">
+                    No tags yet.
+                    {onManageUserTags && (
+                      <button className="decant-tag-picker__manage-link" onClick={() => { onManageUserTags(); setShowTagPicker(false); }}>
+                        Create tags
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    {allUserTags.map((tag) => {
+                      const isAssigned = (data.userTags || []).some(t => t.id === tag.id);
+                      return (
+                        <button
+                          key={tag.id}
+                          className={`decant-tag-picker__option ${isAssigned ? 'decant-tag-picker__option--active' : ''}`}
+                          onClick={() => {
+                            if (!onUserTagChange) return;
+                            const currentIds = (data.userTags || []).map(t => t.id);
+                            const newIds = isAssigned
+                              ? currentIds.filter(id => id !== tag.id)
+                              : [...currentIds, tag.id];
+                            onUserTagChange(data.id, newIds);
+                          }}
+                        >
+                          <span className="decant-tag-picker__dot" style={{ backgroundColor: tag.color }} />
+                          <span className="decant-tag-picker__label">{tag.name}</span>
+                          {isAssigned && <i className="bx bx-check decant-tag-picker__check" />}
+                        </button>
+                      );
+                    })}
+                    {onManageUserTags && (
+                      <>
+                        <div className="decant-tag-picker__divider" />
+                        <button
+                          className="decant-tag-picker__manage"
+                          onClick={() => { onManageUserTags(); setShowTagPicker(false); }}
+                        >
+                          <i className="bx bx-cog" /> Manage tags
+                        </button>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         {/* Quick Actions - visible on hover */}
         <div className="decant-row-actions" onClick={(e) => e.stopPropagation()}>
           {data.url && (

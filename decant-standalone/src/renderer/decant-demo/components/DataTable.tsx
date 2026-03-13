@@ -3,6 +3,7 @@ import { TableRow, ColumnFilters, ColumnWidths, SortKey, SortDir } from '../type
 import { DataTableRow } from './DataTableRow';
 import { getSegmentColor } from '../../utils/metadataCodeColors';
 import { getCategoryIcon } from '../../utils/hierarchyIcons';
+import type { UserTag } from '../../services/api';
 
 interface DataTableProps {
   data: TableRow[];
@@ -26,6 +27,9 @@ interface DataTableProps {
   onBatchExport?: (ids: string[]) => void;
   showStarredOnly?: boolean;
   onToggleStarredFilter?: () => void;
+  allUserTags?: UserTag[];
+  onUserTagChange?: (nodeId: string, tagIds: string[]) => void;
+  onManageUserTags?: () => void;
 }
 
 /** Columns that the user can toggle on/off */
@@ -41,9 +45,10 @@ export const TOGGLEABLE_COLUMNS = [
   { key: 'tags',         label: 'Tags' },
   { key: 'date',         label: 'Date' },
   { key: 'company',      label: 'Company' },
+  { key: 'userTags',     label: 'User Tags' },
 ] as const;
 
-export const DEFAULT_VISIBLE_COLUMNS = new Set(['title', 'type', 'category', 'quickPhrase', 'date']);
+export const DEFAULT_VISIBLE_COLUMNS = new Set(['title', 'type', 'category', 'quickPhrase', 'date', 'userTags']);
 export const COLUMN_VISIBILITY_KEY = 'decant-column-visibility';
 export const COLUMN_ORDER_KEY = 'decant-column-order';
 export const DEFAULT_COLUMN_ORDER = TOGGLEABLE_COLUMNS.map(c => c.key);
@@ -52,9 +57,9 @@ export const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
   checkbox: 24, expand: 28, logo: 32, title: 280,
   segment: 90, type: 70, category: 120, subcategory: 130, quickPhrase: 300,
   description: 220, functionTags: 200,
-  tags: 140, date: 90, company: 100, star: 32,
+  tags: 140, date: 90, company: 100, userTags: 160, star: 32,
 };
-export const RESIZABLE_COLUMNS = ['title', 'segment', 'category', 'subcategory', 'quickPhrase', 'description', 'functionTags', 'tags', 'date', 'company'];
+export const RESIZABLE_COLUMNS = ['title', 'segment', 'category', 'subcategory', 'quickPhrase', 'description', 'functionTags', 'tags', 'date', 'company', 'userTags'];
 export const COLUMN_WIDTHS_KEY = 'decant-column-widths-v2';
 
 export const DataTable: React.FC<DataTableProps> = ({
@@ -79,6 +84,9 @@ export const DataTable: React.FC<DataTableProps> = ({
   onBatchExport,
   showStarredOnly,
   onToggleStarredFilter,
+  allUserTags,
+  onUserTagChange,
+  onManageUserTags,
 }) => {
   const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
   const [savedViews, setSavedViews] = useState<Array<{ name: string; filters: Record<string, string> }>>(() => {
@@ -577,6 +585,9 @@ export const DataTable: React.FC<DataTableProps> = ({
                         isColVisible={isColVisible}
                         getColOrder={getColOrder}
                         onCellEdit={onCellEdit}
+                        allUserTags={allUserTags}
+                        onUserTagChange={onUserTagChange}
+                        onManageUserTags={onManageUserTags}
                       />
                     </React.Fragment>
                   );
@@ -606,6 +617,9 @@ export const DataTable: React.FC<DataTableProps> = ({
               isColVisible={isColVisible}
               getColOrder={getColOrder}
               onCellEdit={onCellEdit}
+              allUserTags={allUserTags}
+              onUserTagChange={onUserTagChange}
+              onManageUserTags={onManageUserTags}
             />
           ))
         )}
