@@ -1,0 +1,226 @@
+import React, { useState, useCallback, useMemo } from 'react';
+import type { TreeNodeData } from '../types';
+import { SEGMENT_HEX_MAP } from '../helpers';
+import { getTreeNodeIcon, getIconProps } from '../../utils/hierarchyIcons';
+import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
+import { CollectionsPanel } from '../../components/collections/CollectionsPanel';
+
+// ============================================================================
+// TREE NODE COMPONENT
+// ============================================================================
+
+interface TreeNodeProps {
+  node: TreeNodeData;
+  level: number;
+  selectedId: string | null;
+  expandedIds: Set<string>;
+  onSelect: (id: string, node: TreeNodeData) => void;
+  onToggle: (id: string) => void;
+}
+
+const TreeNode: React.FC<TreeNodeProps> = ({
+  node,
+  level,
+  selectedId,
+  expandedIds,
+  onSelect,
+  onToggle,
+}) => {
+  const hasChildren = node.children && node.children.length > 0;
+  const isExpanded = expandedIds.has(node.id);
+  const isSelected = selectedId === node.id;
+
+  const isAncestor = selectedId !== null && selectedId !== node.id &&
+    (node.id.startsWith('seg-') && selectedId.startsWith(`cat-${node.id.replace('seg-', '')}-`));
+
+  const NodeIcon = getTreeNodeIcon(node.id, node.iconType);
+
+  const segmentCode = node.id === 'all' ? '' : node.id.charAt(0).toUpperCase();
+  const iconColor = SEGMENT_HEX_MAP[segmentCode] ?? '#6b7280';
+  const iconProps = getIconProps({ size: 16, stroke: 1.5, color: iconColor });
+
+  const isSegment = node.id.startsWith('seg-');
+  const isCategory = node.id.startsWith('cat-');
+  const segmentColorClass = segmentCode ? `decant-tree-node__row--seg-${segmentCode}` : '';
+  const levelClass = isSegment ? 'decant-tree-node__row--segment' : isCategory ? 'decant-tree-node__row--category' : 'decant-tree-node__row--item';
+
+  return (
+    <div className="decant-tree-node">
+      <div
+        className={`decant-tree-node__row ${levelClass} ${segmentColorClass} ${isSelected ? 'decant-tree-node__row--selected' : ''} ${isAncestor ? 'decant-tree-node__row--ancestor' : ''}`}
+        style={{ paddingLeft: `${level * 20 + 12}px` }}
+        onClick={() => onSelect(node.id, node)}
+      >
+        {isSegment && <span className="decant-tree-node__accent" style={{ backgroundColor: iconColor }} />}
+        {hasChildren ? (
+          <button
+            className="decant-tree-node__toggle"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle(node.id);
+            }}
+          >
+            {isExpanded ? <IconChevronDown size={14} stroke={1.5} /> : <IconChevronRight size={14} stroke={1.5} />}
+          </button>
+        ) : (
+          <span className="decant-tree-node__toggle-spacer" />
+        )}
+        <NodeIcon {...iconProps} className="decant-tree-node__icon" />
+        <i
+          className={`bx ${node.iconHint || 'bx-file'} decant-tree-node__icon`}
+          style={{ color: node.iconColor || '#6b7280' }}
+        />
+        <span className="decant-tree-node__label">{node.name}</span>
+      </div>
+      {hasChildren && isExpanded && (
+        <div className="decant-tree-node__children">
+          {node.children!.map((child) => (
+            <TreeNode
+              key={child.id}
+              node={child}
+              level={level + 1}
+              selectedId={selectedId}
+              expandedIds={expandedIds}
+              onSelect={onSelect}
+              onToggle={onToggle}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============================================================================
+// SIDEBAR COMPONENT
+// ============================================================================
+
+interface SidebarProps {
+  data: TreeNodeData[];
+  selectedId: string | null;
+  onSelect: (id: string, node: TreeNodeData) => void;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+  totalCount: number;
+  width: number;
+  onResizeStart: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({
+  data,
+  selectedId,
+  onSelect,
+  isCollapsed,
+  onToggleCollapse,
+  totalCount,
+  width,
+  onResizeStart,
+}) => {
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(
+    new Set(['decant-core', 'project-phoenix', 'frontend', 'components', 'resources', 'team-space'])
+  );
+  const [searchQuery, setSearchQuery] = useState('');
+  const [allExpanded, setAllExpanded] = useState(false);
+
+  const handleToggle = useCallback((id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
+      return next;
+    });
+  }, []);
+
+  const collectAllIds = useCallback((nodes: TreeNodeData[]): string[] => {
+    const ids: string[] = [];
+    for (const node of nodes) {
+      ids.push(node.id);
+      if (node.children) ids.push(...collectAllIds(node.children));
+    }
+    return ids;
+  }, []);
+
+  const handleExpandAll = useCallback(() => {
+    if (allExpanded) {
+      setExpandedIds(new Set());
+      setAllExpanded(false);
+    } else {
+      setExpandedIds(new Set(collectAllIds(data)));
+      setAllExpanded(true);
+    }
+  }, [allExpanded, data, collectAllIds]);
+
+  const filterTree = useCallback((nodes: TreeNodeData[], query: string): TreeNodeData[] => {
+    if (!query) return nodes;
+    return nodes.reduce<TreeNodeData[]>((acc, node) => {
+      const matchesSearch = node.name.toLowerCase().includes(query.toLowerCase());
+      const filteredChildren = node.children ? filterTree(node.children, query) : [];
+      if (matchesSearch || filteredChildren.length > 0) {
+        acc.push({
+          ...node,
+          children: filteredChildren.length > 0 ? filteredChildren : node.children,
+        });
+      }
+      return acc;
+    }, []);
+  }, []);
+
+  const filteredData = useMemo(() => filterTree(data, searchQuery), [data, searchQuery, filterTree]);
+
+  return (
+    <aside
+      className={`decant-sidebar ${isCollapsed ? 'decant-sidebar--collapsed' : ''}`}
+      style={!isCollapsed ? { width } : undefined}
+    >
+      <div className="decant-sidebar__search">
+        <i className="bx bx-search" />
+        <input
+          type="text"
+          placeholder="Search your tree..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <button
+          className="decant-sidebar__expand-all"
+          onClick={handleExpandAll}
+          title={allExpanded ? 'Collapse all' : 'Expand all'}
+        >
+          <i className={`bx ${allExpanded ? 'bx-collapse-alt' : 'bx-expand-alt'}`} />
+        </button>
+      </div>
+      <div className="decant-sidebar__content">
+        <div
+          className={`decant-tree-node__root-row ${selectedId === 'all' || selectedId === null ? 'decant-tree-node__row--selected' : ''}`}
+          onClick={() => onSelect('all', { id: 'all', name: 'All Items' } as TreeNodeData)}
+          role="button"
+          tabIndex={0}
+        >
+          <span className="decant-tree-node__toggle-spacer" />
+          <svg className="decant-tree-node__root-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          <span className="decant-tree-node__root-label">All Items</span>
+          <span className="decant-tree-node__root-count">{totalCount}</span>
+        </div>
+        {filteredData.map((node) => (
+          <TreeNode
+            key={node.id}
+            node={node}
+            level={0}
+            selectedId={selectedId}
+            expandedIds={expandedIds}
+            onSelect={onSelect}
+            onToggle={handleToggle}
+          />
+        ))}
+      </div>
+      {!isCollapsed && <CollectionsPanel />}
+      <button className="decant-sidebar__toggle" onClick={onToggleCollapse}>
+        <i className={`bx ${isCollapsed ? 'bx-chevron-right' : 'bx-chevron-left'}`} />
+      </button>
+      <div className="decant-sidebar__resize-handle" onMouseDown={onResizeStart} />
+    </aside>
+  );
+};
