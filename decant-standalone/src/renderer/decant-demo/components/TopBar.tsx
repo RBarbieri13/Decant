@@ -11,6 +11,7 @@ interface TopBarProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   onBatchImportClick?: () => void;
+  onImessageImportClick?: () => void;
   onQuickAddClick?: () => void;
   onRefreshAllClick?: () => void;
   onReclassifyClick?: () => void;
@@ -29,6 +30,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onBreadcrumbClick,
   onClearFilter,
   onBatchImportClick,
+  onImessageImportClick,
   onQuickAddClick,
   onRefreshAllClick,
   onReclassifyClick,
@@ -116,6 +118,15 @@ export const TopBar: React.FC<TopBarProps> = ({
         >
           <i className="bx bx-cloud-upload" />
           Batch Import
+        </button>
+
+        <button
+          className="decant-topbar__batch-btn"
+          onClick={onImessageImportClick}
+          title="Import last 5 URLs from iMessage self-texts"
+        >
+          <i className="bx bx-message-square-dots" />
+          iMessage
         </button>
 
         <button

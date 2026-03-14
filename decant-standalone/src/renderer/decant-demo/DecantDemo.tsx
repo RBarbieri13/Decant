@@ -11,7 +11,7 @@ import { BatchImportModal } from '../components/import/BatchImportModal';
 import { QuickAddModal } from '../components/import/QuickAddModal';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
 import { useApp } from '../context/AppContext';
-import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI, userTagsAPI } from '../services/api';
+import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI, userTagsAPI, imessageAPI } from '../services/api';
 import type { UserTag } from '../services/api';
 import { createIntegratedSSEClient, getEnrichmentTracker } from '../services/realtimeService';
 import { getSegmentColor, formatMetadataCodesForDisplay } from '../utils/metadataCodeColors';
@@ -160,6 +160,7 @@ export default function DecantDemo() {
   ]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBatchImportOpen, setIsBatchImportOpen] = useState(false);
+  const [imessageInitialUrls, setImessageInitialUrls] = useState('');
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
@@ -532,6 +533,20 @@ export default function DecantDemo() {
     setSelectedTreeId(null);
   }, []);
 
+  const handleImessageImport = useCallback(async () => {
+    try {
+      const result = await imessageAPI.extractUrls(5);
+      if (result.success && result.urls.length > 0) {
+        setImessageInitialUrls(result.urls.join('\n'));
+        setIsBatchImportOpen(true);
+      } else {
+        alert(result.error || 'No URLs found in recent iMessage self-texts.');
+      }
+    } catch {
+      alert('Failed to read iMessages. Make sure Full Disk Access is granted in System Settings > Privacy & Security.');
+    }
+  }, []);
+
   const handleRefreshAll = useCallback(async () => {
     if (isRefreshingAll) return;
     setIsRefreshingAll(true);
@@ -687,6 +702,7 @@ export default function DecantDemo() {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onBatchImportClick={() => setIsBatchImportOpen(true)}
+        onImessageImportClick={handleImessageImport}
         onQuickAddClick={() => setIsQuickAddOpen(true)}
         onRefreshAllClick={handleRefreshAll}
         onReclassifyClick={handleReclassifyAll}
@@ -717,6 +733,10 @@ export default function DecantDemo() {
           onResizeStart={handleSidebarResizeStart}
           itemCounts={sidebarItemCounts}
           onDropItem={handleDropItem}
+          allUserTags={allUserTags}
+          onCreateUserTag={handleCreateUserTag}
+          onUpdateUserTag={handleUpdateUserTag}
+          onDeleteUserTag={handleDeleteUserTag}
         />
 
         <main className="decant-main">
@@ -787,7 +807,8 @@ export default function DecantDemo() {
 
       <BatchImportModal
         isOpen={isBatchImportOpen}
-        onClose={() => setIsBatchImportOpen(false)}
+        onClose={() => { setIsBatchImportOpen(false); setImessageInitialUrls(''); }}
+        initialUrls={imessageInitialUrls}
       />
 
       <SettingsDialog isOpen={appState.settingsDialogOpen} onClose={appActions.closeSettingsDialog} />

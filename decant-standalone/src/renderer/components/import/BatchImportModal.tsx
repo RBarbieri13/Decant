@@ -3,7 +3,7 @@
 // Main modal for batch URL import with split-view layout
 // ============================================================
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useBatchImport } from '../../hooks/useBatchImport';
 import { useApp } from '../../context/AppContext';
 import { BatchUrlInput } from './BatchUrlInput';
@@ -13,12 +13,15 @@ interface BatchImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImportComplete?: (importedNodeIds: string[]) => void;
+  /** Pre-populate the URL textarea (e.g. from iMessage extraction) */
+  initialUrls?: string;
 }
 
 export function BatchImportModal({
   isOpen,
   onClose,
   onImportComplete,
+  initialUrls,
 }: BatchImportModalProps): React.ReactElement | null {
   const { actions: appActions } = useApp();
   const {
@@ -41,6 +44,13 @@ export function BatchImportModal({
     progressPercent,
     validUrlCount,
   } = useBatchImport();
+
+  // Pre-populate URL textarea when initialUrls changes (e.g. iMessage extraction)
+  useEffect(() => {
+    if (isOpen && initialUrls) {
+      setUrlText(initialUrls);
+    }
+  }, [isOpen, initialUrls, setUrlText]);
 
   // Handler to open settings
   const handleOpenSettings = useCallback(() => {

@@ -15,6 +15,7 @@ import * as auditRoutes from './audit.js';
 import * as reclassifyRoutes from './reclassify.js';
 import * as collectionRoutes from './collections.js';
 import * as userTagRoutes from './user-tags.js';
+import * as imessageRoutes from './imessage.js';
 import { getSegmentLabels, getCategoryLabels } from '../database/taxonomy_ops.js';
 import { importLimiter, settingsLimiter } from '../middleware/rateLimit.js';
 import { enqueueManyForEnrichment } from '../services/processing_queue.js';
@@ -184,6 +185,13 @@ export function registerAPIRoutes(app: Express): void {
 
   // GET /api/batch-import/:batchId - Get batch import status
   app.get('/api/batch-import/:batchId', batchImportRoutes.getBatchStatus);
+
+  // ============================================================
+  // iMessage routes
+  // ============================================================
+
+  // POST /api/imessage/extract-urls - Extract recent URLs from self-texts
+  app.post('/api/imessage/extract-urls', imessageRoutes.extractUrls);
 
   // ============================================================
   // Settings routes (with rate limiting for sensitive endpoints)

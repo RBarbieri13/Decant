@@ -508,6 +508,28 @@ export const batchImportAPI = {
 };
 
 // ============================================================
+// iMessage API
+// ============================================================
+
+export const imessageAPI = {
+  /**
+   * Extract recent URLs from iMessage self-text thread
+   */
+  async extractUrls(count = 5): Promise<{ success: boolean; urls: string[]; error?: string }> {
+    const res = await fetchWithAuth(`${API_BASE}/imessage/extract-urls`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ count }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, urls: [], error: data.error || 'Failed to extract iMessage URLs' };
+    }
+    return data;
+  },
+};
+
+// ============================================================
 // Admin API
 // ============================================================
 
