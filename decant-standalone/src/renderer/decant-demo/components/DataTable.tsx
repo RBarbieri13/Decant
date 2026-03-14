@@ -13,7 +13,7 @@ interface DataTableProps {
   statusText?: string;
   totalCount?: number;
   categoryName?: string;
-  groupedData?: { label: string; catCode: string; items: TableRow[] }[] | null;
+  groupedData?: { label: string; catCode: string; items: TableRow[]; segCode?: string }[] | null;
   segmentCode?: string;
   onCategoryClick?: (segCode: string, catCode: string) => void;
   onTagClick?: (tag: string) => void;
@@ -521,14 +521,15 @@ export const DataTable: React.FC<DataTableProps> = ({
       )}
       <div className="decant-table__body">
         {groupedData ? (
-          // Render with subcategory group headers
+          // Render with group headers (segment-level for All Items, category-level within a segment)
           groupedData.map((group) => {
-            const GroupIcon = segmentCode
-              ? getCategoryIcon(segmentCode, group.catCode)
+            const effectiveSegCode = group.segCode || segmentCode;
+            const GroupIcon = effectiveSegCode
+              ? getCategoryIcon(effectiveSegCode, group.catCode)
               : null;
             return (
-              <React.Fragment key={`group-${group.catCode}`}>
-                <div className={`decant-table__group-header ${segmentCode ? `decant-table__group-header--${getSegmentColor(segmentCode)}` : ''} ${collapsedGroups.has(group.catCode) ? 'decant-table__group-header--collapsed' : ''}`}>
+              <React.Fragment key={`group-${group.segCode ? `seg-${group.segCode}` : group.catCode}`}>
+                <div className={`decant-table__group-header ${effectiveSegCode ? `decant-table__group-header--${getSegmentColor(effectiveSegCode)}` : ''} ${collapsedGroups.has(group.catCode) ? 'decant-table__group-header--collapsed' : ''}`}>
                   <button
                     className="decant-table__group-collapse-btn"
                     onClick={(e) => handleToggleGroup(group.catCode, e)}
@@ -538,7 +539,13 @@ export const DataTable: React.FC<DataTableProps> = ({
                   </button>
                   <div
                     className="decant-table__group-header__inner"
-                    onClick={() => segmentCode && onCategoryClick?.(segmentCode, group.catCode)}
+                    onClick={() => {
+                      if (group.segCode) {
+                        onSegmentClick?.(group.segCode);
+                      } else if (segmentCode) {
+                        onCategoryClick?.(segmentCode, group.catCode);
+                      }
+                    }}
                     role="button"
                     tabIndex={0}
                   >

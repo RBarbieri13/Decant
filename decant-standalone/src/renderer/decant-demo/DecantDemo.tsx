@@ -432,17 +432,37 @@ export default function DecantDemo() {
   }, [tableData, hierarchyFilter, debouncedColumnFilters, searchQuery, showStarredOnly]);
 
   const groupedTableData = useMemo(() => {
-    if (hierarchyFilter.type !== 'segment') return null;
-    const groups = new Map<string, { label: string; catCode: string; items: TableRow[] }>();
-    for (const item of filteredTableData) {
-      const key = item.categoryCode || 'OTH';
-      if (!groups.has(key)) {
-        groups.set(key, { label: item.category, catCode: key, items: [] });
+    if (hierarchyFilter.type === 'all') {
+      // Group by segment when showing all items
+      const groups = new Map<string, { label: string; catCode: string; segCode: string; items: TableRow[] }>();
+      for (const item of filteredTableData) {
+        const key = item.segmentCode || 'X';
+        if (!groups.has(key)) {
+          groups.set(key, {
+            label: SEGMENT_LABELS[key] || key,
+            catCode: `seg-${key}`,
+            segCode: key,
+            items: [],
+          });
+        }
+        groups.get(key)!.items.push(item);
       }
-      groups.get(key)!.items.push(item);
+      return [...groups.values()].sort((a, b) => b.items.length - a.items.length);
     }
-    return [...groups.values()].sort((a, b) => b.items.length - a.items.length);
-  }, [filteredTableData, hierarchyFilter]);
+    if (hierarchyFilter.type === 'segment') {
+      // Group by category within a segment
+      const groups = new Map<string, { label: string; catCode: string; items: TableRow[] }>();
+      for (const item of filteredTableData) {
+        const key = item.categoryCode || 'OTH';
+        if (!groups.has(key)) {
+          groups.set(key, { label: item.category, catCode: key, items: [] });
+        }
+        groups.get(key)!.items.push(item);
+      }
+      return [...groups.values()].sort((a, b) => b.items.length - a.items.length);
+    }
+    return null;
+  }, [filteredTableData, hierarchyFilter, SEGMENT_LABELS]);
 
   // ---- Event handlers ----
 
@@ -733,10 +753,6 @@ export default function DecantDemo() {
           onResizeStart={handleSidebarResizeStart}
           itemCounts={sidebarItemCounts}
           onDropItem={handleDropItem}
-          allUserTags={allUserTags}
-          onCreateUserTag={handleCreateUserTag}
-          onUpdateUserTag={handleUpdateUserTag}
-          onDeleteUserTag={handleDeleteUserTag}
         />
 
         <main className="decant-main">

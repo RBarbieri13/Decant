@@ -77,24 +77,35 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Green Scrollbar Styling */
+/* Green Scrollbar Styling — hover-only visibility */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #e8e4dc;
+  background: transparent;
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--decant-brand-primary);
+  background: transparent;
   border-radius: 5px;
-  border: 2px solid #e8e4dc;
+  border: 2px solid transparent;
+  transition: background 0.2s ease;
 }
 
-::-webkit-scrollbar-thumb:hover {
+/* Show scrollbars on hover */
+*:hover::-webkit-scrollbar-track {
+  background: #e8e4dc;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background: var(--decant-brand-primary);
+  border-color: #e8e4dc;
+}
+
+*:hover::-webkit-scrollbar-thumb:hover {
   background: var(--decant-brand-dark);
 }
 
@@ -510,7 +521,7 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: auto;
 }
 
 /* Empty State */
@@ -1341,6 +1352,23 @@ body {
   padding: 16px 0;
 }
 
+/* Side-by-side bottom panels (Collections + User Tags) */
+.decant-sidebar__bottom-panels {
+  display: flex;
+  flex-shrink: 0;
+  border-top: 1px solid #d5cec3;
+}
+
+.decant-sidebar__bottom-panels > * {
+  flex: 1;
+  min-width: 0;
+  border-top: none;
+}
+
+.decant-sidebar__bottom-panels > *:first-child {
+  border-right: 1px solid #d5cec3;
+}
+
 .decant-sidebar__toggle {
   position: absolute;
   top: 50%;
@@ -1559,7 +1587,8 @@ body {
   flex-direction: column;
   height: 100%;
   background-color: #ffffff;
-  overflow: hidden;
+  overflow-y: hidden;
+  overflow-x: auto;
 }
 
 /* Title bar with view toggles */
@@ -1738,7 +1767,8 @@ body {
 
 .decant-table__body {
   flex: 1;
-  overflow-y: auto;
+  overflow: auto;
+  min-width: min-content;
 }
 
 /* Subcategory group header row */
@@ -4833,54 +4863,59 @@ body {
   text-overflow: ellipsis;
 }
 
+.decant-user-tag--vibrant {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  max-width: 90px;
+}
+
 .decant-user-tag--preview {
   max-width: none;
   cursor: default;
 }
 
-.decant-user-tag__remove {
-  display: inline-flex;
+/* Hover action bar — appears on cell hover, floats to the right */
+.decant-user-tags__hover-actions {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, transparent 0%, #ffffff 20%);
+  padding-left: 16px;
+  padding-right: 2px;
+  z-index: 5;
+}
+
+.decant-table__cell--user-tags:hover .decant-user-tags__hover-actions {
+  display: flex;
+}
+
+.decant-user-tags__hover-btn {
+  display: flex;
   align-items: center;
   justify-content: center;
-  background: none;
+  width: 22px;
+  height: 22px;
   border: none;
-  padding: 0;
-  margin-left: 2px;
+  border-radius: 4px;
+  background: transparent;
+  color: #9ca3af;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.15s;
-  font-size: 12px;
-  color: inherit;
+  font-size: 14px;
+  transition: all 0.12s ease;
 }
 
-.decant-user-tag:hover .decant-user-tag__remove {
-  opacity: 0.7;
+.decant-user-tags__hover-btn:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: #374151;
 }
 
-.decant-user-tag__remove:hover {
-  opacity: 1 !important;
-}
-
-.decant-user-tags__add {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border: 1px dashed var(--decant-gray-300);
-  border-radius: 50%;
-  background: none;
-  color: var(--decant-gray-400);
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.15s;
-  flex-shrink: 0;
-}
-
-.decant-user-tags__add:hover {
-  border-color: var(--decant-brand-primary, #2d5b47);
-  color: var(--decant-brand-primary, #2d5b47);
-  background: rgba(45, 91, 71, 0.06);
+.decant-user-tags__hover-btn--danger:hover {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
 }
 
 /* Tag Picker Dropdown */
