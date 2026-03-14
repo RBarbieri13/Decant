@@ -14,6 +14,7 @@ export interface UserTagRow {
   id: string;
   name: string;
   color: string;
+  emblem: string;
   position: number;
   created_at: string;
 }
@@ -21,11 +22,13 @@ export interface UserTagRow {
 export interface CreateUserTagInput {
   name: string;
   color?: string;
+  emblem?: string;
 }
 
 export interface UpdateUserTagInput {
   name?: string;
   color?: string;
+  emblem?: string;
   position?: number;
 }
 
@@ -58,9 +61,9 @@ export function createUserTag(input: CreateUserTagInput): UserTagRow {
   }
 
   db.prepare(`
-    INSERT INTO user_tags (id, name, color, position)
-    VALUES (?, ?, ?, ?)
-  `).run(id, input.name, input.color ?? '#6b7280', position);
+    INSERT INTO user_tags (id, name, color, emblem, position)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(id, input.name, input.color ?? '#6b7280', input.emblem ?? '🏷', position);
 
   return getUserTagById(id)!;
 }
@@ -78,6 +81,10 @@ export function updateUserTag(id: string, input: UpdateUserTagInput): UserTagRow
   if (input.color !== undefined) {
     setClauses.push('color = ?');
     values.push(input.color);
+  }
+  if (input.emblem !== undefined) {
+    setClauses.push('emblem = ?');
+    values.push(input.emblem);
   }
   if (input.position !== undefined) {
     setClauses.push('position = ?');
@@ -124,7 +131,7 @@ export function getTagsForNodes(nodeIds: string[]): Map<string, UserTagRow[]> {
   const db = getDatabase();
   const placeholders = nodeIds.map(() => '?').join(',');
   const rows = db.prepare(`
-    SELECT nut.node_id, ut.id, ut.name, ut.color, ut.position, ut.created_at
+    SELECT nut.node_id, ut.id, ut.name, ut.color, ut.emblem, ut.position, ut.created_at
     FROM node_user_tags nut
     JOIN user_tags ut ON ut.id = nut.tag_id
     WHERE nut.node_id IN (${placeholders})
@@ -139,6 +146,7 @@ export function getTagsForNodes(nodeIds: string[]): Map<string, UserTagRow[]> {
       id: row.id,
       name: row.name,
       color: row.color,
+      emblem: row.emblem,
       position: row.position,
       created_at: row.created_at,
     });

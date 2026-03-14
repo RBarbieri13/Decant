@@ -24,6 +24,7 @@ import migration012 from './012_add_extraction_quality.js';
 import migration013 from './013_add_collections.js';
 import migration014 from './014_add_function_tags.js';
 import migration015 from './015_add_user_tags.js';
+import migration016 from './016_add_user_tag_emblem.js';
 
 /**
  * All available migrations in order of execution
@@ -45,6 +46,7 @@ export const migrations: Migration[] = [
   migration013,
   migration014,
   migration015,
+  migration016,
 ];
 
 /**

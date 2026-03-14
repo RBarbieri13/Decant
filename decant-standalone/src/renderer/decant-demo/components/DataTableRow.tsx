@@ -345,35 +345,57 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
             onClick={(e) => e.stopPropagation()}
             ref={tagPickerRef}
           >
+            {/* Tag pills */}
             <div className="decant-user-tags">
               {(data.userTags || []).map((tag) => (
                 <span
                   key={tag.id}
-                  className="decant-user-tag"
-                  style={{ backgroundColor: tag.color + '22', color: tag.color, borderColor: tag.color + '44' }}
+                  className="decant-user-tag decant-user-tag--vibrant"
+                  style={{
+                    backgroundColor: tag.color + '30',
+                    color: tag.color,
+                    borderColor: tag.color + '55',
+                    textShadow: `0 0 1px ${tag.color}44`,
+                  }}
                 >
                   {tag.name}
-                  {onUserTagChange && (
-                    <button
-                      className="decant-user-tag__remove"
-                      onClick={() => {
-                        const newIds = (data.userTags || []).filter(t => t.id !== tag.id).map(t => t.id);
-                        onUserTagChange(data.id, newIds);
-                      }}
-                    >
-                      <i className="bx bx-x" />
-                    </button>
-                  )}
                 </span>
               ))}
+            </div>
+            {/* Hover action bar */}
+            <div className="decant-user-tags__hover-actions">
               <button
-                className="decant-user-tags__add"
+                className="decant-user-tags__hover-btn"
+                title={data.starred ? 'Unstar' : 'Star'}
+                onClick={() => onToggleStar(data.id)}
+              >
+                <i className={`bx ${data.starred ? 'bxs-star' : 'bx-star'}`} />
+              </button>
+              <button
+                className="decant-user-tags__hover-btn"
+                title="Add tag"
                 onClick={() => setShowTagPicker(prev => !prev)}
-                title="Add user tag"
               >
                 <i className="bx bx-plus" />
               </button>
+              <button
+                className="decant-user-tags__hover-btn"
+                title="Edit tags"
+                onClick={() => onManageUserTags?.()}
+              >
+                <i className="bx bx-edit-alt" />
+              </button>
+              {(data.userTags || []).length > 0 && (
+                <button
+                  className="decant-user-tags__hover-btn decant-user-tags__hover-btn--danger"
+                  title="Remove all tags"
+                  onClick={() => onUserTagChange?.(data.id, [])}
+                >
+                  <i className="bx bx-trash" />
+                </button>
+              )}
             </div>
+            {/* Tag picker dropdown */}
             {showTagPicker && allUserTags && (
               <div className="decant-tag-picker">
                 {allUserTags.length === 0 ? (

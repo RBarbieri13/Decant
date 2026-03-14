@@ -713,6 +713,7 @@ export interface UserTag {
   id: string;
   name: string;
   color: string;
+  emblem: string;
   position: number;
   created_at: string;
 }
@@ -724,7 +725,7 @@ export const userTagsAPI = {
     return res.json();
   },
 
-  async create(data: { name: string; color?: string }): Promise<UserTag> {
+  async create(data: { name: string; color?: string; emblem?: string }): Promise<UserTag> {
     const res = await fetchWithAuth(`${API_BASE}/user-tags`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -737,7 +738,7 @@ export const userTagsAPI = {
     return res.json();
   },
 
-  async update(id: string, data: { name?: string; color?: string; position?: number }): Promise<UserTag> {
+  async update(id: string, data: { name?: string; color?: string; emblem?: string; position?: number }): Promise<UserTag> {
     const res = await fetchWithAuth(`${API_BASE}/user-tags/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },

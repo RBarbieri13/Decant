@@ -4,6 +4,7 @@ import { SEGMENT_HEX_MAP } from '../helpers';
 import { getTreeNodeIcon, getIconProps } from '../../utils/hierarchyIcons';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { CollectionsPanel } from '../../components/collections/CollectionsPanel';
+import { UserTagsPanel } from '../../components/user-tags/UserTagsPanel';
 
 // ============================================================================
 // TREE NODE COMPONENT
@@ -249,7 +250,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           />
         ))}
       </div>
-      {!isCollapsed && <CollectionsPanel />}
+      {!isCollapsed && (
+        <div className="decant-sidebar__bottom-panels">
+          <CollectionsPanel />
+          <UserTagsPanel />
+        </div>
+      )}
       <button className="decant-sidebar__toggle" onClick={onToggleCollapse}>
         <i className={`bx ${isCollapsed ? 'bx-chevron-right' : 'bx-chevron-left'}`} />
       </button>
