@@ -2,18 +2,148 @@
    COLLECTIONS PANEL - Slide-up panel in sidebar bottom
    ============================================================================ */
 
-/* ---- Panel Container ---- */
+/* ---- Anchor (collapsed header in sidebar) ---- */
 
-.collections-panel {
-  border-top: 1px solid #d5cec3;
-  background-color: var(--decant-zone-sidebar-bg, #e8e4df);
+.collections-panel-anchor {
   flex-shrink: 0;
-  position: relative;
-  z-index: 10;
+  background-color: var(--decant-zone-sidebar-bg, #e8e4df);
+  border-top: 1px solid #d5cec3;
 }
 
-.collections-panel--expanded {
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+/* ---- Floating Panel (expanded) ---- */
+
+.collections-floating-panel {
+  position: fixed;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06);
+  animation: collections-float-in 0.15s ease;
+  overflow: hidden;
+}
+
+.collections-floating-panel--dragging {
+  cursor: grabbing;
+  user-select: none;
+  opacity: 0.95;
+}
+
+.collections-floating-panel--resizing {
+  user-select: none;
+}
+
+@keyframes collections-float-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Floating header (drag handle) */
+.collections-floating-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 42px;
+  min-height: 42px;
+  padding: 0 10px 0 14px;
+  background: var(--decant-zone-sidebar-bg, #e8e4df);
+  border-bottom: 1px solid #d5cec3;
+  cursor: grab;
+  user-select: none;
+}
+
+.collections-floating-panel--dragging .collections-floating-header {
+  cursor: grabbing;
+}
+
+.collections-floating-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.collections-floating-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.collections-floating-subtitle {
+  font-size: 11px;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.collections-floating-header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.collections-floating-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.collections-floating-close:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #374151;
+}
+
+/* Floating body */
+.collections-floating-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 4px;
+}
+
+/* Shared resize handles */
+.floating-resize-handle {
+  position: absolute;
+}
+
+.floating-resize-handle--e {
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: ew-resize;
+}
+
+.floating-resize-handle--s {
+  bottom: -3px;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  cursor: ns-resize;
+}
+
+.floating-resize-handle--se {
+  bottom: -3px;
+  right: -3px;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+}
+
+.floating-resize-handle:hover {
+  background: rgba(45, 91, 71, 0.15);
+  border-radius: 2px;
 }
 
 /* ---- Collapsed Bar / Header ---- */
@@ -104,13 +234,7 @@
   color: #374151;
 }
 
-/* ---- Expanded Content ---- */
-
-.collections-panel__content {
-  max-height: 40vh;
-  overflow-y: auto;
-  padding-bottom: 4px;
-}
+/* ---- Expanded Content (used inside floating body) ---- */
 
 .collections-panel__subtitle {
   font-size: 11px;

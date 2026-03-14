@@ -7,6 +7,7 @@ import {
 } from '@tabler/icons-react';
 import type { UserTag } from '../../services/api';
 import { useUserTags } from '../../hooks/useUserTags';
+import { useFloatingPanel } from '../../hooks/useFloatingPanel';
 import { UserTagItem } from './UserTagItem';
 import { UserTagCreateForm } from './UserTagCreateForm';
 import { UserTagContextMenu } from './UserTagContextMenu';
@@ -32,6 +33,16 @@ export function UserTagsPanel() {
     renamingId,
     setRenamingId,
   } = useUserTags();
+
+  const { rect, isDragging, isResizing, zIndex, bringToFront, onDragStart, onResizeStart } = useFloatingPanel({
+    storageKey: 'decant-utag-panel-rect',
+    defaultWidth: 340,
+    defaultHeight: 360,
+    minWidth: 260,
+    minHeight: 180,
+    defaultOffsetX: 180,
+    defaultOffsetY: 0,
+  });
 
   // ----------------------------------------
   // Local state
@@ -128,104 +139,142 @@ export function UserTagsPanel() {
   // ----------------------------------------
 
   return (
-    <div className={`utag-panel ${isPanelExpanded ? 'utag-panel--expanded' : ''}`}>
-      {/* ====== HEADER BAR (always visible) ====== */}
-      <div className="utag-panel-header" onClick={togglePanel}>
-        <div className="utag-panel-header-left">
-          <span className="utag-panel-accent" />
-          <IconTag size={16} className="utag-panel-header-icon" />
-          <span className="utag-panel-header-label">
-            {isPanelExpanded ? 'My Tags' : 'Tags'}
-          </span>
-          {totalCount > 0 && (
-            <span className="utag-panel-header-count">{totalCount}</span>
-          )}
-          {isPanelExpanded && totalCount > 0 && (
-            <span className="utag-panel-header-subtitle">
-              {totalCount} tag{totalCount !== 1 ? 's' : ''}
+    <>
+      {/* ====== COLLAPSED HEADER (always in sidebar) ====== */}
+      <div className="utag-panel-anchor">
+        <div className="utag-panel-header" onClick={togglePanel}>
+          <div className="utag-panel-header-left">
+            <span className="utag-panel-accent" />
+            <IconTag size={16} className="utag-panel-header-icon" />
+            <span className="utag-panel-header-label">
+              {isPanelExpanded ? 'My Tags' : 'Tags'}
             </span>
-          )}
-        </div>
+            {totalCount > 0 && (
+              <span className="utag-panel-header-count">{totalCount}</span>
+            )}
+          </div>
 
-        <div className="utag-panel-header-right">
-          {isPanelExpanded && (
-            <button
-              className="utag-panel-add-button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsCreating(true);
-              }}
-              title="New tag"
-              aria-label="Create new tag"
-            >
-              <IconPlus size={14} />
-            </button>
-          )}
-          <span className="utag-panel-chevron">
-            {isPanelExpanded ? <IconChevronDown size={16} /> : <IconChevronUp size={16} />}
-          </span>
+          <div className="utag-panel-header-right">
+            <span className="utag-panel-chevron">
+              {isPanelExpanded ? <IconChevronDown size={16} /> : <IconChevronUp size={16} />}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* ====== EXPANDED CONTENT ====== */}
+      {/* ====== FLOATING EXPANDED PANEL ====== */}
       {isPanelExpanded && (
-        <div className="utag-panel-body">
-          {isLoading ? (
-            <div className="utag-panel-loading">
-              <span className="utag-panel-spinner" />
-              <span>Loading...</span>
+        <div
+          className={`utag-floating-panel ${isDragging ? 'utag-floating-panel--dragging' : ''} ${isResizing ? 'utag-floating-panel--resizing' : ''}`}
+          style={{
+            left: rect.x,
+            top: rect.y,
+            width: rect.width,
+            height: rect.height,
+            zIndex,
+          }}
+          onMouseDown={bringToFront}
+        >
+          {/* Drag handle / floating header */}
+          <div
+            className="utag-floating-header"
+            onMouseDown={onDragStart}
+          >
+            <div className="utag-floating-header-left">
+              <IconTag size={16} className="utag-panel-header-icon" />
+              <span className="utag-floating-title">My Tags</span>
+              {totalCount > 0 && (
+                <span className="utag-panel-header-count">{totalCount}</span>
+              )}
+              {totalCount > 0 && (
+                <span className="utag-panel-header-subtitle">
+                  {totalCount} tag{totalCount !== 1 ? 's' : ''}
+                </span>
+              )}
             </div>
-          ) : tags.length === 0 && !isCreating ? (
-            /* Empty State */
-            <div className="utag-panel-empty">
-              <IconTag size={32} className="utag-panel-empty-icon" />
-              <p className="utag-panel-empty-title">No custom tags yet</p>
-              <p className="utag-panel-empty-text">
-                Create tags to organize and label your items with custom colors and emblems.
-              </p>
+            <div className="utag-floating-header-right">
               <button
-                className="utag-panel-empty-cta"
-                onClick={() => setIsCreating(true)}
+                className="utag-panel-add-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsCreating(true);
+                }}
+                title="New tag"
+                aria-label="Create new tag"
               >
-                <IconTag size={14} />
-                Create Your First Tag
+                <IconPlus size={14} />
+              </button>
+              <button
+                className="utag-floating-close"
+                onClick={togglePanel}
+                aria-label="Close panel"
+              >
+                <IconChevronDown size={16} />
               </button>
             </div>
-          ) : (
-            <>
-              {/* Tag List */}
-              <div className="utag-panel-scroll">
-                {tags.map(tag => (
-                  <UserTagItem
-                    key={tag.id}
-                    tag={tag}
-                    isRenaming={renamingId === tag.id}
-                    onRename={handleRename}
-                    onCancelRename={handleCancelRename}
-                    onContextMenu={handleContextMenu}
-                    onClick={handleTagClick}
-                  />
-                ))}
-              </div>
+          </div>
 
-              {/* Create Form or New Tag Button */}
-              {isCreating ? (
-                <UserTagCreateForm
-                  onSubmit={handleCreateSubmit}
-                  onCancel={handleCreateCancel}
-                  existingNames={existingNames}
-                />
-              ) : (
+          {/* Panel body */}
+          <div className="utag-floating-body">
+            {isLoading ? (
+              <div className="utag-panel-loading">
+                <span className="utag-panel-spinner" />
+                <span>Loading...</span>
+              </div>
+            ) : tags.length === 0 && !isCreating ? (
+              <div className="utag-panel-empty">
+                <IconTag size={32} className="utag-panel-empty-icon" />
+                <p className="utag-panel-empty-title">No custom tags yet</p>
+                <p className="utag-panel-empty-text">
+                  Create tags to organize and label your items with custom colors and emblems.
+                </p>
                 <button
-                  className="utag-panel-new-button"
+                  className="utag-panel-empty-cta"
                   onClick={() => setIsCreating(true)}
                 >
-                  <IconPlus size={14} />
-                  <span>New Tag</span>
+                  <IconTag size={14} />
+                  Create Your First Tag
                 </button>
-              )}
-            </>
-          )}
+              </div>
+            ) : (
+              <>
+                <div className="utag-panel-scroll">
+                  {tags.map(tag => (
+                    <UserTagItem
+                      key={tag.id}
+                      tag={tag}
+                      isRenaming={renamingId === tag.id}
+                      onRename={handleRename}
+                      onCancelRename={handleCancelRename}
+                      onContextMenu={handleContextMenu}
+                      onClick={handleTagClick}
+                    />
+                  ))}
+                </div>
+
+                {isCreating ? (
+                  <UserTagCreateForm
+                    onSubmit={handleCreateSubmit}
+                    onCancel={handleCreateCancel}
+                    existingNames={existingNames}
+                  />
+                ) : (
+                  <button
+                    className="utag-panel-new-button"
+                    onClick={() => setIsCreating(true)}
+                  >
+                    <IconPlus size={14} />
+                    <span>New Tag</span>
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Resize handles */}
+          <div className="utag-resize-handle utag-resize-handle--e" onMouseDown={e => onResizeStart(e, 'e')} />
+          <div className="utag-resize-handle utag-resize-handle--s" onMouseDown={e => onResizeStart(e, 's')} />
+          <div className="utag-resize-handle utag-resize-handle--se" onMouseDown={e => onResizeStart(e, 'se')} />
         </div>
       )}
 
@@ -254,6 +303,6 @@ export function UserTagsPanel() {
           existingNames={existingNames}
         />
       )}
-    </div>
+    </>
   );
 }

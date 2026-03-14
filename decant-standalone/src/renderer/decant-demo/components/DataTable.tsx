@@ -57,7 +57,7 @@ export const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
   checkbox: 24, expand: 28, logo: 32, title: 280,
   segment: 90, type: 70, category: 120, subcategory: 130, quickPhrase: 300,
   description: 220, functionTags: 200,
-  tags: 140, date: 90, company: 100, userTags: 160, star: 32,
+  tags: 140, date: 90, company: 100, userTags: 160,
 };
 export const RESIZABLE_COLUMNS = ['title', 'segment', 'category', 'subcategory', 'quickPhrase', 'description', 'functionTags', 'tags', 'date', 'company', 'userTags'];
 export const COLUMN_WIDTHS_KEY = 'decant-column-widths-v2';
@@ -221,7 +221,7 @@ export const DataTable: React.FC<DataTableProps> = ({
     const w = columnWidths;
     const orderedVisible = columnOrder.filter(col => visibleColumns.has(col));
     const dynamicWidths = orderedVisible.map(col => `${w[col] || 100}px`);
-    return [`${w.checkbox}px`, `${w.expand}px`, ...dynamicWidths, `${w.star}px`].join(' ');
+    return [`${w.checkbox}px`, `${w.expand}px`, ...dynamicWidths].join(' ');
   }, [columnWidths, columnOrder, visibleColumns]);
 
   const handleToggleExpand = useCallback((id: string) => {
@@ -488,7 +488,6 @@ export const DataTable: React.FC<DataTableProps> = ({
             </div>
           );
         })}
-        <div className="decant-table__header-cell" style={{ order: 100 }}></div>
       </div>
       {/* Per-column filter row */}
       {onColumnFilterChange && (
@@ -516,7 +515,6 @@ export const DataTable: React.FC<DataTableProps> = ({
               </div>
             );
           })}
-          <div className="decant-table__filter-cell" style={{ order: 100 }} />
         </div>
       )}
       <div className="decant-table__body">

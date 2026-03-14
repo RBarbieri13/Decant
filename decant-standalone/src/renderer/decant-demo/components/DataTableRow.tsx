@@ -71,7 +71,6 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
   onManageUserTags,
 }) => {
   const rowColorClass = data.rowColor ? `decant-table__row--${data.rowColor}` : '';
-  const [starPulse, setStarPulse] = useState(false);
   const [faviconError, setFaviconError] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -342,46 +341,45 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
           <div
             className="decant-table__cell decant-table__cell--user-tags"
             style={{ order: getColOrder('userTags') }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); setShowTagPicker(prev => !prev); }}
             ref={tagPickerRef}
           >
-            {/* Tag pills */}
+            {/* Tag pills or empty placeholder */}
             <div className="decant-user-tags">
-              {(data.userTags || []).map((tag) => (
-                <span
-                  key={tag.id}
-                  className="decant-user-tag decant-user-tag--vibrant"
-                  style={{
-                    backgroundColor: tag.color + '30',
-                    color: tag.color,
-                    borderColor: tag.color + '55',
-                    textShadow: `0 0 1px ${tag.color}44`,
-                  }}
-                >
-                  {tag.name}
+              {(data.userTags || []).length > 0 ? (
+                (data.userTags || []).map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="decant-user-tag decant-user-tag--vibrant"
+                    style={{
+                      backgroundColor: tag.color + '30',
+                      color: tag.color,
+                      borderColor: tag.color + '55',
+                      textShadow: `0 0 1px ${tag.color}44`,
+                    }}
+                  >
+                    {tag.name}
+                  </span>
+                ))
+              ) : (
+                <span className="decant-user-tags__placeholder">
+                  <i className="bx bx-purchase-tag" />
                 </span>
-              ))}
+              )}
             </div>
             {/* Hover action bar */}
             <div className="decant-user-tags__hover-actions">
               <button
                 className="decant-user-tags__hover-btn"
                 title={data.starred ? 'Unstar' : 'Star'}
-                onClick={() => onToggleStar(data.id)}
+                onClick={(e) => { e.stopPropagation(); onToggleStar(data.id); }}
               >
                 <i className={`bx ${data.starred ? 'bxs-star' : 'bx-star'}`} />
               </button>
               <button
                 className="decant-user-tags__hover-btn"
-                title="Add tag"
-                onClick={() => setShowTagPicker(prev => !prev)}
-              >
-                <i className="bx bx-plus" />
-              </button>
-              <button
-                className="decant-user-tags__hover-btn"
-                title="Edit tags"
-                onClick={() => onManageUserTags?.()}
+                title="Manage tags"
+                onClick={(e) => { e.stopPropagation(); onManageUserTags?.(); }}
               >
                 <i className="bx bx-edit-alt" />
               </button>
@@ -389,7 +387,7 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
                 <button
                   className="decant-user-tags__hover-btn decant-user-tags__hover-btn--danger"
                   title="Remove all tags"
-                  onClick={() => onUserTagChange?.(data.id, [])}
+                  onClick={(e) => { e.stopPropagation(); onUserTagChange?.(data.id, []); }}
                 >
                   <i className="bx bx-trash" />
                 </button>
@@ -424,7 +422,7 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
                             onUserTagChange(data.id, newIds);
                           }}
                         >
-                          <span className="decant-tag-picker__dot" style={{ backgroundColor: tag.color }} />
+                          <span className="decant-tag-picker__emblem" style={{ backgroundColor: tag.color + '25', color: tag.color }}>{tag.emblem || '🏷'}</span>
                           <span className="decant-tag-picker__label">{tag.name}</span>
                           {isAssigned && <i className="bx bx-check decant-tag-picker__check" />}
                         </button>
@@ -478,22 +476,6 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
             onClick={() => onDelete?.(data.id)}
           >
             <i className="bx bx-trash" />
-          </button>
-        </div>
-        {/* Star */}
-        <div className="decant-table__cell decant-table__cell--center" style={{ order: 100 }}>
-          <button
-            className={`decant-star-btn ${data.starred ? 'decant-star-btn--active' : ''} ${starPulse ? 'decant-star-btn--pulse' : ''}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleStar(data.id);
-              if (!data.starred) {
-                setStarPulse(true);
-                setTimeout(() => setStarPulse(false), 400);
-              }
-            }}
-          >
-            <i className={`bx ${data.starred ? 'bxs-star' : 'bx-star'}`} />
           </button>
         </div>
       </div>

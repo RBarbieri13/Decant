@@ -1,7 +1,6 @@
 // ============================================================
 // CollectionsPanel
-// Slide-up panel at the bottom of the sidebar for managing
-// user-created folder collections
+// Floating panel for managing user-created folder collections
 // ============================================================
 
 import { useState, useCallback } from 'react';
@@ -12,6 +11,7 @@ import {
   IconFolder,
 } from '@tabler/icons-react';
 import { useCollections } from '../../hooks/useCollections';
+import { useFloatingPanel } from '../../hooks/useFloatingPanel';
 import { CollectionTree } from './CollectionTree';
 import { CollectionContextMenu } from './CollectionContextMenu';
 import { CollectionIconPicker } from './CollectionIconPicker';
@@ -40,6 +40,16 @@ export function CollectionsPanel() {
     deleteCollection,
     duplicateCollection,
   } = useCollections();
+
+  const { rect, isDragging, isResizing, zIndex, bringToFront, onDragStart, onResizeStart } = useFloatingPanel({
+    storageKey: 'decant-collections-panel-rect',
+    defaultWidth: 320,
+    defaultHeight: 340,
+    minWidth: 240,
+    minHeight: 160,
+    defaultOffsetX: -180,
+    defaultOffsetY: 0,
+  });
 
   // ----------------------------------------
   // Local state
@@ -111,7 +121,6 @@ export function CollectionsPanel() {
   }, []);
 
   const handleDelete = useCallback(async (id: string) => {
-    // Find collection info for confirmation
     const findInTree = (nodes: typeof collections): typeof collections[0] | null => {
       for (const node of nodes) {
         if (node.id === id) return node;
@@ -174,76 +183,127 @@ export function CollectionsPanel() {
   // ----------------------------------------
 
   return (
-    <div className={`collections-panel ${isPanelExpanded ? 'collections-panel--expanded' : ''}`}>
-      {/* ====== COLLAPSED BAR / HEADER ====== */}
-      <div className="collections-panel__bar" onClick={togglePanel}>
-        <div className="collections-panel__bar-left">
-          <span className="collections-panel__bar-accent" />
-          <IconFolder size={16} className="collections-panel__bar-icon" />
-          <span className="collections-panel__bar-label">
-            {isPanelExpanded ? 'My Collections' : 'Collections'}
-          </span>
-          {totalCount > 0 && (
-            <span className="collections-panel__bar-count">{totalCount}</span>
-          )}
-        </div>
+    <>
+      {/* ====== COLLAPSED HEADER (always in sidebar) ====== */}
+      <div className="collections-panel-anchor">
+        <div className="collections-panel__bar" onClick={togglePanel}>
+          <div className="collections-panel__bar-left">
+            <span className="collections-panel__bar-accent" />
+            <IconFolder size={16} className="collections-panel__bar-icon" />
+            <span className="collections-panel__bar-label">
+              {isPanelExpanded ? 'Collections' : 'Coll...'}
+            </span>
+            {totalCount > 0 && (
+              <span className="collections-panel__bar-count">{totalCount}</span>
+            )}
+          </div>
 
-        <div className="collections-panel__bar-right">
-          {isPanelExpanded
-            ? <IconChevronDown size={16} className="collections-panel__bar-chevron" />
-            : <IconChevronUp size={16} className="collections-panel__bar-chevron" />
-          }
-          <button
-            className="collections-panel__bar-add"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleStartCreate(null);
-            }}
-            aria-label="New collection"
-          >
-            <IconPlus size={14} />
-          </button>
+          <div className="collections-panel__bar-right">
+            {isPanelExpanded
+              ? <IconChevronDown size={16} className="collections-panel__bar-chevron" />
+              : <IconChevronUp size={16} className="collections-panel__bar-chevron" />
+            }
+            <button
+              className="collections-panel__bar-add"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleStartCreate(null);
+              }}
+              aria-label="New collection"
+            >
+              <IconPlus size={14} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* ====== EXPANDED CONTENT ====== */}
+      {/* ====== FLOATING EXPANDED PANEL ====== */}
       {isPanelExpanded && (
-        <div className="collections-panel__content">
-          {isPanelExpanded && totalCount > 0 && (
-            <div className="collections-panel__subtitle">
-              {totalCount} folder{totalCount !== 1 ? 's' : ''}
+        <div
+          className={`collections-floating-panel ${isDragging ? 'collections-floating-panel--dragging' : ''} ${isResizing ? 'collections-floating-panel--resizing' : ''}`}
+          style={{
+            left: rect.x,
+            top: rect.y,
+            width: rect.width,
+            height: rect.height,
+            zIndex,
+          }}
+          onMouseDown={bringToFront}
+        >
+          {/* Drag handle / floating header */}
+          <div
+            className="collections-floating-header"
+            onMouseDown={onDragStart}
+          >
+            <div className="collections-floating-header-left">
+              <IconFolder size={16} className="collections-panel__bar-icon" />
+              <span className="collections-floating-title">My Collections</span>
+              {totalCount > 0 && (
+                <span className="collections-panel__bar-count">{totalCount}</span>
+              )}
+              {totalCount > 0 && (
+                <span className="collections-floating-subtitle">
+                  {totalCount} folder{totalCount !== 1 ? 's' : ''}
+                </span>
+              )}
             </div>
-          )}
+            <div className="collections-floating-header-right">
+              <button
+                className="collections-panel__bar-add"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStartCreate(null);
+                }}
+                aria-label="New collection"
+              >
+                <IconPlus size={14} />
+              </button>
+              <button
+                className="collections-floating-close"
+                onClick={togglePanel}
+                aria-label="Close panel"
+              >
+                <IconChevronDown size={16} />
+              </button>
+            </div>
+          </div>
 
-          <CollectionTree
-            collections={collections}
-            expandedIds={expandedIds}
-            renamingId={renamingId}
-            selectedId={selectedId}
-            onToggleExpand={toggleExpanded}
-            onSelect={handleSelect}
-            onRename={handleRename}
-            onCancelRename={handleCancelRename}
-            onContextMenu={handleContextMenu}
-          />
+          {/* Panel body */}
+          <div className="collections-floating-body">
+            <CollectionTree
+              collections={collections}
+              expandedIds={expandedIds}
+              renamingId={renamingId}
+              selectedId={selectedId}
+              onToggleExpand={toggleExpanded}
+              onSelect={handleSelect}
+              onRename={handleRename}
+              onCancelRename={handleCancelRename}
+              onContextMenu={handleContextMenu}
+            />
 
-          {/* Inline create at root level */}
-          {isCreating && creatingParentId === null ? (
-            <NewCollectionInput
-              parentId={null}
-              depth={0}
-              onSubmit={handleCreateSubmit}
-              onCancel={handleCreateCancel}
-              startEditing
-            />
-          ) : (
-            <NewCollectionInput
-              parentId={null}
-              depth={0}
-              onSubmit={handleCreateSubmit}
-              onCancel={handleCreateCancel}
-            />
-          )}
+            {isCreating && creatingParentId === null ? (
+              <NewCollectionInput
+                parentId={null}
+                depth={0}
+                onSubmit={handleCreateSubmit}
+                onCancel={handleCreateCancel}
+                startEditing
+              />
+            ) : (
+              <NewCollectionInput
+                parentId={null}
+                depth={0}
+                onSubmit={handleCreateSubmit}
+                onCancel={handleCreateCancel}
+              />
+            )}
+          </div>
+
+          {/* Resize handles */}
+          <div className="floating-resize-handle floating-resize-handle--e" onMouseDown={e => onResizeStart(e, 'e')} />
+          <div className="floating-resize-handle floating-resize-handle--s" onMouseDown={e => onResizeStart(e, 's')} />
+          <div className="floating-resize-handle floating-resize-handle--se" onMouseDown={e => onResizeStart(e, 'se')} />
         </div>
       )}
 
@@ -282,6 +342,6 @@ export function CollectionsPanel() {
           />
         ) : null;
       })()}
-    </div>
+    </>
   );
 }
