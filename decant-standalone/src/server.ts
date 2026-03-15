@@ -33,6 +33,7 @@ import {
   startStatsCollection,
   stopStatsCollection,
 } from './backend/services/metrics/index.js';
+import { initializeProvider } from './backend/services/llm/provider.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -68,6 +69,24 @@ try {
 } catch (error) {
   log.error('Failed to initialize database', { err: error });
   process.exit(1);
+}
+
+// Initialize LLM provider if API key is configured
+if (config.OPENAI_API_KEY) {
+  try {
+    initializeProvider({
+      type: 'openai',
+      apiKey: config.OPENAI_API_KEY,
+      model: config.OPENAI_MODEL,
+    });
+    log.info('LLM provider initialized', { model: config.OPENAI_MODEL });
+  } catch (error) {
+    log.warn('Failed to initialize LLM provider — AI features disabled', {
+      err: error instanceof Error ? error.message : String(error),
+    });
+  }
+} else {
+  log.warn('No OPENAI_API_KEY configured — AI features disabled');
 }
 
 // Start cache auto-cleanup

@@ -74,4 +74,4 @@ scripts/configure-api-keys.ts
 console-errors.log
 *.log
 Logos/
-decant-*.png
+*.png

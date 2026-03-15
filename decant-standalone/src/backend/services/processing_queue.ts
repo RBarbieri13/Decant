@@ -11,6 +11,7 @@ import { enrichNode, type EnrichmentResult } from './phase2_enricher.js';
 import { emitEnrichmentComplete } from './notifications/index.js';
 import { withRetry, RetryPresets } from './retry/index.js';
 import { readNode } from '../database/nodes.js';
+import { generateNodeSummary } from './summary/index.js';
 
 /**
  * Job status values
@@ -272,6 +273,15 @@ export class ProcessingQueue {
         } : undefined;
 
         emitEnrichmentComplete(job.node_id, true, hierarchyUpdates);
+
+        // Generate AI summary after enrichment (fire-and-forget)
+        generateNodeSummary(job.node_id).catch((err) => {
+          log.warn('Summary generation after enrichment failed', {
+            nodeId: job.node_id,
+            error: err instanceof Error ? err.message : String(err),
+            module: 'processing-queue',
+          });
+        });
       } else {
         // Handle failure
         await this.handleJobFailure(job, result.error || 'Unknown error');

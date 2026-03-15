@@ -762,3 +762,85 @@ export const userTagsAPI = {
     if (!res.ok) throw new Error('Failed to set node tags');
   },
 };
+
+// ============================================================
+// Summary API
+// ============================================================
+
+export interface NodeSummaryCategory {
+  label: string;
+  color: 'blue' | 'teal' | 'coral' | 'pink' | 'gray' | 'green' | 'amber' | 'red' | 'purple';
+}
+
+export interface NodeSummaryStat {
+  label: string;
+  value: string;
+  color?: 'success' | 'danger' | 'warning' | 'info' | null;
+}
+
+export interface NodeSummaryEntity {
+  name: string;
+  abbreviation: string;
+  role: string;
+  color: 'blue' | 'teal' | 'coral' | 'pink' | 'gray' | 'green' | 'amber' | 'red' | 'purple';
+}
+
+export interface NodeSummaryRelationship {
+  from: string;
+  to: string;
+  label: string;
+}
+
+export interface NodeSummaryTimelineItem {
+  date: string;
+  description: string;
+  status: 'complete' | 'active' | 'upcoming';
+}
+
+export interface NodeSummaryData {
+  category: NodeSummaryCategory;
+  title: string;
+  summary: string;
+  quick_outline: { heading: string; bullets: string[] };
+  stats: NodeSummaryStat[];
+  entities: NodeSummaryEntity[];
+  relationships: NodeSummaryRelationship[];
+  timeline: NodeSummaryTimelineItem[];
+  tags: string[];
+  link_label: string | null;
+}
+
+export interface NodeSummaryResponse {
+  nodeId: string;
+  summary: NodeSummaryData | null;
+  exists?: boolean;
+  cached?: boolean;
+}
+
+export const summaryAPI = {
+  /**
+   * Get the cached summary for a node
+   */
+  async get(nodeId: string): Promise<NodeSummaryResponse> {
+    const res = await fetchWithAuth(`${API_BASE}/nodes/${nodeId}/summary`);
+    if (!res.ok) throw new Error('Failed to fetch summary');
+    return res.json();
+  },
+
+  /**
+   * Generate or regenerate the AI summary for a node
+   * @param nodeId - Node ID
+   * @param force - If true, regenerate even if cached summary exists
+   */
+  async generate(nodeId: string, force: boolean = false): Promise<NodeSummaryResponse> {
+    const url = force
+      ? `${API_BASE}/nodes/${nodeId}/summary/generate?force=true`
+      : `${API_BASE}/nodes/${nodeId}/summary/generate`;
+    const res = await fetchWithAuth(url, { method: 'POST' });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Summary generation failed' }));
+      throw new Error(err.error || 'Summary generation failed');
+    }
+    return res.json();
+  },
+};

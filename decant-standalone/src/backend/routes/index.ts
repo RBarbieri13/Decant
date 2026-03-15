@@ -16,6 +16,7 @@ import * as reclassifyRoutes from './reclassify.js';
 import * as collectionRoutes from './collections.js';
 import * as userTagRoutes from './user-tags.js';
 import * as imessageRoutes from './imessage.js';
+import * as summaryRoutes from './summary.js';
 import { getSegmentLabels, getCategoryLabels } from '../database/taxonomy_ops.js';
 import { importLimiter, settingsLimiter } from '../middleware/rateLimit.js';
 import { enqueueManyForEnrichment } from '../services/processing_queue.js';
@@ -123,6 +124,12 @@ export function registerAPIRoutes(app: Express): void {
 
   // GET /api/nodes/:id/history - Get node audit history
   app.get('/api/nodes/:id/history', validateParams(UuidParamSchema), auditRoutes.getNodeAuditHistory);
+
+  // GET /api/nodes/:id/summary - Get cached AI summary for node
+  app.get('/api/nodes/:id/summary', validateParams(UuidParamSchema), summaryRoutes.getNodeSummary);
+
+  // POST /api/nodes/:id/summary/generate - Generate or regenerate AI summary
+  app.post('/api/nodes/:id/summary/generate', validateParams(UuidParamSchema), summaryRoutes.generateSummary);
 
   // ============================================================
   // Hierarchy routes
