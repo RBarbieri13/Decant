@@ -38,6 +38,7 @@ import { HybridDetailCard } from './components/HybridDetailCard';
 import { Dashboard } from './components/Dashboard';
 import { CollectionsPanel } from '../components/collections/CollectionsPanel';
 import { UserTagsPanel } from '../components/user-tags/UserTagsPanel';
+import { BottomBarSlot } from '../components/BottomBarSlot';
 
 // ============================================================================
 // HOOKS
@@ -802,10 +803,14 @@ export default function DecantDemo() {
         />
       </div>
 
-      {/* Full-width bottom bar for Collections & Tags panels */}
+      {/* Full-width bottom bar — each panel is an independently slidable tab */}
       <div className="decant-app__bottom-bar">
-        <CollectionsPanel />
-        <UserTagsPanel />
+        <BottomBarSlot storageKey="decant-bottombar-collections" defaultLeft={16}>
+          <CollectionsPanel />
+        </BottomBarSlot>
+        <BottomBarSlot storageKey="decant-bottombar-tags" defaultLeft={200}>
+          <UserTagsPanel />
+        </BottomBarSlot>
       </div>
 
       <HybridDetailCard

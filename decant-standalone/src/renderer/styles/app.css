@@ -917,21 +917,48 @@ body {
   overflow: hidden;
 }
 
-/* Full-width bottom bar for collapsed Collections & Tags panels */
+/* Full-width bottom bar — panels slide freely along horizontal axis */
 .decant-app__bottom-bar {
-  display: flex;
+  position: relative;
   flex-shrink: 0;
+  height: 40px;
   border-top: 1px solid #d5cec3;
   background: var(--decant-zone-sidebar-bg, #e8e2d9);
 }
 
-.decant-app__bottom-bar > * {
-  flex: 1;
-  min-width: 0;
+/* Each slot is absolutely positioned and horizontally draggable */
+.bottom-bar-slot {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  cursor: grab;
+  user-select: none;
+  border-radius: 0;
+  transition: box-shadow 0.15s ease;
 }
 
-.decant-app__bottom-bar > *:first-child {
-  border-right: 1px solid #d5cec3;
+.bottom-bar-slot:hover {
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.bottom-bar-slot--dragging {
+  cursor: grabbing;
+  z-index: 10;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Override panel anchors to be compact (not flex: 1) */
+.bottom-bar-slot .collections-panel-anchor,
+.bottom-bar-slot .utag-panel-anchor {
+  border-top: none;
+  background: transparent;
+}
+
+.bottom-bar-slot .collections-panel__bar,
+.bottom-bar-slot .utag-panel-header {
+  padding: 0 12px;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 /* ============================================================================
