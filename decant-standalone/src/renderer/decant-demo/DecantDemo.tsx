@@ -36,6 +36,8 @@ import { FIELD_TO_API } from './components/DataTableRow';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { HybridDetailCard } from './components/HybridDetailCard';
 import { Dashboard } from './components/Dashboard';
+import { CollectionsPanel } from '../components/collections/CollectionsPanel';
+import { UserTagsPanel } from '../components/user-tags/UserTagsPanel';
 
 // ============================================================================
 // HOOKS
@@ -798,6 +800,12 @@ export default function DecantDemo() {
           onToggle={handleTogglePanel}
           isVisible={rightPanelVisible}
         />
+      </div>
+
+      {/* Full-width bottom bar for Collections & Tags panels */}
+      <div className="decant-app__bottom-bar">
+        <CollectionsPanel />
+        <UserTagsPanel />
       </div>
 
       <HybridDetailCard

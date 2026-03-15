@@ -917,6 +917,23 @@ body {
   overflow: hidden;
 }
 
+/* Full-width bottom bar for collapsed Collections & Tags panels */
+.decant-app__bottom-bar {
+  display: flex;
+  flex-shrink: 0;
+  border-top: 1px solid #d5cec3;
+  background: var(--decant-zone-sidebar-bg, #e8e2d9);
+}
+
+.decant-app__bottom-bar > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.decant-app__bottom-bar > *:first-child {
+  border-right: 1px solid #d5cec3;
+}
+
 /* ============================================================================
    TOP BAR - Light clean header with logo and search on left
    ============================================================================ */
@@ -1353,21 +1370,6 @@ body {
 }
 
 /* Side-by-side bottom panels (Collections + User Tags) */
-.decant-sidebar__bottom-panels {
-  display: flex;
-  flex-shrink: 0;
-  border-top: 1px solid #d5cec3;
-}
-
-.decant-sidebar__bottom-panels > * {
-  flex: 1;
-  min-width: 0;
-  border-top: none;
-}
-
-.decant-sidebar__bottom-panels > *:first-child {
-  border-right: 1px solid #d5cec3;
-}
 
 .decant-sidebar__toggle {
   position: absolute;
