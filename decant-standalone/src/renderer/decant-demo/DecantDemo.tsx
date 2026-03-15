@@ -11,7 +11,7 @@ import { BatchImportModal } from '../components/import/BatchImportModal';
 import { QuickAddModal } from '../components/import/QuickAddModal';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
 import { useApp } from '../context/AppContext';
-import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI, userTagsAPI, imessageAPI, onAuthNeededChange, isAuthNeeded } from '../services/api';
+import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI, userTagsAPI, imessageAPI, isAuthNeeded } from '../services/api';
 import type { UserTag } from '../services/api';
 import { createIntegratedSSEClient, getEnrichmentTracker } from '../services/realtimeService';
 import { getSegmentColor, formatMetadataCodesForDisplay } from '../utils/metadataCodeColors';
@@ -177,11 +177,8 @@ export default function DecantDemo() {
   const [CATEGORY_LABELS, setCategoryLabels] = useState<Record<string, Record<string, string>>>(DEFAULT_CATEGORY_LABELS);
   const [allUserTags, setAllUserTags] = useState<UserTag[]>([]);
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
-  const [needsAuth, setNeedsAuth] = useState(isAuthNeeded());
+  const [needsAuth, setNeedsAuth] = useState(false);
   const [tokenInput, setTokenInput] = useState('');
-
-  // Listen for 401 auth errors from API calls
-  useEffect(() => onAuthNeededChange(setNeedsAuth), []);
 
   // ---- Keyboard shortcuts ----
 
@@ -329,6 +326,10 @@ export default function DecantDemo() {
         }
       } catch (error) {
         console.error('Failed to load nodes from API:', error);
+        // If any API call triggered a 401, show auth prompt
+        if (isAuthNeeded()) {
+          setNeedsAuth(true);
+        }
       }
     };
     init();
