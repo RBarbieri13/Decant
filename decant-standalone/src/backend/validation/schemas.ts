@@ -223,6 +223,7 @@ export const AddNodeToCollectionSchema = z.object({
 export const CreateUserTagSchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name must be 50 characters or less'),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Color must be a valid hex color').optional(),
+  emblem: z.string().max(4, 'Emblem must be 4 characters or less').optional(),
 });
 
 /**
@@ -231,6 +232,7 @@ export const CreateUserTagSchema = z.object({
 export const UpdateUserTagSchema = z.object({
   name: z.string().min(1).max(50).optional(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  emblem: z.string().max(4).optional(),
   position: z.number().int().min(0).optional(),
 }).refine(
   (data) => Object.keys(data).length > 0,
