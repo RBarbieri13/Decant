@@ -48,7 +48,7 @@ export const TOGGLEABLE_COLUMNS = [
   { key: 'userTags',     label: 'User Tags' },
 ] as const;
 
-export const DEFAULT_VISIBLE_COLUMNS = new Set(['title', 'type', 'category', 'quickPhrase', 'date', 'userTags']);
+export const DEFAULT_VISIBLE_COLUMNS = new Set(['title', 'type', 'category', 'quickPhrase', 'functionTags', 'tags', 'date', 'userTags']);
 export const COLUMN_VISIBILITY_KEY = 'decant-column-visibility';
 export const COLUMN_ORDER_KEY = 'decant-column-order';
 export const DEFAULT_COLUMN_ORDER = TOGGLEABLE_COLUMNS.map(c => c.key);

@@ -147,7 +147,7 @@ export function UserTagsPanel() {
             <span className="utag-panel-accent" />
             <IconTag size={16} className="utag-panel-header-icon" />
             <span className="utag-panel-header-label">
-              {isPanelExpanded ? 'My Tags' : 'Tags'}
+              My Tags
             </span>
             {totalCount > 0 && (
               <span className="utag-panel-header-count">{totalCount}</span>

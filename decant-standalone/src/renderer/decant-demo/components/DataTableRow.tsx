@@ -367,32 +367,6 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
                 </span>
               )}
             </div>
-            {/* Hover action bar */}
-            <div className="decant-user-tags__hover-actions">
-              <button
-                className="decant-user-tags__hover-btn"
-                title={data.starred ? 'Unstar' : 'Star'}
-                onClick={(e) => { e.stopPropagation(); onToggleStar(data.id); }}
-              >
-                <i className={`bx ${data.starred ? 'bxs-star' : 'bx-star'}`} />
-              </button>
-              <button
-                className="decant-user-tags__hover-btn"
-                title="Manage tags"
-                onClick={(e) => { e.stopPropagation(); onManageUserTags?.(); }}
-              >
-                <i className="bx bx-edit-alt" />
-              </button>
-              {(data.userTags || []).length > 0 && (
-                <button
-                  className="decant-user-tags__hover-btn decant-user-tags__hover-btn--danger"
-                  title="Remove all tags"
-                  onClick={(e) => { e.stopPropagation(); onUserTagChange?.(data.id, []); }}
-                >
-                  <i className="bx bx-trash" />
-                </button>
-              )}
-            </div>
             {/* Tag picker dropdown */}
             {showTagPicker && allUserTags && (
               <div className="decant-tag-picker">

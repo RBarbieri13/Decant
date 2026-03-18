@@ -21,29 +21,11 @@ function withAuthHeaders(headers?: HeadersInit): Headers {
   return h;
 }
 
-// Global flag: set to true when any API call gets a 401
-let _authNeeded = false;
-const _authListeners = new Set<(needed: boolean) => void>();
-
-export function onAuthNeededChange(listener: (needed: boolean) => void): () => void {
-  _authListeners.add(listener);
-  return () => _authListeners.delete(listener);
-}
-
-export function isAuthNeeded(): boolean {
-  return _authNeeded;
-}
-
 async function fetchWithAuth(url: string, init: RequestInit = {}): Promise<Response> {
-  const res = await fetch(url, {
+  return fetch(url, {
     ...init,
     headers: withAuthHeaders(init.headers),
   });
-  if (res.status === 401 && !_authNeeded) {
-    _authNeeded = true;
-    _authListeners.forEach(fn => fn(true));
-  }
-  return res;
 }
 
 export interface Node {

@@ -959,6 +959,56 @@ body {
   padding: 0 12px;
   gap: 6px;
   white-space: nowrap;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  border-radius: 6px;
+  margin: 4px 0;
+  height: 32px;
+}
+
+.bottom-bar-slot .collections-panel__bar-label,
+.bottom-bar-slot .utag-panel-header-label {
+  color: #ffffff;
+}
+
+.bottom-bar-slot .collections-panel__bar-icon,
+.bottom-bar-slot .utag-panel-header-icon {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.bottom-bar-slot .collections-panel__bar-count,
+.bottom-bar-slot .utag-panel-header-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.bottom-bar-slot .collections-panel__bar-accent,
+.bottom-bar-slot .utag-panel-accent {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.bottom-bar-slot .collections-panel__bar-chevron,
+.bottom-bar-slot .utag-panel-chevron {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.bottom-bar-slot .collections-panel__bar:hover,
+.bottom-bar-slot .utag-panel-header:hover {
+  background: linear-gradient(135deg, #356a53, #45896a);
+}
+
+/* Resize handle on right edge of each slot */
+.bottom-bar-slot__resize {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 5;
+}
+
+.bottom-bar-slot__resize:hover {
+  background: rgba(45, 91, 71, 0.3);
 }
 
 /* ============================================================================
@@ -1805,7 +1855,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0;
-  padding: 8px 16px;
+  padding: 4px 16px;
   background: linear-gradient(to right, #f0ece4, #f5f1ed);
   border-bottom: 1px solid #b8b2a8;
   border-top: 1px solid #b8b2a8;
@@ -1918,8 +1968,8 @@ body {
   display: grid;
   align-items: center;
   gap: 8px;
-  padding: 4px 12px;
-  min-height: 36px;
+  padding: 2px 12px;
+  min-height: 30px;
   overflow: hidden;
   cursor: pointer;
   border-bottom: 1px solid #e0ddd8;
@@ -1961,7 +2011,7 @@ body {
 
 .decant-row-actions {
   position: absolute;
-  right: 40px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -4901,7 +4951,7 @@ body {
 
 .decant-user-tags__placeholder {
   color: var(--decant-gray-300, #d1d5db);
-  font-size: 14px;
+  font-size: 20px;
   display: flex;
   align-items: center;
   cursor: pointer;

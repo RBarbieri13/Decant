@@ -11,7 +11,7 @@ import { BatchImportModal } from '../components/import/BatchImportModal';
 import { QuickAddModal } from '../components/import/QuickAddModal';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
 import { useApp } from '../context/AppContext';
-import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI, userTagsAPI, imessageAPI, isAuthNeeded } from '../services/api';
+import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI, userTagsAPI, imessageAPI } from '../services/api';
 import type { UserTag } from '../services/api';
 import { createIntegratedSSEClient, getEnrichmentTracker } from '../services/realtimeService';
 import { getSegmentColor, formatMetadataCodesForDisplay } from '../utils/metadataCodeColors';
@@ -177,8 +177,6 @@ export default function DecantDemo() {
   const [CATEGORY_LABELS, setCategoryLabels] = useState<Record<string, Record<string, string>>>(DEFAULT_CATEGORY_LABELS);
   const [allUserTags, setAllUserTags] = useState<UserTag[]>([]);
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
-  const [needsAuth, setNeedsAuth] = useState(false);
-  const [tokenInput, setTokenInput] = useState('');
 
   // ---- Keyboard shortcuts ----
 
@@ -326,10 +324,6 @@ export default function DecantDemo() {
         }
       } catch (error) {
         console.error('Failed to load nodes from API:', error);
-        // If any API call triggered a 401, show auth prompt
-        if (isAuthNeeded()) {
-          setNeedsAuth(true);
-        }
       }
     };
     init();
@@ -719,55 +713,6 @@ export default function DecantDemo() {
   }, [loadUserTags, loadNodes]);
 
   // ---- Render ----
-
-  if (needsAuth) {
-    return (
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', background: '#0f1a12', color: '#e0e0e0', fontFamily: 'Inter, system-ui, sans-serif',
-      }}>
-        <div style={{
-          background: '#1a2e1e', borderRadius: 12, padding: '40px 36px', maxWidth: 420,
-          width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', textAlign: 'center',
-        }}>
-          <div style={{ fontSize: 28, fontWeight: 700, marginBottom: 8, color: '#4ade80' }}>Decant</div>
-          <div style={{ fontSize: 14, color: '#9ca3af', marginBottom: 24 }}>
-            Enter your access token to connect
-          </div>
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            if (tokenInput.trim()) {
-              localStorage.setItem('decant_access_token', tokenInput.trim());
-              window.location.reload();
-            }
-          }}>
-            <input
-              type="password"
-              value={tokenInput}
-              onChange={(e) => setTokenInput(e.target.value)}
-              placeholder="Access token"
-              autoFocus
-              style={{
-                width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #374151',
-                background: '#111a13', color: '#e0e0e0', fontSize: 14, marginBottom: 16,
-                outline: 'none', boxSizing: 'border-box',
-              }}
-            />
-            <button type="submit" style={{
-              width: '100%', padding: '10px 0', borderRadius: 8, border: 'none',
-              background: '#16a34a', color: 'white', fontSize: 14, fontWeight: 600,
-              cursor: 'pointer',
-            }}>
-              Connect
-            </button>
-          </form>
-          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 16 }}>
-            Set your token in Settings after connecting, or configure DECANT_ACCESS_TOKEN on the server.
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="decant-app">

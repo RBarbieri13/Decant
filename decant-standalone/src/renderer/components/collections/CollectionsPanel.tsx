@@ -191,7 +191,7 @@ export function CollectionsPanel() {
             <span className="collections-panel__bar-accent" />
             <IconFolder size={16} className="collections-panel__bar-icon" />
             <span className="collections-panel__bar-label">
-              {isPanelExpanded ? 'Collections' : 'Coll...'}
+              My Collections
             </span>
             {totalCount > 0 && (
               <span className="collections-panel__bar-count">{totalCount}</span>
