@@ -4916,7 +4916,7 @@ body {
 .decant-table__cell--user-tags {
   position: relative;
   overflow: visible !important;
-  cursor: pointer;
+  cursor: default;
 }
 
 .decant-user-tags {
@@ -4931,7 +4931,7 @@ body {
   align-items: center;
   gap: 2px;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   padding: 1px 8px;
   border-radius: 10px;
   border: 1px solid;
@@ -4948,17 +4948,62 @@ body {
   max-width: 90px;
 }
 
-.decant-user-tags__placeholder {
-  color: var(--decant-gray-300, #d1d5db);
-  font-size: 20px;
-  display: flex;
+/* Add tag "+" button — always visible */
+.decant-user-tags__add-btn {
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1.5px dashed #9ca3af;
+  background: transparent;
+  color: #6b7280;
+  font-size: 16px;
   cursor: pointer;
-  transition: color 0.15s;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
-.decant-table__cell--user-tags:hover .decant-user-tags__placeholder {
-  color: var(--decant-gray-500, #6b7280);
+.decant-user-tags__add-btn:hover {
+  border-color: #2d5b47;
+  color: #2d5b47;
+  background: rgba(45, 91, 71, 0.06);
+  border-style: solid;
+}
+
+/* Per-tag remove "x" button */
+.decant-user-tag__remove {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 1px;
+  border-radius: 3px;
+  opacity: 0.6;
+  transition: opacity 0.1s;
+}
+
+.decant-user-tag:hover .decant-user-tag__remove {
+  display: inline-flex;
+}
+
+.decant-user-tag__remove:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.decant-user-tag__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .decant-user-tag--preview {
@@ -5011,6 +5056,22 @@ body {
 }
 
 /* Tag Picker Dropdown */
+.decant-tag-picker__header {
+  padding: 8px 12px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+}
+
+.decant-tag-picker__color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .decant-tag-picker {
   position: absolute;
   top: 100%;

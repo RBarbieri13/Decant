@@ -341,41 +341,53 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
           <div
             className="decant-table__cell decant-table__cell--user-tags"
             style={{ order: getColOrder('userTags') }}
-            onClick={(e) => { e.stopPropagation(); setShowTagPicker(prev => !prev); }}
             ref={tagPickerRef}
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Tag pills or empty placeholder */}
             <div className="decant-user-tags">
-              {(data.userTags || []).length > 0 ? (
-                (data.userTags || []).map((tag) => (
-                  <span
-                    key={tag.id}
-                    className="decant-user-tag decant-user-tag--vibrant"
-                    style={{
-                      backgroundColor: tag.color + '30',
-                      color: tag.color,
-                      borderColor: tag.color + '55',
-                      textShadow: `0 0 1px ${tag.color}44`,
+              {(data.userTags || []).map((tag) => (
+                <span
+                  key={tag.id}
+                  className="decant-user-tag decant-user-tag--vibrant"
+                  style={{
+                    backgroundColor: tag.color + '20',
+                    color: tag.color,
+                    borderColor: tag.color + '40',
+                  }}
+                >
+                  <span className="decant-user-tag__name">{tag.name}</span>
+                  <button
+                    className="decant-user-tag__remove"
+                    title="Remove tag"
+                    onClick={() => {
+                      if (!onUserTagChange) return;
+                      const newIds = (data.userTags || []).filter(t => t.id !== tag.id).map(t => t.id);
+                      onUserTagChange(data.id, newIds);
                     }}
                   >
-                    {tag.name}
-                  </span>
-                ))
-              ) : (
-                <span className="decant-user-tags__placeholder">
-                  <i className="bx bx-purchase-tag" />
+                    <i className="bx bx-x" />
+                  </button>
                 </span>
-              )}
+              ))}
+              {/* Add tag button */}
+              <button
+                className="decant-user-tags__add-btn"
+                title="Add tag"
+                onClick={() => setShowTagPicker(prev => !prev)}
+              >
+                <i className="bx bx-plus" />
+              </button>
             </div>
             {/* Tag picker dropdown */}
             {showTagPicker && allUserTags && (
               <div className="decant-tag-picker">
+                <div className="decant-tag-picker__header">Add Tag</div>
                 {allUserTags.length === 0 ? (
                   <div className="decant-tag-picker__empty">
-                    No tags yet.
+                    No tags created yet.
                     {onManageUserTags && (
                       <button className="decant-tag-picker__manage-link" onClick={() => { onManageUserTags(); setShowTagPicker(false); }}>
-                        Create tags
+                        Create your first tag
                       </button>
                     )}
                   </div>
@@ -396,7 +408,7 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
                             onUserTagChange(data.id, newIds);
                           }}
                         >
-                          <span className="decant-tag-picker__emblem" style={{ backgroundColor: tag.color + '25', color: tag.color }}>{tag.emblem || '🏷'}</span>
+                          <span className="decant-tag-picker__color-dot" style={{ backgroundColor: tag.color }} />
                           <span className="decant-tag-picker__label">{tag.name}</span>
                           {isAssigned && <i className="bx bx-check decant-tag-picker__check" />}
                         </button>
