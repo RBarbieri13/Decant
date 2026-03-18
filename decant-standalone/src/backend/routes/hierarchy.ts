@@ -16,7 +16,7 @@ import {
 } from '../database/taxonomy.js';
 import * as hierarchyCache from '../cache/hierarchy_cache.js';
 import { buildHierarchyTree } from '../services/hierarchy/tree_builder.js';
-import { HierarchyView } from '../../shared/types.js';
+// HierarchyView no longer used — single dynamic tree
 
 // ============================================================
 // Existing Endpoints
@@ -28,14 +28,10 @@ import { HierarchyView } from '../../shared/types.js';
  */
 export async function getHierarchyTree(req: Request, res: Response): Promise<void> {
   try {
-    const view = req.params.view as 'function' | 'organization';
-    if (!['function', 'organization'].includes(view)) {
-      res.status(400).json({ error: 'Invalid view. Must be "function" or "organization"' });
-      return;
-    }
+    const view = req.params.view as string;
 
-    // Use new tree builder
-    const tree = buildHierarchyTree(view as HierarchyView);
+    // Dynamic hierarchy — single tree, view parameter ignored
+    const tree = buildHierarchyTree();
     res.json({ tree, viewType: view });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });

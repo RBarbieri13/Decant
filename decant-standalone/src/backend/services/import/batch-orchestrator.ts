@@ -207,11 +207,11 @@ class BatchImportManager {
             item.nodeId = cached.nodeId;
             item.title = existingNode.title as string | undefined;
             item.classification = {
-              segment: cached.classification.segment,
-              category: cached.classification.category,
-              contentType: cached.classification.contentType,
-              organization: cached.classification.organization,
-              confidence: cached.classification.confidence,
+              segment: cached.classification?.segment ?? cached.profile?.primaryDomain ?? '',
+              category: cached.classification?.category ?? cached.profile?.primaryFunction ?? '',
+              contentType: cached.classification?.contentType ?? cached.profile?.resourceType ?? '',
+              organization: cached.classification?.organization ?? cached.profile?.company ?? '',
+              confidence: cached.classification?.confidence ?? cached.profile?.confidence ?? 0,
               reasoning: '',
             };
             item.completedAt = new Date().toISOString();
@@ -250,11 +250,11 @@ class BatchImportManager {
       item.title = successResult.metadata.title;
       item.favicon = successResult.metadata.favicon || undefined;
       item.classification = {
-        segment: successResult.classification.segment,
-        category: successResult.classification.category,
-        contentType: successResult.classification.contentType,
-        organization: successResult.classification.organization,
-        confidence: successResult.classification.confidence,
+        segment: successResult.profile.primaryDomain,
+        category: successResult.profile.primaryFunction,
+        contentType: successResult.profile.resourceType,
+        organization: successResult.profile.company,
+        confidence: successResult.profile.confidence,
         reasoning: '',
       };
       item.completedAt = new Date().toISOString();

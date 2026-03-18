@@ -277,16 +277,18 @@ export default function DecantDemo() {
   const loadTree = useCallback(async () => {
     try {
       const result = await hierarchyAPI.getTree(hierarchyView);
-      if (result && result.tree) {
+      const treeNodes = result?.root || result?.tree || [];
+      if (treeNodes.length > 0) {
         const transformNode = (node: any): TreeNodeData => ({
           id: node.id,
           name: node.title,
           iconHint: node.iconHint || 'bxs-folder',
           iconColor: GUMROAD_ICON_COLORS[node.color] || '#6b7280',
-          children: (node.children || []).map(transformNode),
+          iconType: node.discriminatorDimension || node.nodeType || undefined,
+          children: (node.children || []).filter((c: any) => c.nodeType !== 'item').map(transformNode),
           isExpanded: false,
         });
-        setTreeData(result.tree.map(transformNode));
+        setTreeData(treeNodes.map(transformNode));
       }
     } catch (error) {
       console.error('Failed to load hierarchy tree from API:', error);

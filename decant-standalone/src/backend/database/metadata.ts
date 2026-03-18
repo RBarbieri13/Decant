@@ -689,6 +689,67 @@ export function clearNodeMetadata(nodeId: string): void {
 }
 
 /**
+ * Register faceted metadata codes from a SemanticProfile.
+ * Maps profile fields to the 13 metadata code types and persists them.
+ */
+export function registerMetadataCodesFromProfile(
+  nodeId: string,
+  profile: {
+    primaryFunction?: string;
+    primaryDomain?: string;
+    resourceType?: string;
+    company?: string;
+    technologies?: string[];
+    concepts?: string[];
+    audience?: string[];
+    platform?: string[];
+    industry?: string[];
+    pricing?: string[];
+  },
+  confidence: number = 0.9,
+): number {
+  const codes: MetadataInput[] = [];
+
+  if (profile.primaryFunction) {
+    codes.push({ type: 'FNC', code: normalizeCode(profile.primaryFunction), confidence });
+  }
+  if (profile.primaryDomain) {
+    codes.push({ type: 'DOM', code: normalizeCode(profile.primaryDomain), confidence });
+  }
+  if (profile.resourceType) {
+    codes.push({ type: 'TYP', code: normalizeCode(profile.resourceType), confidence });
+  }
+  if (profile.company) {
+    codes.push({ type: 'ORG', code: normalizeCode(profile.company), confidence });
+  }
+
+  for (const tech of profile.technologies ?? []) {
+    if (tech.trim()) codes.push({ type: 'TEC', code: normalizeCode(tech), confidence });
+  }
+  for (const concept of profile.concepts ?? []) {
+    if (concept.trim()) codes.push({ type: 'CON', code: normalizeCode(concept), confidence });
+  }
+  for (const aud of profile.audience ?? []) {
+    if (aud.trim()) codes.push({ type: 'AUD', code: normalizeCode(aud), confidence });
+  }
+  for (const plt of profile.platform ?? []) {
+    if (plt.trim()) codes.push({ type: 'PLT', code: normalizeCode(plt), confidence });
+  }
+  for (const ind of profile.industry ?? []) {
+    if (ind.trim()) codes.push({ type: 'IND', code: normalizeCode(ind), confidence });
+  }
+  for (const prc of profile.pricing ?? []) {
+    if (prc.trim()) codes.push({ type: 'PRC', code: normalizeCode(prc), confidence });
+  }
+
+  if (codes.length > 0) {
+    setNodeMetadata(nodeId, codes);
+  }
+
+  return codes.length;
+}
+
+/**
  * Batch load metadata for multiple nodes.
  * Efficient for loading metadata when listing nodes.
  *

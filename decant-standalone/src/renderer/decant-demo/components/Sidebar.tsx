@@ -34,24 +34,22 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   const isExpanded = expandedIds.has(node.id);
   const isSelected = selectedId === node.id;
 
-  const isAncestor = selectedId !== null && selectedId !== node.id &&
-    (node.id.startsWith('seg-') && selectedId.startsWith(`cat-${node.id.replace('seg-', '')}-`));
-
   const NodeIcon = getTreeNodeIcon(node.id, node.iconType);
 
-  const segmentCode = node.id === 'all' ? '' : node.id.charAt(0).toUpperCase();
-  const iconColor = SEGMENT_HEX_MAP[segmentCode] ?? '#6b7280';
+  // Dynamic hierarchy: use node's own color or derive from level
+  const iconColor = node.iconColor || SEGMENT_HEX_MAP[node.id.charAt(0)?.toUpperCase()] || '#6b7280';
   const iconProps = getIconProps({ size: 16, stroke: 1.5, color: iconColor });
 
-  const isSegment = node.id.startsWith('seg-');
-  const isCategory = node.id.startsWith('cat-');
-  const segmentColorClass = segmentCode ? `decant-tree-node__row--seg-${segmentCode}` : '';
-  const levelClass = isSegment ? 'decant-tree-node__row--segment' : isCategory ? 'decant-tree-node__row--category' : 'decant-tree-node__row--item';
+  // For dynamic hierarchy, branches are identified by having children, not by ID prefix
+  const isSegment = node.id.startsWith('seg-') || (level === 0 && hasChildren);
+  const isBranch = hasChildren;
+  const segmentColorClass = isSegment ? `decant-tree-node__row--seg-${node.id.charAt(0)?.toUpperCase() || 'A'}` : '';
+  const levelClass = isBranch ? (level === 0 ? 'decant-tree-node__row--segment' : 'decant-tree-node__row--category') : 'decant-tree-node__row--item';
 
   return (
     <div className="decant-tree-node">
       <div
-        className={`decant-tree-node__row ${levelClass} ${segmentColorClass} ${isSelected ? 'decant-tree-node__row--selected' : ''} ${isAncestor ? 'decant-tree-node__row--ancestor' : ''} ${isDragOver ? 'decant-tree-node__row--drop-target' : ''}`}
+        className={`decant-tree-node__row ${levelClass} ${segmentColorClass} ${isSelected ? 'decant-tree-node__row--selected' : ''} ${isDragOver ? 'decant-tree-node__row--drop-target' : ''}`}
         style={{ paddingLeft: `${level * 20 + 12}px` }}
         onClick={() => onSelect(node.id, node)}
         onDragOver={(e) => {
@@ -71,7 +69,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           } catch {}
         }}
       >
-        {isSegment && <span className="decant-tree-node__accent" style={{ backgroundColor: iconColor }} />}
+        {(isSegment || (level === 0 && hasChildren)) && <span className="decant-tree-node__accent" style={{ backgroundColor: iconColor }} />}
         {hasChildren ? (
           <button
             className="decant-tree-node__toggle"
@@ -146,9 +144,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   itemCounts,
   onDropItem,
 }) => {
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(
-    new Set(['decant-core', 'project-phoenix', 'frontend', 'components', 'resources', 'team-space'])
-  );
+  // Auto-expand top-level branches on first render
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
+    const ids = new Set<string>();
+    for (const node of data) {
+      ids.add(node.id);
+    }
+    return ids;
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [allExpanded, setAllExpanded] = useState(false);
 

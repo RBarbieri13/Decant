@@ -56,7 +56,7 @@ export async function importUrl(req: Request, res: Response): Promise<void> {
     // Success - return full result
     const successResult = result as ImportResult;
 
-    // Get the full node data for backward compatibility
+    // Get the full node data
     const node = readNode(successResult.nodeId);
 
     res.json({
@@ -64,19 +64,10 @@ export async function importUrl(req: Request, res: Response): Promise<void> {
       nodeId: successResult.nodeId,
       cached: successResult.cached,
       node: node,
-      classification: {
-        segment: successResult.classification.segment,
-        category: successResult.classification.category,
-        contentType: successResult.classification.contentType,
-        organization: successResult.classification.organization,
-        confidence: successResult.classification.confidence,
-      },
-      hierarchyCodes: successResult.hierarchyCodes,
+      profile: successResult.profile,
+      placement: successResult.placement,
       metadata: successResult.metadata,
-      phase2: {
-        queued: successResult.phase2Queued,
-        jobId: successResult.phase2JobId,
-      },
+      refinement: successResult.refinement,
     });
   } catch (error) {
     log.error('Import route error', { err: error, module: 'import' });

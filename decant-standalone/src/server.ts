@@ -24,10 +24,11 @@ import * as cache from './backend/cache/index.js';
 import { config, logConfigSummary } from './backend/config/index.js';
 import { errorHandler, notFoundHandler } from './backend/middleware/errorHandler.js';
 import {
-  startProcessingQueue,
-  stopProcessingQueue,
-  getProcessingQueue,
-} from './backend/services/processing_queue.js';
+  initializeHierarchyEngine,
+  clearHierarchyEngine,
+} from './backend/services/hierarchy/hierarchy_engine.js';
+import { BranchDiscriminator } from './backend/services/hierarchy/branch_discriminator.js';
+import * as keystore from './backend/services/keystore.js';
 import {
   metricsMiddleware,
   startStatsCollection,
@@ -134,22 +135,20 @@ const server: Server = app.listen(config.PORT, () => {
   log.info(`Decant server running at http://localhost:${config.PORT}`);
   log.info(`Environment: ${config.NODE_ENV}`);
 
-  // Start the background processing queue after server is listening
-  try {
-    startProcessingQueue();
-    const queue = getProcessingQueue();
-    const stats = queue.getStats();
-    log.info('Background processing queue started', {
-      pending: stats.pending,
-      processing: stats.processing,
-      failed: stats.failed,
-    });
-  } catch (error) {
-    log.error('Failed to start processing queue', {
+  // Initialize dynamic hierarchy engine (async — fire and forget)
+  keystore.getApiKey('openai').then(apiKey => {
+    if (apiKey) {
+      const discriminator = new BranchDiscriminator(apiKey);
+      initializeHierarchyEngine(discriminator);
+      log.info('Dynamic hierarchy engine initialized');
+    } else {
+      log.warn('OpenAI API key not configured — hierarchy engine deferred until key is set');
+    }
+  }).catch(error => {
+    log.error('Failed to initialize hierarchy engine', {
       err: error instanceof Error ? error.message : String(error),
     });
-    // Don't exit - the server can still function without the queue
-  }
+  });
 });
 
 // ============================================================
@@ -176,13 +175,12 @@ async function gracefulShutdown(signal: string): Promise<void> {
     }
   });
 
-  // Stop processing queue (wait for active jobs to complete)
+  // Clear hierarchy engine
   try {
-    log.info('Stopping processing queue...');
-    await stopProcessingQueue();
-    log.info('Processing queue stopped');
-  } catch (queueError) {
-    log.error('Error stopping processing queue', { err: queueError });
+    clearHierarchyEngine();
+    log.info('Hierarchy engine cleared');
+  } catch (engineError) {
+    log.error('Error clearing hierarchy engine', { err: engineError });
   }
 
   // Stop cache auto-cleanup

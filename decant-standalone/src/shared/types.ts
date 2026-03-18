@@ -3,7 +3,7 @@
 // ============================================================
 
 // Node types in the hierarchy
-export type NodeType = 'segment' | 'category' | 'content_type' | 'subcategory' | 'item' | 'organization' | 'custom_space';
+export type NodeType = 'segment' | 'category' | 'content_type' | 'subcategory' | 'item' | 'organization' | 'custom_space' | 'branch';
 
 // Content type codes
 export type ContentTypeCode = 
@@ -126,6 +126,10 @@ export interface TreeNode {
   sourceUrl?: string | null;
   faviconPath?: string | null;
   iconHint?: string | null;
+  /** For branch nodes: what dimension drove this grouping */
+  discriminatorDimension?: string | null;
+  /** Hierarchy depth level (0 = root) */
+  depth?: number;
 }
 
 // ============================================================

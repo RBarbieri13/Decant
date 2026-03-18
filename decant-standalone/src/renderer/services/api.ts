@@ -205,9 +205,16 @@ export const nodesAPI = {
 // ============================================================
 
 export const hierarchyAPI = {
-  async getTree(view: 'function' | 'organization'): Promise<any> {
-    const res = await fetchWithAuth(`${API_BASE}/hierarchy/tree/${view}`);
-    if (!res.ok) throw new Error(`Failed to fetch ${view} tree`);
+  async getTree(_view?: 'function' | 'organization'): Promise<any> {
+    // Dynamic hierarchy — single tree, view parameter ignored
+    const res = await fetchWithAuth(`${API_BASE}/hierarchy/dynamic/tree`);
+    if (!res.ok) {
+      // Fallback to legacy endpoint if dynamic not available
+      const legacyRes = await fetchWithAuth(`${API_BASE}/hierarchy/tree/${_view || 'function'}`);
+      if (!legacyRes.ok) throw new Error('Failed to fetch tree');
+      return legacyRes.json();
+    }
+    // Dynamic endpoint returns { root: [...] } — pass through as-is
     return res.json();
   },
 

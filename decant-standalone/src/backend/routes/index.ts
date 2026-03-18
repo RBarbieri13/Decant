@@ -17,14 +17,16 @@ import * as collectionRoutes from './collections.js';
 import * as userTagRoutes from './user-tags.js';
 import * as imessageRoutes from './imessage.js';
 import * as summaryRoutes from './summary.js';
+import * as dynamicHierarchyRoutes from './dynamic-hierarchy.js';
 import { getSegmentLabels, getCategoryLabels } from '../database/taxonomy_ops.js';
 import { importLimiter, settingsLimiter } from '../middleware/rateLimit.js';
-import { enqueueManyForEnrichment } from '../services/processing_queue.js';
+// NOTE: processing_queue.js removed — admin routes now use hierarchy engine
 import { getDatabase } from '../database/connection.js';
 import { importUrl as orchestratorImportUrl } from '../services/import/orchestrator.js';
 import { getNotificationService, type NotificationEvent } from '../services/notifications/index.js';
 import { log } from '../logger/index.js';
 import { metricsEndpoint } from '../services/metrics/index.js';
+import * as appCache from '../cache/index.js';
 
 // Validation middleware
 import { validateBody, validateQuery, validateParams, validate } from '../middleware/validate.js';
@@ -161,6 +163,25 @@ export function registerAPIRoutes(app: Express): void {
   });
 
   // ============================================================
+  // Dynamic Hierarchy routes
+  // ============================================================
+
+  // GET /api/hierarchy/dynamic/tree - Dynamic hierarchy tree (N-deep recursive)
+  app.get('/api/hierarchy/dynamic/tree', dynamicHierarchyRoutes.getDynamicTree);
+
+  // GET /api/hierarchy/dynamic/stats - Hierarchy statistics
+  app.get('/api/hierarchy/dynamic/stats', dynamicHierarchyRoutes.getHierarchyStats);
+
+  // POST /api/hierarchy/rebuild - Full global refinement (user-clickable)
+  app.post('/api/hierarchy/rebuild', dynamicHierarchyRoutes.rebuildHierarchy);
+
+  // POST /api/hierarchy/rebuild-full - Complete rebuild from scratch
+  app.post('/api/hierarchy/rebuild-full', dynamicHierarchyRoutes.rebuildFullHierarchy);
+
+  // POST /api/hierarchy/node/:id/move - Move node to different branch
+  app.post('/api/hierarchy/node/:id/move', validateParams(UuidParamSchema), dynamicHierarchyRoutes.moveNodeToBranch);
+
+  // ============================================================
   // Search routes
   // ============================================================
 
@@ -270,45 +291,20 @@ export function registerAPIRoutes(app: Express): void {
   // Admin routes (one-time operations)
   // ============================================================
 
-  // POST /api/admin/backfill-subcategories - Re-enqueue all nodes missing subcategory_label
-  app.post('/api/admin/backfill-subcategories', (_req: Request, res: Response) => {
+  // POST /api/admin/rebuild-hierarchy - Alias for hierarchy rebuild (admin convenience)
+  app.post('/api/admin/rebuild-hierarchy', async (_req: Request, res: Response) => {
     try {
-      const db = getDatabase();
-      const rows = db.prepare(
-        `SELECT id FROM nodes WHERE subcategory_label IS NULL AND is_deleted = 0`
-      ).all() as { id: string }[];
-
-      if (rows.length === 0) {
-        res.json({ queued: 0, message: 'All nodes already have subcategory labels' });
+      const { getHierarchyEngine, hasHierarchyEngine } = await import('../services/hierarchy/hierarchy_engine.js');
+      if (!hasHierarchyEngine()) {
+        res.status(503).json({ error: 'Hierarchy engine not initialized' });
         return;
       }
-
-      const nodeIds = rows.map(r => r.id);
-      enqueueManyForEnrichment(nodeIds, 1);
-
-      log.info(`Backfill: queued ${nodeIds.length} nodes for subcategory enrichment`, { module: 'admin' });
-      res.json({ queued: nodeIds.length, message: `Queued ${nodeIds.length} nodes for subcategory enrichment` });
+      const result = await getHierarchyEngine().buildFullHierarchy();
+      appCache.invalidate('tree:*');
+      res.json({ success: true, ...result });
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      log.error('Backfill subcategories failed', { error: msg, module: 'admin' });
-      res.status(500).json({ error: msg });
-    }
-  });
-
-  // POST /api/admin/enrich-all - Re-enqueue all nodes for full Phase 2 re-enrichment
-  app.post('/api/admin/enrich-all', (_req: Request, res: Response) => {
-    try {
-      const db = getDatabase();
-      const rows = db.prepare(
-        `SELECT id FROM nodes WHERE is_deleted = 0`
-      ).all() as { id: string }[];
-      const nodeIds = rows.map(r => r.id);
-      enqueueManyForEnrichment(nodeIds, 5);
-      log.info(`Enrich-all queued`, { count: nodeIds.length, module: 'admin' });
-      res.json({ queued: true, count: nodeIds.length });
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      log.error('Enrich-all failed', { error: msg, module: 'admin' });
+      log.error('Admin rebuild-hierarchy failed', { error: msg, module: 'admin' });
       res.status(500).json({ error: msg });
     }
   });

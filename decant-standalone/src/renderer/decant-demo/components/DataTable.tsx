@@ -43,7 +43,7 @@ export const TOGGLEABLE_COLUMNS = [
   { key: 'description',  label: 'Description' },
   { key: 'functionTags', label: 'Function' },
   { key: 'tags',         label: 'Tags' },
-  { key: 'date',         label: 'Date' },
+  { key: 'date',         label: 'Date Added' },
   { key: 'company',      label: 'Company' },
   { key: 'userTags',     label: 'User Tags' },
 ] as const;

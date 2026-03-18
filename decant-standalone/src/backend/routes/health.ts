@@ -10,7 +10,7 @@ import {
   getComponentHealth,
 } from '../health/index.js';
 import { getCircuitBreakerRegistry } from '../services/retry/circuit-breaker.js';
-import { getProcessingQueue } from '../services/processing_queue.js';
+import { hasHierarchyEngine, getHierarchyEngine } from '../services/hierarchy/hierarchy_engine.js';
 
 /**
  * Format uptime in human-readable format.
@@ -169,14 +169,14 @@ export function metrics(_req: Request, res: Response): void {
   const circuitBreakerRegistry = getCircuitBreakerRegistry();
   const circuitBreakerStats = circuitBreakerRegistry.getAllStats();
 
-  // Get processing queue stats
-  let queueStats = null;
+  // Get hierarchy engine stats
+  let hierarchyStats = null;
   try {
-    const queue = getProcessingQueue();
-    queueStats = queue.getStats();
+    if (hasHierarchyEngine()) {
+      hierarchyStats = getHierarchyEngine().getStats();
+    }
   } catch {
-    // Queue may not be initialized
-    queueStats = null;
+    hierarchyStats = null;
   }
 
   res.json({
@@ -189,7 +189,7 @@ export function metrics(_req: Request, res: Response): void {
       tableSizes: dbStats.tableSizes,
       databaseSizeBytes: dbStats.databaseSizeBytes,
     },
-    queue: queueStats,
+    hierarchy: hierarchyStats,
     circuitBreakers: circuitBreakerStats,
     memoryUsage: {
       heapUsed: memoryUsage.heapUsed,

@@ -1,363 +1,300 @@
 // ============================================================
 // Tree Builder Service
 // ============================================================
-// Transforms flat nodes into nested tree structure for UI rendering
-// Groups by Segment > Category > Items (function view)
-// or Organization > Category > Items (organization view)
+// Builds a recursive N-deep tree from the hierarchy_branches
+// table for UI rendering. Single dynamic view — no more
+// separate function/organization views.
 
 import { getDatabase } from '../../database/connection.js';
-import { HierarchyView, TreeNode, NodeType, GumroadColor, ContentTypeCode } from '../../../shared/types.js';
+import { TreeNode, GumroadColor, ContentTypeCode } from '../../../shared/types.js';
 import {
   CONTENT_TYPE_ICONS as SHARED_CONTENT_TYPE_ICONS,
-  ORGANIZATION_ICONS,
   getIconByKeyword,
-  resolveSegmentIcon,
-  resolveCategoryIcon,
 } from '../../../shared/iconDatabase.js';
-import { getSegmentLabels, getCategoryLabels } from '../../database/taxonomy_ops.js';
 
-interface DatabaseNode {
+// ============================================================
+// Types
+// ============================================================
+
+interface BranchRow {
+  id: string;
+  parent_id: string | null;
+  label: string;
+  depth: number;
+  discriminator_dimension: string | null;
+  discriminator_value: string | null;
+  node_count: number;
+  sort_order: number;
+}
+
+interface NodeRow {
   id: string;
   title: string;
-  function_hierarchy_code: string | null;
-  organization_hierarchy_code: string | null;
-  content_type_code: string | null;
-  category_code: string | null;
   url: string | null;
   logo_url: string | null;
-  segment_code: string | null;
-  company: string | null;
-  extracted_fields: string | null;
-  subcategory_label: string | null;
+  content_type_code: string | null;
+  branch_id: string;
 }
 
-/**
- * Resolve segment code from either the dedicated column or extracted_fields JSON
- */
-function resolveSegment(node: DatabaseNode): string {
-  if (node.segment_code) return node.segment_code;
-  if (node.extracted_fields) {
-    try {
-      const fields = JSON.parse(node.extracted_fields);
-      if (fields.segment) return fields.segment;
-      if (fields.segment_code) return fields.segment_code;
-    } catch {}
-  }
-  return 'X'; // fallback to Science & Research
-}
+// ============================================================
+// Color Assignment
+// ============================================================
 
-/**
- * Resolve category code from either the dedicated column or extracted_fields JSON
- */
-function resolveCategory(node: DatabaseNode): string {
-  if (node.category_code) return node.category_code;
-  if (node.extracted_fields) {
-    try {
-      const fields = JSON.parse(node.extracted_fields);
-      if (fields.category) return fields.category;
-      if (fields.category_code) return fields.category_code;
-    } catch {}
-  }
-  return 'OTH'; // fallback to Other
-}
-
-/**
- * Resolve content type code from either the dedicated column or extracted_fields JSON
- */
-function resolveContentType(node: DatabaseNode): string | null {
-  if (node.content_type_code) return node.content_type_code;
-  if (node.extracted_fields) {
-    try {
-      const fields = JSON.parse(node.extracted_fields);
-      if (fields.contentType) return fields.contentType;
-      if (fields.content_type_code) return fields.content_type_code;
-    } catch {}
-  }
-  return null;
-}
-
-// Segment and category labels are now read dynamically from the DB
-// via getSegmentLabels() and getCategoryLabels() from taxonomy_ops.ts.
-// This enables the dynamic reclassification system to generate emergent taxonomies.
-
-const CONTENT_TYPE_LABELS: Record<string, string> = {
-  T: 'Tools & Software',
-  A: 'Articles',
-  V: 'Videos',
-  P: 'Research Papers',
-  R: 'Repositories',
-  G: 'Guides & Tutorials',
-  S: 'Services',
-  C: 'Courses',
-  I: 'Images & Graphics',
-  N: 'News',
-  K: 'Knowledge Bases',
-  U: 'Other',
+const DEPTH_COLORS: GumroadColor[] = ['pink', 'blue', 'green', 'yellow'];
+const DIMENSION_COLORS: Record<string, GumroadColor> = {
+  function: 'pink',
+  domain: 'blue',
+  technology: 'green',
+  concept: 'blue',
+  audience: 'yellow',
+  platform: 'green',
+  organization: 'pink',
+  resource_type: 'yellow',
+  industry: 'blue',
+  pricing: 'green',
+  topic_cluster: 'pink',
+  segment: 'pink',
+  category: 'blue',
+  subcategory: 'green',
 };
 
-const CONTENT_TYPE_ICONS = SHARED_CONTENT_TYPE_ICONS;
+function getBranchColor(branch: BranchRow): GumroadColor {
+  if (branch.discriminator_dimension && DIMENSION_COLORS[branch.discriminator_dimension]) {
+    return DIMENSION_COLORS[branch.discriminator_dimension];
+  }
+  return DEPTH_COLORS[branch.depth % DEPTH_COLORS.length];
+}
+
+// ============================================================
+// Icon Resolution
+// ============================================================
+
+const DIMENSION_ICONS: Record<string, string> = {
+  function: 'bxs-cog',
+  domain: 'bxs-book-content',
+  technology: 'bxs-chip',
+  concept: 'bxs-bulb',
+  audience: 'bxs-group',
+  platform: 'bxs-devices',
+  organization: 'bxs-buildings',
+  resource_type: 'bxs-file',
+  industry: 'bxs-factory',
+  pricing: 'bxs-dollar-circle',
+  topic_cluster: 'bxs-category',
+  segment: 'bxs-folder',
+  category: 'bxs-folder-open',
+  subcategory: 'bxs-folder-plus',
+};
+
+function getBranchIcon(branch: BranchRow): string {
+  if (branch.discriminator_dimension && DIMENSION_ICONS[branch.discriminator_dimension]) {
+    return DIMENSION_ICONS[branch.discriminator_dimension];
+  }
+  if (branch.depth === 0) return 'bxs-home';
+  return 'bxs-folder';
+}
+
+// ============================================================
+// Main Builder
+// ============================================================
 
 /**
- * Build hierarchy tree from database nodes
- * Groups nodes into: Segment > Category > Items (function view)
- * or Organization > Category > Items (organization view)
+ * Build the dynamic hierarchy tree from hierarchy_branches table.
+ * Returns a recursive N-deep tree structure for the UI.
  */
-export function buildHierarchyTree(viewType: HierarchyView): TreeNode[] {
+export function buildHierarchyTree(): TreeNode[] {
   const db = getDatabase();
 
-  const nodes = db.prepare(`
+  // Check if dynamic hierarchy tables exist
+  const tableCheck = db.prepare(`
+    SELECT name FROM sqlite_master WHERE type='table' AND name='hierarchy_branches'
+  `).get();
+
+  if (!tableCheck) {
+    // Fall back to legacy tree builder if migration hasn't run
+    return buildLegacyTree();
+  }
+
+  // Load all active branches ordered by depth then sort_order
+  const branches = db.prepare(`
+    SELECT id, parent_id, label, depth, discriminator_dimension,
+           discriminator_value, node_count, sort_order
+    FROM hierarchy_branches
+    WHERE is_active = 1
+    ORDER BY depth ASC, sort_order ASC
+  `).all() as BranchRow[];
+
+  if (branches.length === 0) {
+    return buildLegacyTree();
+  }
+
+  // Load all node placements (primary only)
+  const nodePlacements = db.prepare(`
     SELECT
-      id, title, function_hierarchy_code, organization_hierarchy_code,
-      content_type_code, category_code, url, logo_url, segment_code, company,
-      extracted_fields, subcategory_label
-    FROM nodes
-    WHERE is_deleted = 0
-    ORDER BY date_added DESC
-  `).all() as DatabaseNode[];
+      n.id, n.title, n.url, n.logo_url, n.content_type_code,
+      p.branch_id
+    FROM node_branch_placements p
+    JOIN nodes n ON n.id = p.node_id AND n.is_deleted = 0
+    WHERE p.is_primary = 1
+    ORDER BY n.title ASC
+  `).all() as NodeRow[];
 
-  if (nodes.length === 0) return [];
-
-  if (viewType === 'function') {
-    return buildFunctionTree(nodes);
-  }
-  return buildOrganizationTree(nodes);
-}
-
-function resolveClassification(node: DatabaseNode): { seg: string; cat: string; ct: string } {
-  let seg = node.segment_code || '';
-  let cat = node.category_code || '';
-  let ct = node.content_type_code || '';
-
-  if (!seg && node.extracted_fields) {
-    try {
-      const fields = JSON.parse(node.extracted_fields);
-      if (fields.segment) seg = fields.segment;
-      if (fields.category) cat = fields.category;
-      if (fields.contentType) ct = fields.contentType;
-    } catch {
-      // ignore parse errors
+  // Group nodes by branch_id
+  const nodesByBranch = new Map<string, NodeRow[]>();
+  for (const node of nodePlacements) {
+    const list = nodesByBranch.get(node.branch_id);
+    if (list) {
+      list.push(node);
+    } else {
+      nodesByBranch.set(node.branch_id, [node]);
     }
   }
 
-  return {
-    seg: seg || 'T',
-    cat: cat || 'OTH',
-    ct: ct || 'A',
-  };
-}
-
-function buildFunctionTree(nodes: DatabaseNode[]): TreeNode[] {
-  // Load dynamic labels from DB (with hardcoded fallbacks)
-  const segLabels = getSegmentLabels();
-  const catLabels = getCategoryLabels();
-
-  // Segment → Category → Subcategory → Items
-  const segmentMap = new Map<string, Map<string, Map<string, DatabaseNode[]>>>();
-
-  for (const node of nodes) {
-    const seg = resolveSegment(node);
-    const cat = resolveCategory(node);
-    const rawSubcat = node.subcategory_label?.trim();
-    const subcat = (rawSubcat && rawSubcat.length > 2) ? rawSubcat : 'General';
-
-    if (!segmentMap.has(seg)) {
-      segmentMap.set(seg, new Map());
+  // Build branch map for parent lookups
+  const branchMap = new Map<string, BranchRow>();
+  const childrenMap = new Map<string, BranchRow[]>();
+  for (const branch of branches) {
+    branchMap.set(branch.id, branch);
+    const parentId = branch.parent_id || '__root__';
+    const siblings = childrenMap.get(parentId);
+    if (siblings) {
+      siblings.push(branch);
+    } else {
+      childrenMap.set(parentId, [branch]);
     }
-    const catMap = segmentMap.get(seg)!;
-    if (!catMap.has(cat)) {
-      catMap.set(cat, new Map());
-    }
-    const subcatMap = catMap.get(cat)!;
-    if (!subcatMap.has(subcat)) {
-      subcatMap.set(subcat, []);
-    }
-    subcatMap.get(subcat)!.push(node);
   }
 
-  const tree: TreeNode[] = [];
-  const sortedSegments = [...segmentMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  // Recursive tree construction
+  function buildBranchNode(branch: BranchRow): TreeNode {
+    const children: TreeNode[] = [];
+    const color = getBranchColor(branch);
 
-  for (const [segCode, catMap] of sortedSegments) {
-    const segLabel = segLabels[segCode] || segCode;
-    const segColor = getSegmentColor(segCode);
-
-    const categoryChildren: TreeNode[] = [];
-    const sortedCategories = [...catMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-
-    for (const [catCode, subcatMap] of sortedCategories) {
-      const catLabel = catLabels[segCode]?.[catCode] || catCode;
-      const sortedSubcats = [...subcatMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-      const totalInCat = [...subcatMap.values()].reduce((sum, arr) => sum + arr.length, 0);
-
-      // If only one subcategory (or only 'General'), show items directly under category
-      const hasMultipleSubcats = sortedSubcats.length > 1 ||
-        (sortedSubcats.length === 1 && sortedSubcats[0][0] !== 'General');
-
-      let catChildren: TreeNode[];
-
-      if (hasMultipleSubcats) {
-        // Add subcategory tier
-        catChildren = sortedSubcats.map(([subcatLabel, subcatNodes]) => {
-          const itemChildren: TreeNode[] = subcatNodes.map(node => ({
-            id: node.id,
-            title: node.title,
-            nodeType: 'item' as NodeType,
-            color: segColor,
-            children: [],
-            isExpanded: false,
-            contentTypeCode: node.content_type_code as ContentTypeCode | null,
-            sourceUrl: node.url,
-            faviconPath: node.logo_url,
-            iconHint: CONTENT_TYPE_ICONS[node.content_type_code || 'A'] || getIconByKeyword(node.title) || 'bxs-file',
-          }));
-          return {
-            id: `subcat-${segCode}-${catCode}-${subcatLabel.replace(/\s+/g, '_')}`,
-            title: `${subcatLabel} (${subcatNodes.length})`,
-            nodeType: 'subcategory' as NodeType,
-            color: segColor,
-            children: itemChildren,
-            isExpanded: false,
-          };
-        });
-      } else {
-        // Flatten items directly under category
-        const allNodes = sortedSubcats.flatMap(([, nodes]) => nodes);
-        catChildren = allNodes.map(node => ({
-          id: node.id,
-          title: node.title,
-          nodeType: 'item' as NodeType,
-          color: segColor,
-          children: [],
-          isExpanded: false,
-          contentTypeCode: node.content_type_code as ContentTypeCode | null,
-          sourceUrl: node.url,
-          faviconPath: node.logo_url,
-          iconHint: CONTENT_TYPE_ICONS[node.content_type_code || 'A'] || getIconByKeyword(node.title) || 'bxs-file',
-        }));
-      }
-
-      categoryChildren.push({
-        id: `cat-${segCode}-${catCode}`,
-        title: `${catLabel} (${totalInCat})`,
-        nodeType: 'category' as NodeType,
-        color: segColor,
-        children: catChildren,
-        isExpanded: false,
-        iconHint: resolveCategoryIcon(segCode, catCode),
-      });
+    // Add child branches
+    const childBranches = childrenMap.get(branch.id) || [];
+    for (const child of childBranches) {
+      children.push(buildBranchNode(child));
     }
 
-    const totalInSegment = [...catMap.values()].reduce(
-      (sum, subcatMap) => sum + [...subcatMap.values()].reduce((s, arr) => s + arr.length, 0),
-      0
-    );
-    tree.push({
-      id: `seg-${segCode}`,
-      title: `${segLabel} (${totalInSegment})`,
-      nodeType: 'segment' as NodeType,
-      color: segColor,
-      children: categoryChildren,
-      isExpanded: false,
-      iconHint: resolveSegmentIcon(segCode),
-    });
-  }
-
-  return tree;
-}
-
-function buildOrganizationTree(nodes: DatabaseNode[]): TreeNode[] {
-  const catLabels = getCategoryLabels();
-  const orgMap = new Map<string, Map<string, DatabaseNode[]>>();
-
-  for (const node of nodes) {
-    const org = node.company || 'Unknown';
-    const cat = resolveCategory(node);
-
-    if (!orgMap.has(org)) {
-      orgMap.set(org, new Map());
-    }
-    const catMap = orgMap.get(org)!;
-    if (!catMap.has(cat)) {
-      catMap.set(cat, []);
-    }
-    catMap.get(cat)!.push(node);
-  }
-
-  const tree: TreeNode[] = [];
-  const sortedOrgs = [...orgMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-
-  for (const [orgName, catMap] of sortedOrgs) {
-    const categoryChildren: TreeNode[] = [];
-    const sortedCategories = [...catMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-
-    for (const [catCode, catNodes] of sortedCategories) {
-      const segCode = resolveSegment(catNodes[0]);
-      const catLabel = catLabels[segCode]?.[catCode] || catCode;
-
-      const itemChildren: TreeNode[] = catNodes.map(node => ({
+    // Add leaf nodes (items directly in this branch)
+    const directNodes = nodesByBranch.get(branch.id) || [];
+    for (const node of directNodes) {
+      children.push({
         id: node.id,
         title: node.title,
-        nodeType: 'item' as NodeType,
-        color: getSegmentColor(resolveSegment(node)),
+        nodeType: 'item',
+        color,
         children: [],
         isExpanded: false,
         contentTypeCode: node.content_type_code as ContentTypeCode | null,
         sourceUrl: node.url,
         faviconPath: node.logo_url,
-        iconHint: CONTENT_TYPE_ICONS[node.content_type_code || 'A'] || getIconByKeyword(node.title) || 'bxs-file',
-      }));
-
-      categoryChildren.push({
-        id: `org-${orgName}-cat-${catCode}`,
-        title: `${catLabel} (${catNodes.length})`,
-        nodeType: 'category' as NodeType,
-        children: itemChildren,
-        isExpanded: false,
-        iconHint: resolveCategoryIcon(segCode, catCode),
+        iconHint: SHARED_CONTENT_TYPE_ICONS[node.content_type_code || 'A']
+          || getIconByKeyword(node.title)
+          || 'bxs-file',
       });
     }
 
-    const totalInOrg = [...catMap.values()].reduce((sum, arr) => sum + arr.length, 0);
-    tree.push({
-      id: `org-${orgName}`,
-      title: `${orgName} (${totalInOrg})`,
-      nodeType: 'organization' as NodeType,
-      children: categoryChildren,
+    return {
+      id: branch.id,
+      title: `${branch.label} (${branch.node_count})`,
+      nodeType: 'branch',
+      color,
+      children,
       isExpanded: false,
-      iconHint: ORGANIZATION_ICONS[orgName] || 'bxs-buildings',
+      iconHint: getBranchIcon(branch),
+      discriminatorDimension: branch.discriminator_dimension,
+      depth: branch.depth,
+    };
+  }
+
+  // Build tree from root branches
+  const rootBranches = childrenMap.get('__root__') || [];
+  const tree: TreeNode[] = rootBranches.map(buildBranchNode);
+
+  return tree;
+}
+
+// ============================================================
+// Legacy Fallback (for pre-migration compatibility)
+// ============================================================
+
+function buildLegacyTree(): TreeNode[] {
+  const db = getDatabase();
+
+  const nodes = db.prepare(`
+    SELECT id, title, url, logo_url, content_type_code,
+           segment_code, category_code, subcategory_label
+    FROM nodes
+    WHERE is_deleted = 0
+    ORDER BY date_added DESC
+  `).all() as Array<{
+    id: string;
+    title: string;
+    url: string | null;
+    logo_url: string | null;
+    content_type_code: string | null;
+    segment_code: string | null;
+    category_code: string | null;
+    subcategory_label: string | null;
+  }>;
+
+  if (nodes.length === 0) return [];
+
+  // Simple grouping: segment > category > items
+  const segmentMap = new Map<string, Map<string, typeof nodes>>();
+
+  for (const node of nodes) {
+    const seg = node.segment_code || 'X';
+    const cat = node.category_code || 'OTH';
+
+    if (!segmentMap.has(seg)) segmentMap.set(seg, new Map());
+    const catMap = segmentMap.get(seg)!;
+    if (!catMap.has(cat)) catMap.set(cat, []);
+    catMap.get(cat)!.push(node);
+  }
+
+  const tree: TreeNode[] = [];
+  for (const [segCode, catMap] of [...segmentMap.entries()].sort()) {
+    const catChildren: TreeNode[] = [];
+    for (const [catCode, catNodes] of [...catMap.entries()].sort()) {
+      const itemChildren: TreeNode[] = catNodes.map(node => ({
+        id: node.id,
+        title: node.title,
+        nodeType: 'item' as const,
+        children: [],
+        isExpanded: false,
+        contentTypeCode: node.content_type_code as ContentTypeCode | null,
+        sourceUrl: node.url,
+        faviconPath: node.logo_url,
+        iconHint: SHARED_CONTENT_TYPE_ICONS[node.content_type_code || 'A'] || 'bxs-file',
+      }));
+
+      catChildren.push({
+        id: `cat-${segCode}-${catCode}`,
+        title: `${catCode} (${catNodes.length})`,
+        nodeType: 'branch',
+        children: itemChildren,
+        isExpanded: false,
+      });
+    }
+
+    const segTotal = [...catMap.values()].reduce((s, arr) => s + arr.length, 0);
+    tree.push({
+      id: `seg-${segCode}`,
+      title: `${segCode} (${segTotal})`,
+      nodeType: 'branch',
+      children: catChildren,
+      isExpanded: false,
     });
   }
 
   return tree;
 }
 
-function getSegmentColor(segmentCode: string | null): GumroadColor | undefined {
-  if (!segmentCode) return undefined;
+// ============================================================
+// Utility exports (kept for backward compatibility)
+// ============================================================
 
-  // Known codes keep their assigned colors for visual stability
-  const knownColors: Record<string, GumroadColor> = {
-    'A': 'pink',
-    'T': 'blue',
-    'F': 'green',
-    'S': 'yellow',
-    'H': 'pink',
-    'B': 'blue',
-    'E': 'yellow',
-    'L': 'green',
-    'X': 'blue',
-    'C': 'pink',
-  };
-  if (knownColors[segmentCode]) return knownColors[segmentCode];
-
-  // Dynamic codes get colors from rotation
-  const colors: GumroadColor[] = ['pink', 'blue', 'green', 'yellow'];
-  return colors[segmentCode.charCodeAt(0) % colors.length];
-}
-
-/**
- * Parse hierarchy code into parts
- * Example: "A.LLM.T.1" -> { segment: "A", category: "LLM", contentType: "T", index: 1 }
- */
 export function parseHierarchyCode(code: string | null): {
   segment?: string;
   category?: string;
@@ -365,9 +302,7 @@ export function parseHierarchyCode(code: string | null): {
   index?: number;
 } {
   if (!code) return {};
-
   const parts = code.split('.');
-
   return {
     segment: parts[0],
     category: parts[1],
@@ -376,30 +311,14 @@ export function parseHierarchyCode(code: string | null): {
   };
 }
 
-/**
- * Get hierarchy level from code
- * A = segment
- * A.LLM = category
- * A.LLM.T = content type
- * A.LLM.T.1 = item
- */
 export function getHierarchyLevel(code: string | null): number {
   if (!code) return 0;
   return code.split('.').length;
 }
 
-/**
- * Get parent code from hierarchy code
- * A.LLM.T.1 -> A.LLM.T
- * A.LLM.T -> A.LLM
- * A.LLM -> A
- * A -> null
- */
 export function getParentCode(code: string | null): string | null {
   if (!code) return null;
-
   const parts = code.split('.');
   if (parts.length === 1) return null;
-
   return parts.slice(0, -1).join('.');
 }

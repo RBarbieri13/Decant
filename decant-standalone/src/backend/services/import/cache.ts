@@ -15,15 +15,31 @@ import { log } from '../../logger/index.js';
 export interface CachedImportResult {
   nodeId: string;
   classification: {
-    segment: string;
-    category: string;
-    contentType: string;
-    organization: string;
+    segment?: string;
+    category?: string;
+    contentType?: string;
+    organization?: string;
+    confidence?: number;
+  };
+  /** Semantic profile summary (new dynamic hierarchy) */
+  profile?: {
+    title: string;
+    company: string;
+    primaryFunction: string;
+    primaryDomain: string;
+    resourceType: string;
     confidence: number;
   };
   hierarchyCodes: {
     function: string | null;
     organization: string | null;
+  };
+  /** Branch placement info (new dynamic hierarchy) */
+  placement?: {
+    branchId: string;
+    branchLabel: string;
+    branchDepth: number;
+    path: string[];
   };
   metadata: {
     title: string;
