@@ -221,7 +221,7 @@ export const DataTable: React.FC<DataTableProps> = ({
     const w = columnWidths;
     const orderedVisible = columnOrder.filter(col => visibleColumns.has(col));
     const dynamicWidths = orderedVisible.map(col => `${w[col] || 100}px`);
-    return [`${w.checkbox}px`, `${w.expand}px`, ...dynamicWidths].join(' ');
+    return [`${w.checkbox}px`, `${w.expand}px`, ...dynamicWidths, '0px'].join(' ');
   }, [columnWidths, columnOrder, visibleColumns]);
 
   const handleToggleExpand = useCallback((id: string) => {

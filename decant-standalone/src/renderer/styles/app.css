@@ -2010,15 +2010,14 @@ body {
    ============================================================================ */
 
 .decant-row-actions {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
+  position: sticky;
+  right: 0;
   display: flex;
   gap: 2px;
   align-items: center;
   padding: 3px 6px;
-  background: linear-gradient(90deg, transparent, #ffffff 12%, #ffffff);
+  margin-left: -120px;
+  background: linear-gradient(90deg, transparent, #ffffff 20%, #ffffff);
   border-radius: 6px;
   opacity: 0;
   pointer-events: none;
@@ -2032,15 +2031,15 @@ body {
 }
 
 .decant-table__row--selected .decant-row-actions {
-  background: linear-gradient(90deg, transparent, #e8f0eb 12%, #e8f0eb);
+  background: linear-gradient(90deg, transparent, #e8f0eb 20%, #e8f0eb);
 }
 
 .decant-table__row:nth-child(even) .decant-row-actions {
-  background: linear-gradient(90deg, transparent, #fafafa 12%, #fafafa);
+  background: linear-gradient(90deg, transparent, #fafafa 20%, #fafafa);
 }
 
 .decant-table__row:hover .decant-row-actions {
-  background: linear-gradient(90deg, transparent, #f5f7fa 12%, #f5f7fa);
+  background: linear-gradient(90deg, transparent, #f5f7fa 20%, #f5f7fa);
 }
 
 .decant-row-actions__btn {
