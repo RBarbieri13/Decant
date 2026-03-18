@@ -968,6 +968,10 @@ body {
 .bottom-bar-slot .collections-panel__bar-label,
 .bottom-bar-slot .utag-panel-header-label {
   color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 .bottom-bar-slot .collections-panel__bar-icon,
@@ -1970,7 +1974,7 @@ body {
   gap: 8px;
   padding: 2px 12px;
   min-height: 30px;
-  overflow: hidden;
+  overflow: visible;
   cursor: pointer;
   border-bottom: 1px solid #e0ddd8;
   border-left: 3px solid transparent;
