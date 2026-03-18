@@ -57,7 +57,7 @@ export const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
   checkbox: 24, expand: 28, logo: 32, title: 280,
   segment: 90, type: 70, category: 120, subcategory: 130, quickPhrase: 300,
   description: 220, functionTags: 200,
-  tags: 140, date: 90, company: 100, userTags: 160,
+  tags: 140, date: 110, company: 100, userTags: 160,
 };
 export const RESIZABLE_COLUMNS = ['title', 'segment', 'category', 'subcategory', 'quickPhrase', 'description', 'functionTags', 'tags', 'date', 'company', 'userTags'];
 export const COLUMN_WIDTHS_KEY = 'decant-column-widths-v2';

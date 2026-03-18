@@ -392,7 +392,9 @@ export default function DecantDemo() {
     let filtered = tableData;
 
     // Hierarchy filter
-    if (hierarchyFilter.type === 'segment' && hierarchyFilter.segmentCode) {
+    if (hierarchyFilter.type === 'branch' && hierarchyFilter.branchNodeIds) {
+      filtered = filtered.filter(item => hierarchyFilter.branchNodeIds!.has(item.id));
+    } else if (hierarchyFilter.type === 'segment' && hierarchyFilter.segmentCode) {
       filtered = filtered.filter(item => item.segmentCode === hierarchyFilter.segmentCode);
     } else if (hierarchyFilter.type === 'category' && hierarchyFilter.segmentCode && hierarchyFilter.categoryCode) {
       filtered = filtered.filter(
@@ -466,20 +468,77 @@ export default function DecantDemo() {
       }
       return [...groups.values()].sort((a, b) => b.items.length - a.items.length);
     }
+    if (hierarchyFilter.type === 'branch') {
+      // No sub-grouping for branch filter — show flat list
+      return null;
+    }
     return null;
   }, [filteredTableData, hierarchyFilter, SEGMENT_LABELS]);
 
   // ---- Event handlers ----
 
-  const handleTreeSelect = useCallback((id: string, _node: TreeNodeData) => {
+  // Collect all item IDs from a tree node and its descendants
+  const collectItemIds = useCallback((nodes: any[]): Set<string> => {
+    const ids = new Set<string>();
+    const walk = (list: any[]) => {
+      for (const n of list) {
+        if (n.nodeType === 'item' || (!n.children || n.children.length === 0)) {
+          ids.add(n.id);
+        }
+        if (n.children) walk(n.children);
+      }
+    };
+    walk(nodes);
+    return ids;
+  }, []);
+
+  // Find a node in the raw API tree by ID (to get its children for filtering)
+  const findNodeInTree = useCallback((nodes: any[], targetId: string): any | null => {
+    for (const n of nodes) {
+      if (n.id === targetId) return n;
+      if (n.children) {
+        const found = findNodeInTree(n.children, targetId);
+        if (found) return found;
+      }
+    }
+    return null;
+  }, []);
+
+  // Build breadcrumb path from root to a node
+  const buildBreadcrumbPath = useCallback((nodes: any[], targetId: string, path: BreadcrumbItem[] = []): BreadcrumbItem[] | null => {
+    for (const n of nodes) {
+      const label = n.title || n.name || 'Unknown';
+      const cleanLabel = label.replace(/\s*\(\d+\)\s*$/, '');
+      const currentPath = [...path, { label: cleanLabel, id: n.id }];
+      if (n.id === targetId) return currentPath;
+      if (n.children) {
+        const found = buildBreadcrumbPath(n.children, targetId, currentPath);
+        if (found) return found;
+      }
+    }
+    return null;
+  }, []);
+
+  const handleTreeSelect = useCallback((id: string, node: TreeNodeData) => {
     setSelectedTreeId(id);
+
+    if (id === 'all' || id === null) {
+      setHierarchyFilter({ type: 'all' });
+      setCurrentCategoryTitle('All Items');
+      setBreadcrumbs([{ label: 'All Items', id: 'all' }]);
+      return;
+    }
+
+    // Legacy seg-/cat- prefixed IDs
     if (id.startsWith('seg-')) {
       const segCode = id.replace('seg-', '');
       const segLabel = SEGMENT_LABELS[segCode] || segCode;
       setHierarchyFilter({ type: 'segment', segmentCode: segCode });
       setCurrentCategoryTitle(segLabel);
       setBreadcrumbs([{ label: 'All Items', id: 'all' }, { label: segLabel, id }]);
-    } else if (id.startsWith('cat-')) {
+      return;
+    }
+    if (id.startsWith('cat-')) {
       const parts = id.replace('cat-', '').split('-');
       const segCode = parts[0];
       const catCode = parts[1];
@@ -492,12 +551,30 @@ export default function DecantDemo() {
         { label: segLabel, id: `seg-${segCode}` },
         { label: catLabel, id },
       ]);
-    } else {
-      setHierarchyFilter({ type: 'all' });
-      setCurrentCategoryTitle('All Items');
-      setBreadcrumbs([{ label: 'All Items', id: 'all' }]);
+      return;
     }
-  }, [SEGMENT_LABELS, CATEGORY_LABELS]);
+
+    // Dynamic branch — collect all descendant item IDs for filtering
+    // We need to find this branch in the raw API tree to get its full children
+    (async () => {
+      try {
+        const result = await hierarchyAPI.getTree('function');
+        const rawTree = result?.root || result?.tree || [];
+        const branchNode = findNodeInTree(rawTree, id);
+        if (branchNode) {
+          const nodeIds = collectItemIds(branchNode.children || []);
+          const cleanLabel = (branchNode.title || node.name || '').replace(/\s*\(\d+\)\s*$/, '');
+          setHierarchyFilter({ type: 'branch', branchId: id, branchNodeIds: nodeIds });
+          setCurrentCategoryTitle(cleanLabel);
+
+          const pathItems = buildBreadcrumbPath(rawTree, id) || [];
+          setBreadcrumbs([{ label: 'All Items', id: 'all' }, ...pathItems]);
+        }
+      } catch (err) {
+        console.error('Failed to load branch nodes:', err);
+      }
+    })();
+  }, [SEGMENT_LABELS, CATEGORY_LABELS, findNodeInTree, collectItemIds, buildBreadcrumbPath]);
 
   const handleRowSelect = useCallback((id: string) => {
     setSelectedRowId(id);

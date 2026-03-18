@@ -23,9 +23,11 @@ export interface TreeNodeData {
 }
 
 export interface HierarchyFilter {
-  type: 'all' | 'segment' | 'category';
+  type: 'all' | 'segment' | 'category' | 'branch';
   segmentCode?: string;
   categoryCode?: string;
+  branchId?: string;
+  branchNodeIds?: Set<string>;
 }
 
 export interface TableRow {
