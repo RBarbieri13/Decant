@@ -49,18 +49,18 @@ export const TOGGLEABLE_COLUMNS = [
 ] as const;
 
 export const DEFAULT_VISIBLE_COLUMNS = new Set(['title', 'type', 'category', 'quickPhrase', 'functionTags', 'tags', 'date', 'userTags']);
-export const COLUMN_VISIBILITY_KEY = 'decant-column-visibility';
-export const COLUMN_ORDER_KEY = 'decant-column-order';
+export const COLUMN_VISIBILITY_KEY = 'decant-column-visibility-v2';
+export const COLUMN_ORDER_KEY = 'decant-column-order-v2';
 export const DEFAULT_COLUMN_ORDER = TOGGLEABLE_COLUMNS.map(c => c.key);
 
 export const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
   checkbox: 24, expand: 28, logo: 32, title: 280,
   segment: 90, type: 70, category: 120, subcategory: 130, quickPhrase: 300,
   description: 220, functionTags: 200,
-  tags: 140, date: 110, company: 100, userTags: 160,
+  tags: 140, date: 130, company: 100, userTags: 160,
 };
 export const RESIZABLE_COLUMNS = ['title', 'segment', 'category', 'subcategory', 'quickPhrase', 'description', 'functionTags', 'tags', 'date', 'company', 'userTags'];
-export const COLUMN_WIDTHS_KEY = 'decant-column-widths-v2';
+export const COLUMN_WIDTHS_KEY = 'decant-column-widths-v3';
 
 export const DataTable: React.FC<DataTableProps> = ({
   data,

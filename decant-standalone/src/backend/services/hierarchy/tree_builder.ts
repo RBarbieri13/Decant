@@ -128,6 +128,13 @@ export function buildHierarchyTree(): TreeNode[] {
     return buildLegacyTree();
   }
 
+  // If hierarchy has no sub-branches (only root-level), it hasn't been meaningfully structured yet.
+  // Fall back to legacy segment/category tree which gives useful navigation.
+  const hasSubBranches = branches.some(b => b.parent_id !== null);
+  if (!hasSubBranches) {
+    return buildLegacyTree();
+  }
+
   // Load all node placements (primary only)
   const nodePlacements = db.prepare(`
     SELECT

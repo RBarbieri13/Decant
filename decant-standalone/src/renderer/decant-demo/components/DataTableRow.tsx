@@ -233,21 +233,23 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
           onClick={(e) => { e.stopPropagation(); onCategoryClick?.(data.segmentCode, data.categoryCode); }}
           title={`Filter by ${data.category}`}
         >
-          <span
-            className="decant-category-dot"
-            style={{
-              backgroundColor: (() => {
+          {data.category ? (
+            <span
+              className="decant-category-pill"
+              style={(() => {
                 const m: Record<string, string> = {
                   A: '#ec4899', H: '#ec4899', C: '#ec4899',
                   T: '#3b82f6', B: '#3b82f6', X: '#3b82f6',
                   F: '#22c55e', L: '#22c55e',
                   S: '#eab308', E: '#eab308',
                 };
-                return m[data.segmentCode?.charAt(0).toUpperCase() ?? ''] ?? '#6b7280';
-              })()
-            }}
-          />
-          {data.category}
+                const color = m[data.segmentCode?.charAt(0).toUpperCase() ?? ''] ?? '#6b7280';
+                return { color, backgroundColor: color + '18', borderColor: color + '50' };
+              })()}
+            >
+              {data.category}
+            </span>
+          ) : <span className="decant-table__cell--secondary">—</span>}
         </div>}
         {/* Subcategory */}
         {isColVisible('subcategory') && <div
