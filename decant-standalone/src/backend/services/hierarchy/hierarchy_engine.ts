@@ -171,6 +171,173 @@ export class HierarchyEngine {
   }
 
   // ============================================================
+  // Mode 1b: Direct Classification Build
+  // ============================================================
+
+  /**
+   * Build hierarchy directly from a DynamicClassifier's taxonomy and assignments.
+   * Caller passes the output of DynamicClassifier.classifyAll() — one LLM call
+   * classifies all nodes holistically, so no branch discriminator is needed here.
+   *
+   * This replaces the recursive branch discriminator approach with a direct
+   * taxonomy-to-hierarchy mapping.
+   */
+  async buildFromClassification(
+    taxonomy: {
+      segments: Array<{ code: string; label: string; description: string }>;
+      categories: Array<{ segmentCode: string; code: string; label: string; description: string }>;
+    },
+    assignments: Array<{
+      nodeId: string;
+      segmentCode: string;
+      categoryCode: string;
+      subcategoryLabel: string;
+      confidence: number;
+    }>,
+  ): Promise<FullBuildResult> {
+    const startTime = Date.now();
+    const db = getDatabase();
+
+    log.info(`Classification-driven hierarchy build starting`, {
+      module: 'hierarchy-engine',
+      segments: taxonomy.segments.length,
+      categories: taxonomy.categories.length,
+      nodes: assignments.length,
+    });
+
+    // Branch ID maps built during the transaction and used for placement
+    let rootId = '';
+    const segmentBranchIds = new Map<string, string>();
+    const categoryBranchIds = new Map<string, string>();
+    const subcategoryBranchIds = new Map<string, string>();
+
+    withTransaction(() => {
+      // Step 1: Clear existing hierarchy
+      db.prepare('DELETE FROM node_branch_placements').run();
+      db.prepare('DELETE FROM hierarchy_branches').run();
+
+      // Step 2: Create root branch
+      rootId = uuidv4();
+      db.prepare(`
+        INSERT INTO hierarchy_branches
+          (id, parent_id, label, depth, discriminator_dimension, discriminator_value,
+           confidence, node_count, is_dirty, created_at, updated_at)
+        VALUES (?, NULL, 'All Resources', 0, NULL, NULL, 1.0, ?, 0, datetime('now'), datetime('now'))
+      `).run(rootId, assignments.length);
+
+      // Step 3: Create segment branches (depth 1)
+      const insertBranch = db.prepare(`
+        INSERT INTO hierarchy_branches
+          (id, parent_id, label, depth, discriminator_dimension, discriminator_value,
+           description, sort_order, is_active, confidence, node_count, is_dirty,
+           created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1.0, 0, 0, datetime('now'), datetime('now'))
+      `);
+
+      for (let i = 0; i < taxonomy.segments.length; i++) {
+        const segment = taxonomy.segments[i];
+        const segmentId = uuidv4();
+        insertBranch.run(
+          segmentId, rootId, segment.label, 1,
+          'segment', segment.code, segment.description, i,
+        );
+        segmentBranchIds.set(segment.code, segmentId);
+      }
+
+      // Step 4: Create category branches (depth 2)
+      for (let i = 0; i < taxonomy.categories.length; i++) {
+        const category = taxonomy.categories[i];
+        const segmentBranchId = segmentBranchIds.get(category.segmentCode);
+        if (!segmentBranchId) continue;
+
+        const categoryId = uuidv4();
+        insertBranch.run(
+          categoryId, segmentBranchId, category.label, 2,
+          'category', category.code, category.description, i,
+        );
+        categoryBranchIds.set(`${category.segmentCode}:${category.code}`, categoryId);
+      }
+
+      // Step 5: Create subcategory branches (depth 3) for groups with 3+ nodes
+      // Group assignments by (segmentCode, categoryCode, subcategoryLabel)
+      const subcategoryGroups = new Map<string, string[]>();
+      for (const assignment of assignments) {
+        if (!assignment.subcategoryLabel) continue;
+        const key = `${assignment.segmentCode}:${assignment.categoryCode}:${assignment.subcategoryLabel}`;
+        const group = subcategoryGroups.get(key);
+        if (group) {
+          group.push(assignment.nodeId);
+        } else {
+          subcategoryGroups.set(key, [assignment.nodeId]);
+        }
+      }
+
+      let subcategorySortOrder = 0;
+      for (const [key, nodeIds] of subcategoryGroups) {
+        if (nodeIds.length < 3) continue;
+
+        const [segCode, catCode, subLabel] = key.split(':');
+        const parentCategoryId = categoryBranchIds.get(`${segCode}:${catCode}`);
+        if (!parentCategoryId) continue;
+
+        const subId = uuidv4();
+        insertBranch.run(
+          subId, parentCategoryId, subLabel, 3,
+          'subcategory', subLabel, null, subcategorySortOrder++,
+        );
+        subcategoryBranchIds.set(key, subId);
+      }
+
+      // Step 6: Place each node into the deepest matching branch
+      const insertPlacement = db.prepare(`
+        INSERT INTO node_branch_placements
+          (node_id, branch_id, is_primary, placement_confidence, placement_source, placed_at)
+        VALUES (?, ?, 1, ?, 'build', datetime('now'))
+      `);
+
+      for (const assignment of assignments) {
+        const subcategoryKey = `${assignment.segmentCode}:${assignment.categoryCode}:${assignment.subcategoryLabel}`;
+        const categoryKey = `${assignment.segmentCode}:${assignment.categoryCode}`;
+
+        const targetBranchId =
+          subcategoryBranchIds.get(subcategoryKey) ??
+          categoryBranchIds.get(categoryKey) ??
+          segmentBranchIds.get(assignment.segmentCode) ??
+          rootId;
+
+        insertPlacement.run(assignment.nodeId, targetBranchId, assignment.confidence);
+      }
+    });
+
+    // Step 7: Refresh node counts (propagates counts up the tree)
+    this.refreshNodeCounts();
+
+    const branchCount = (db.prepare(
+      'SELECT COUNT(*) as cnt FROM hierarchy_branches WHERE is_active = 1'
+    ).get() as { cnt: number }).cnt;
+
+    const durationMs = Date.now() - startTime;
+
+    log.info('Classification-driven hierarchy build complete', {
+      module: 'hierarchy-engine',
+      branches: branchCount,
+      nodes: assignments.length,
+      durationMs,
+    });
+
+    // 0 LLM calls — the DynamicClassifier already performed that work
+    this.logRefinement('manual', 'global_full', branchCount, branchCount, 0, 0, 0, durationMs);
+
+    return {
+      branchesCreated: branchCount,
+      nodesPlaced: assignments.length,
+      llmCalls: 0,
+      tokenUsage: 0,
+      durationMs,
+    };
+  }
+
+  // ============================================================
   // Mode 2: Incremental Placement
   // ============================================================
 

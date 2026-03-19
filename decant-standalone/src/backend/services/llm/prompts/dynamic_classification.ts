@@ -118,6 +118,13 @@ GUIDELINES:
 - Category codes must be unique within their segment (but can repeat across segments)
 - The taxonomy should feel natural and intuitive — how a human librarian would organize these items
 
+SOCIAL MEDIA CLASSIFICATION RULES:
+- When a URL is from a social media platform (x.com, twitter.com, threads.net, reddit.com), classify by the POST CONTENT AND TOPIC, not the platform.
+- A tweet ABOUT an AI agent tool → belongs in the AI/Agents category, NOT "Social Media".
+- A tweet ABOUT trading bots → belongs in AI Trading category, NOT "Social Media".
+- Only classify something as "Social Media" when the content is truly ABOUT social media as a subject (e.g., social media marketing strategies, platform analytics), or is personal commentary with no clear topical focus.
+- Personal status updates with no clear topic → General Commentary or similar catch-all.
+
 ${CONTENT_TYPE_REFERENCE}
 
 ORGANIZATION CODE: 4 uppercase letters identifying the company/org behind each item. Use 'UNKN' if unknown. Common examples: OAIA (OpenAI), ANTH (Anthropic), GOOG (Google), MSFT (Microsoft), META (Meta), AMZN (Amazon).
@@ -156,6 +163,13 @@ GUIDELINES:
 - Every segment needs at least 2 categories
 - Category codes unique within segment
 
+SOCIAL MEDIA CLASSIFICATION RULES:
+- When a URL is from a social media platform (x.com, twitter.com, threads.net, reddit.com), classify by the POST CONTENT AND TOPIC, not the platform.
+- A tweet ABOUT an AI agent tool → belongs in the AI/Agents category, NOT "Social Media".
+- A tweet ABOUT trading bots → belongs in AI Trading category, NOT "Social Media".
+- Only classify something as "Social Media" when the content is truly ABOUT social media as a subject (e.g., social media marketing strategies, platform analytics), or is personal commentary with no clear topical focus.
+- Personal status updates with no clear topic → General Commentary or similar catch-all.
+
 RESPONSE FORMAT: JSON object with two keys:
 - "segments": array of {code, label, description}
 - "categories": array of {segmentCode, code, label, description}`;
@@ -165,6 +179,13 @@ const ASSIGNMENT_SYSTEM_PROMPT = `You are a knowledge classifier. You will recei
 ${CONTENT_TYPE_REFERENCE}
 
 ORGANIZATION CODE: 4 uppercase letters for the company/org. Use 'UNKN' if unknown.
+
+SOCIAL MEDIA CLASSIFICATION RULES:
+- When a URL is from a social media platform (x.com, twitter.com, threads.net, reddit.com), classify by the POST CONTENT AND TOPIC, not the platform.
+- A tweet ABOUT an AI agent tool → belongs in the AI/Agents category, NOT "Social Media".
+- A tweet ABOUT trading bots → belongs in AI Trading category, NOT "Social Media".
+- Only classify something as "Social Media" when the content is truly ABOUT social media as a subject (e.g., social media marketing strategies, platform analytics), or is personal commentary with no clear topical focus.
+- Personal status updates with no clear topic → General Commentary or similar catch-all.
 
 For each item, provide:
 - nodeId: copy exactly from input
@@ -190,6 +211,10 @@ function formatNodeForPrompt(node: CondensedNode, index: number): string {
   if (node.shortDescription) parts.push(`  Desc: ${node.shortDescription.slice(0, 150)}`);
   if (node.keyConcepts && node.keyConcepts.length > 0) {
     parts.push(`  Tags: ${node.keyConcepts.slice(0, 5).join(', ')}`);
+  }
+  // Flag social media posts so the LLM classifies by content topic, not platform
+  if (node.domain && (node.domain.includes('x.com') || node.domain.includes('twitter.com') || node.domain.includes('reddit.com') || node.domain.includes('threads.net'))) {
+    parts.push(`  [Source: social media post — classify by content topic, NOT platform]`);
   }
   return parts.join('\n');
 }

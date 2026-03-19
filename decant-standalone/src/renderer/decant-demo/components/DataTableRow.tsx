@@ -237,13 +237,10 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
             <span
               className="decant-category-pill"
               style={(() => {
-                const m: Record<string, string> = {
-                  A: '#ec4899', H: '#ec4899', C: '#ec4899',
-                  T: '#3b82f6', B: '#3b82f6', X: '#3b82f6',
-                  F: '#22c55e', L: '#22c55e',
-                  S: '#eab308', E: '#eab308',
-                };
-                const color = m[data.segmentCode?.charAt(0).toUpperCase() ?? ''] ?? '#6b7280';
+                const SEGMENT_COLORS = ['#ec4899', '#3b82f6', '#22c55e', '#eab308', '#8b5cf6', '#f97316', '#06b6d4', '#ef4444'];
+                const segChar = (data.segmentCode || '').charAt(0).toUpperCase();
+                const colorIndex = segChar ? segChar.charCodeAt(0) % SEGMENT_COLORS.length : 4;
+                const color = SEGMENT_COLORS[colorIndex];
                 return { color, backgroundColor: color + '18', borderColor: color + '50' };
               })()}
             >
@@ -518,13 +515,10 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
                       className="decant-visual-card__glyph"
                       style={{
                         backgroundColor: (() => {
-                          const m: Record<string, string> = {
-                            A: 'rgba(236,72,153,0.1)', H: 'rgba(236,72,153,0.1)', C: 'rgba(236,72,153,0.1)',
-                            T: 'rgba(59,130,246,0.1)', B: 'rgba(59,130,246,0.1)', X: 'rgba(59,130,246,0.1)',
-                            F: 'rgba(34,197,94,0.1)', L: 'rgba(34,197,94,0.1)',
-                            S: 'rgba(234,179,8,0.1)', E: 'rgba(234,179,8,0.1)',
-                          };
-                          return m[data.segmentCode?.charAt(0).toUpperCase() ?? ''] ?? 'rgba(107,114,128,0.1)';
+                          const GLYPH_COLORS = ['rgba(236,72,153,0.1)', 'rgba(59,130,246,0.1)', 'rgba(34,197,94,0.1)', 'rgba(234,179,8,0.1)', 'rgba(139,92,246,0.1)', 'rgba(249,115,22,0.1)', 'rgba(6,182,212,0.1)', 'rgba(239,68,68,0.1)'];
+                          const gc = (data.segmentCode || '').charAt(0).toUpperCase();
+                          const gi = gc ? gc.charCodeAt(0) % GLYPH_COLORS.length : 4;
+                          return GLYPH_COLORS[gi];
                         })()
                       }}
                     >

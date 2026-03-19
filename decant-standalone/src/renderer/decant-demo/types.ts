@@ -3,7 +3,7 @@ export type TagColor = 'blue' | 'yellow' | 'pink' | 'green' | 'purple' | 'gray' 
 export type PanelTab = 'properties' | 'related' | 'backlinks';
 export type ColumnFilters = Record<string, string>;
 export type RowColor = 'pink' | 'yellow' | 'blue' | 'green' | 'red' | 'cream' | 'default';
-export type SortKey = 'title' | 'segment' | 'category' | 'subcategoryLabel' | 'quickPhrase' | 'shortDescription' | 'functionTags' | 'date' | 'company';
+export type SortKey = 'title' | 'segment' | 'type' | 'category' | 'subcategoryLabel' | 'quickPhrase' | 'shortDescription' | 'functionTags' | 'tags' | 'date' | 'company' | 'userTags';
 export type SortDir = 'asc' | 'desc';
 export type ColumnWidths = Record<string, number>;
 
@@ -94,9 +94,9 @@ export const CONTENT_TYPE_SYMBOLS: Record<string, string> = {
 };
 
 export const CONTENT_TYPE_LABELS: Record<string, string> = {
-  T: 'Tool', A: 'Website', V: 'Video', P: 'Tutorial',
-  R: 'Repo', G: 'Guide', S: 'Social', C: 'Course',
-  I: 'Image', N: 'News', K: 'Reference', U: 'Unknown',
+  T: 'Tool', A: 'Article', V: 'Video', P: 'Paper',
+  R: 'Repo', G: 'Guide', S: 'Service', C: 'Course',
+  I: 'Image', N: 'News', K: 'Knowledge', U: 'Unknown',
 };
 
 export const GUMROAD_ICON_COLORS: Record<string, string> = {

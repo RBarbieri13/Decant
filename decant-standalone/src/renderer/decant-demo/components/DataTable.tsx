@@ -49,8 +49,8 @@ export const TOGGLEABLE_COLUMNS = [
 ] as const;
 
 export const DEFAULT_VISIBLE_COLUMNS = new Set(['title', 'type', 'category', 'quickPhrase', 'functionTags', 'tags', 'date', 'userTags']);
-export const COLUMN_VISIBILITY_KEY = 'decant-column-visibility-v3';
-export const COLUMN_ORDER_KEY = 'decant-column-order-v3';
+export const COLUMN_VISIBILITY_KEY = 'decant-column-visibility-v5';
+export const COLUMN_ORDER_KEY = 'decant-column-order-v5';
 export const DEFAULT_COLUMN_ORDER = TOGGLEABLE_COLUMNS.map(c => c.key);
 
 export const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
@@ -60,7 +60,7 @@ export const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
   tags: 140, date: 130, company: 100, userTags: 160,
 };
 export const RESIZABLE_COLUMNS = ['title', 'segment', 'category', 'subcategory', 'quickPhrase', 'description', 'functionTags', 'tags', 'date', 'company', 'userTags'];
-export const COLUMN_WIDTHS_KEY = 'decant-column-widths-v3';
+export const COLUMN_WIDTHS_KEY = 'decant-column-widths-v5';
 
 export const DataTable: React.FC<DataTableProps> = ({
   data,
@@ -270,11 +270,19 @@ export const DataTable: React.FC<DataTableProps> = ({
   const sortedData = useMemo(() => {
     if (!sortKey) return data;
     return [...data].sort((a, b) => {
-      const aVal = String(a[sortKey] ?? '').toLowerCase();
-      const bVal = String(b[sortKey] ?? '').toLowerCase();
+      let aVal: string, bVal: string;
+      if (sortKey === 'tags') {
+        aVal = (a.tags || []).map((t: { label: string }) => t.label).join(', ').toLowerCase();
+        bVal = (b.tags || []).map((t: { label: string }) => t.label).join(', ').toLowerCase();
+      } else if (sortKey === 'userTags') {
+        aVal = (a.userTags || []).map((t: { name: string }) => t.name).join(', ').toLowerCase();
+        bVal = (b.userTags || []).map((t: { name: string }) => t.name).join(', ').toLowerCase();
+      } else {
+        aVal = String(a[sortKey] ?? '').toLowerCase();
+        bVal = String(b[sortKey] ?? '').toLowerCase();
+      }
       if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
-      // Stable tiebreaker by id
       return a.id < b.id ? -1 : 1;
     });
   }, [data, sortKey, sortDir]);
@@ -463,10 +471,10 @@ export const DataTable: React.FC<DataTableProps> = ({
         {columnOrder.filter(col => visibleColumns.has(col)).map(col => {
           const colDef = TOGGLEABLE_COLUMNS.find(c => c.key === col)!;
           const sortKeyMap: Record<string, SortKey> = {
-            title: 'title', segment: 'segment', category: 'category',
+            title: 'title', segment: 'segment', type: 'type', category: 'category',
             subcategory: 'subcategoryLabel', quickPhrase: 'quickPhrase',
             description: 'shortDescription', functionTags: 'functionTags',
-            date: 'date', company: 'company',
+            tags: 'tags', date: 'date', company: 'company', userTags: 'userTags',
           };
           const sk = sortKeyMap[col];
           const resizable = RESIZABLE_COLUMNS.includes(col);
@@ -484,6 +492,7 @@ export const DataTable: React.FC<DataTableProps> = ({
               <span
                 className="decant-col-drag-grip"
                 draggable
+                onClick={(e) => e.stopPropagation()}
                 onDragStart={(e) => { e.stopPropagation(); handleColumnDragStart(e, col); }}
                 onDragEnd={handleColumnDragEnd}
                 title="Drag to reorder column"
@@ -570,15 +579,33 @@ export const DataTable: React.FC<DataTableProps> = ({
                   </div>
                 </div>
                 {!collapsedGroups.has(group.catCode) && (() => {
+                  // Sort items within each group by the current sort key/direction
+                  const sortedItems = [...group.items].sort((a, b) => {
+                    if (!sortKey) return 0;
+                    let aVal: string, bVal: string;
+                    if (sortKey === 'tags') {
+                      aVal = (a.tags || []).map((t: { label: string }) => t.label).join(', ').toLowerCase();
+                      bVal = (b.tags || []).map((t: { label: string }) => t.label).join(', ').toLowerCase();
+                    } else if (sortKey === 'userTags') {
+                      aVal = (a.userTags || []).map((t: { name: string }) => t.name).join(', ').toLowerCase();
+                      bVal = (b.userTags || []).map((t: { name: string }) => t.name).join(', ').toLowerCase();
+                    } else {
+                      aVal = String(a[sortKey] ?? '').toLowerCase();
+                      bVal = String(b[sortKey] ?? '').toLowerCase();
+                    }
+                    if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
+                    if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
+                    return 0;
+                  });
                   // Pre-compute subcategory counts to only show dividers for groups with 3+ items
                   const subcatCounts = new Map<string, number>();
-                  for (const item of group.items) {
+                  for (const item of sortedItems) {
                     if (item.subcategoryLabel) {
                       subcatCounts.set(item.subcategoryLabel, (subcatCounts.get(item.subcategoryLabel) || 0) + 1);
                     }
                   }
-                  return group.items.map((row, idx) => {
-                  const prevSubcat = idx > 0 ? group.items[idx - 1].subcategoryLabel : null;
+                  return sortedItems.map((row, idx) => {
+                  const prevSubcat = idx > 0 ? sortedItems[idx - 1].subcategoryLabel : null;
                   const showDivider = idx > 0 && row.subcategoryLabel && row.subcategoryLabel !== prevSubcat && (subcatCounts.get(row.subcategoryLabel) || 0) >= 3;
                   return (
                     <React.Fragment key={row.id}>

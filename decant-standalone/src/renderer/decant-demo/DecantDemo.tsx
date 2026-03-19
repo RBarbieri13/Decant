@@ -170,7 +170,7 @@ export default function DecantDemo() {
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
   const [, setRefreshQueuedCount] = useState<number | null>(null);
   const [isReclassifying, setIsReclassifying] = useState(false);
-  const [reclassifyProgress, setReclassifyProgress] = useState<{ completed: number; total: number } | null>(null);
+  const [reclassifyProgress, setReclassifyProgress] = useState<{ completed: number; total: number; phase?: string } | null>(null);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [pendingEnrichmentIds, setPendingEnrichmentIds] = useState<Set<string>>(new Set());
   const [columnFilters, setColumnFilters] = useState<ColumnFilters>({});
@@ -676,7 +676,7 @@ export default function DecantDemo() {
       // Poll until done, updating progress state
       const poll = async (): Promise<void> => {
         const prog = await reclassifyAPI.getProgress();
-        setReclassifyProgress({ completed: prog.completed, total: prog.total });
+        setReclassifyProgress({ completed: prog.completed, total: prog.total, phase: prog.phase });
         if (prog.isRunning || (!prog.completedAt && !prog.lastError)) {
           await new Promise(r => setTimeout(r, 2000));
           return poll();

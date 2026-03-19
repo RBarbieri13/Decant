@@ -58,7 +58,15 @@ const DIMENSION_COLORS: Record<string, GumroadColor> = {
   subcategory: 'green',
 };
 
+const SEGMENT_PALETTE: GumroadColor[] = ['pink', 'blue', 'green', 'yellow'];
+
 function getBranchColor(branch: BranchRow): GumroadColor {
+  // Depth-1 segment branches: color based on discriminator_value (segment code letter)
+  if (branch.depth === 1 && branch.discriminator_value) {
+    const charCode = branch.discriminator_value.charCodeAt(0) || 0;
+    return SEGMENT_PALETTE[charCode % SEGMENT_PALETTE.length];
+  }
+  // Depth-2+ branches: use dimension color map as fallback
   if (branch.discriminator_dimension && DIMENSION_COLORS[branch.discriminator_dimension]) {
     return DIMENSION_COLORS[branch.discriminator_dimension];
   }
@@ -171,15 +179,18 @@ export function buildHierarchyTree(): TreeNode[] {
     }
   }
 
-  // Recursive tree construction
-  function buildBranchNode(branch: BranchRow): TreeNode {
+  // Recursive tree construction — parentColor cascades from segment to category/subcategory
+  function buildBranchNode(branch: BranchRow, parentColor?: GumroadColor): TreeNode {
     const children: TreeNode[] = [];
-    const color = getBranchColor(branch);
+    // Segments get their own color; categories/subcategories inherit from parent segment
+    const color = branch.depth >= 2 && parentColor
+      ? parentColor
+      : getBranchColor(branch);
 
-    // Add child branches
+    // Add child branches (pass this branch's color so they inherit)
     const childBranches = childrenMap.get(branch.id) || [];
     for (const child of childBranches) {
-      children.push(buildBranchNode(child));
+      children.push(buildBranchNode(child, color));
     }
 
     // Add leaf nodes (items directly in this branch)
@@ -216,7 +227,7 @@ export function buildHierarchyTree(): TreeNode[] {
 
   // Build tree from root branches
   const rootBranches = childrenMap.get('__root__') || [];
-  const tree: TreeNode[] = rootBranches.map(buildBranchNode);
+  const tree: TreeNode[] = rootBranches.map(b => buildBranchNode(b));
 
   return tree;
 }

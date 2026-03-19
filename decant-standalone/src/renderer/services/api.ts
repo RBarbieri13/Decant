@@ -581,7 +581,7 @@ export const reclassifyAPI = {
     return res.json();
   },
 
-  async getProgress(): Promise<{ isRunning: boolean; total: number; completed: number; failed: number; startedAt: string | null; completedAt: string | null; lastError: string | null }> {
+  async getProgress(): Promise<{ isRunning: boolean; total: number; completed: number; failed: number; phase: string; startedAt: string | null; completedAt: string | null; lastError: string | null }> {
     const res = await fetchWithAuth(`${API_BASE}/nodes/reclassify/progress`);
     if (!res.ok) throw new Error('Failed to get reclassify progress');
     return res.json();

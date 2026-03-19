@@ -16,7 +16,7 @@ interface TopBarProps {
   onRefreshAllClick?: () => void;
   onReclassifyClick?: () => void;
   isReclassifying?: boolean;
-  reclassifyProgress?: { completed: number; total: number } | null;
+  reclassifyProgress?: { completed: number; total: number; phase?: string } | null;
   onSettingsClick?: () => void;
   onUserClick?: () => void;
   userName?: string;
@@ -131,19 +131,33 @@ export const TopBar: React.FC<TopBarProps> = ({
           iMessage
         </button>
 
-        <button
-          className="gum-button gum-button--small gum-button--pink"
-          onClick={onReclassifyClick}
-          disabled={isReclassifyingProp}
-          title="Reclassify all nodes with AI"
-          style={{ marginRight: '12px' }}
-        >
-          {isReclassifyingProp
-            ? reclassifyProgress && reclassifyProgress.total > 0
-              ? `${reclassifyProgress.completed}/${reclassifyProgress.total}`
-              : 'Starting...'
-            : 'Reclassify'}
-        </button>
+        <div className="decant-reclassify-wrapper" style={{ position: 'relative', marginRight: '12px' }}>
+          <button
+            className="gum-button gum-button--small gum-button--pink"
+            onClick={onReclassifyClick}
+            disabled={isReclassifyingProp}
+            title="Reclassify all nodes with AI"
+          >
+            {isReclassifyingProp
+              ? reclassifyProgress && reclassifyProgress.total > 0
+                ? ['Classifying...', 'Applying...', 'Building...', 'Done'][reclassifyProgress.completed] || `${reclassifyProgress.completed}/${reclassifyProgress.total}`
+                : 'Starting...'
+              : 'Reclassify'}
+          </button>
+          {isReclassifyingProp && (
+            <div className="decant-reclassify-progress">
+              <div className="decant-reclassify-progress__bar">
+                <div
+                  className="decant-reclassify-progress__fill"
+                  style={{ width: `${reclassifyProgress ? (reclassifyProgress.completed / reclassifyProgress.total) * 100 : 0}%` }}
+                />
+              </div>
+              <span className="decant-reclassify-progress__label">
+                {reclassifyProgress?.phase || 'Initializing...'}
+              </span>
+            </div>
+          )}
+        </div>
 
         <button className="decant-topbar__icon-btn" title="Notifications">
           <i className="bx bx-bell" />

@@ -1198,3 +1198,57 @@ export function getNodesNeedingPhase2Enrichment(limit: number = 50): string[] {
 
   return nodes.map(n => n.id);
 }
+
+/**
+ * Batch-update node rows with assignments from the DynamicClassifier.
+ * Updates segment_code, category_code, subcategory_label, content_type_code,
+ * phrase_description, short_description, and function_tags for each node.
+ *
+ * Caller passes the per-node output of DynamicClassifier.classifyAll().
+ */
+export function applyDynamicAssignments(
+  assignments: Array<{
+    nodeId: string;
+    segmentCode: string;
+    categoryCode: string;
+    subcategoryLabel: string;
+    contentType: string;
+    quickPhrase: string;
+    description: string;
+    functionTags: string;
+  }>,
+): void {
+  if (assignments.length === 0) return;
+
+  const db = getDatabase();
+
+  withTransaction(() => {
+    const stmt = db.prepare(`
+      UPDATE nodes SET
+        segment_code = ?,
+        category_code = ?,
+        subcategory_label = ?,
+        content_type_code = ?,
+        phrase_description = ?,
+        short_description = ?,
+        function_tags = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `);
+
+    for (const assignment of assignments) {
+      stmt.run(
+        assignment.segmentCode,
+        assignment.categoryCode,
+        assignment.subcategoryLabel || null,
+        assignment.contentType || null,
+        assignment.quickPhrase || null,
+        assignment.description || null,
+        assignment.functionTags || null,
+        assignment.nodeId,
+      );
+    }
+  });
+
+  cache.invalidate('tree:*');
+}
