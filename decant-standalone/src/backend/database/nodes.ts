@@ -557,9 +557,13 @@ export function getAllNodes(): unknown[] {
   // Step 4: Batch load user tags
   const userTagsMap = batchLoadUserTags(nodeIds);
 
-  // Step 5: Map over nodes and attach concepts + user tags
+  // Step 5: Batch load hierarchy branch labels
+  const branchLabelsMap = batchLoadBranchLabels(nodeIds);
+
+  // Step 6: Map over nodes and attach all enriched data
   return nodes.map(node => {
     const extractedFields = JSON.parse((node.extracted_fields as string) || '{}');
+    const branchInfo = branchLabelsMap.get(node.id as string);
     return {
       ...node,
       extracted_fields: extractedFields,
@@ -567,6 +571,9 @@ export function getAllNodes(): unknown[] {
       key_concepts: conceptsMap.get(node.id as string) || [],
       metadataCodes: extractedFields.metadataCodes || null,
       user_tags: userTagsMap.get(node.id as string) || [],
+      branch_label: branchInfo?.label || null,
+      branch_depth: branchInfo?.depth ?? null,
+      branch_parent_label: branchInfo?.parentLabel || null,
     };
   });
 }
@@ -628,6 +635,138 @@ export function batchLoadKeyConcepts(nodeIds: string[]): Map<string, string[]> {
   }
 
   return conceptsMap;
+}
+
+/**
+ * Batch load hierarchy branch labels for multiple nodes in a single query.
+ * Returns a Map of nodeId -> { label, depth, parentLabel }
+ */
+function batchLoadBranchLabels(nodeIds: string[]): Map<string, { label: string; depth: number; parentLabel: string | null }> {
+  const result = new Map<string, { label: string; depth: number; parentLabel: string | null }>();
+  if (nodeIds.length === 0) return result;
+
+  const db = getDatabase();
+  try {
+    const placeholders = nodeIds.map(() => '?').join(', ');
+    const rows = db.prepare(`
+      SELECT p.node_id, h.label, h.depth, parent.label as parent_label
+      FROM node_branch_placements p
+      JOIN hierarchy_branches h ON h.id = p.branch_id AND h.is_active = 1
+      LEFT JOIN hierarchy_branches parent ON parent.id = h.parent_id AND parent.is_active = 1
+      WHERE p.is_primary = 1
+      AND p.node_id IN (${placeholders})
+    `).all(...nodeIds) as Array<{ node_id: string; label: string; depth: number; parent_label: string | null }>;
+
+    for (const row of rows) {
+      result.set(row.node_id, {
+        label: row.label,
+        depth: row.depth,
+        parentLabel: row.parent_label,
+      });
+    }
+  } catch {
+    // hierarchy tables may not exist yet
+  }
+  return result;
+}
+
+const RESOURCE_TYPE_TO_CONTENT_CODE: Record<string, string> = {
+  tool: 'T',
+  article: 'A',
+  video: 'V',
+  paper: 'P',
+  repository: 'R',
+  guide: 'G',
+  service: 'S',
+  course: 'C',
+  image: 'I',
+  news: 'N',
+  knowledge_base: 'K',
+  dataset: 'A',
+  podcast: 'A',
+  newsletter: 'A',
+  community: 'S',
+  other: 'U',
+};
+
+/**
+ * Update a node's core fields with data from a fresh semantic profile.
+ * Called during reclassification to persist re-profiled data to the DB.
+ */
+export function updateNodeWithSemanticProfile(
+  nodeId: string,
+  profile: {
+    title: string;
+    company: string;
+    phraseDescription: string;
+    shortDescription: string;
+    aiSummary: string;
+    logoUrl?: string | null;
+    primaryFunction: string;
+    primaryDomain: string;
+    resourceType: string;
+    functionTags: string;
+    metadataTags: string[];
+    keyConcepts: string[];
+    concepts: string[];
+  },
+): void {
+  const db = getDatabase();
+  const contentTypeCode = RESOURCE_TYPE_TO_CONTENT_CODE[profile.resourceType] || 'A';
+  const subcategoryLabel = profile.concepts?.[0] || null;
+
+  withTransaction(() => {
+    // Update main node fields
+    db.prepare(`
+      UPDATE nodes SET
+        title = ?,
+        company = ?,
+        phrase_description = ?,
+        short_description = ?,
+        ai_summary = ?,
+        logo_url = COALESCE(?, logo_url),
+        content_type_code = ?,
+        function_tags = ?,
+        metadata_tags = ?,
+        subcategory_label = ?,
+        extracted_fields = json_patch(
+          COALESCE(extracted_fields, '{}'),
+          ?
+        ),
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(
+      profile.title.slice(0, 500),
+      profile.company?.slice(0, 200) || null,
+      profile.phraseDescription?.slice(0, 100) || null,
+      profile.shortDescription?.slice(0, 500) || null,
+      profile.aiSummary?.slice(0, 2000) || null,
+      profile.logoUrl || null,
+      contentTypeCode,
+      profile.functionTags?.slice(0, 300) || null,
+      JSON.stringify((profile.metadataTags || []).slice(0, 10)),
+      subcategoryLabel?.slice(0, 60) || null,
+      JSON.stringify({
+        primaryFunction: profile.primaryFunction,
+        primaryDomain: profile.primaryDomain,
+        resourceType: profile.resourceType,
+        profileUpdatedAt: new Date().toISOString(),
+      }),
+      nodeId,
+    );
+
+    // Refresh key concepts
+    db.prepare('DELETE FROM key_concepts WHERE node_id = ?').run(nodeId);
+    const conceptStmt = db.prepare('INSERT INTO key_concepts (id, node_id, concept) VALUES (?, ?, ?)');
+    for (const concept of (profile.keyConcepts || []).slice(0, 20)) {
+      const normalized = concept.toLowerCase().trim();
+      if (normalized.length > 0) {
+        conceptStmt.run(uuidv4(), nodeId, normalized);
+      }
+    }
+  });
+
+  cache.invalidate('tree:*');
 }
 
 /**

@@ -118,6 +118,9 @@ export function registerAPIRoutes(app: Express): void {
   // GET /api/nodes/:id/backlinks - Get nodes that reference/link to this node
   app.get('/api/nodes/:id/backlinks', validateParams(UuidParamSchema), nodeRoutes.getBacklinks);
 
+  // GET /api/nodes/reclassify/progress - Poll reclassification progress
+  app.get('/api/nodes/reclassify/progress', reclassifyRoutes.getReclassifyProgress);
+
   // POST /api/nodes/reclassify - Reclassify all nodes using AI
   app.post('/api/nodes/reclassify', reclassifyRoutes.reclassifyAll);
 

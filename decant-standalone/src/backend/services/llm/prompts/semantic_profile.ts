@@ -98,6 +98,14 @@ CRITICAL RULES:
 
 7. COMPANY: Use the canonical company name. "OpenAI" not "openai" or "Open AI". "Anthropic" not "anthropic.com". If it's an individual's project, use their name or handle.
 
+8. SOCIAL MEDIA POSTS (Twitter/X, LinkedIn, Reddit, etc.): When the URL is a social media post, classify by the CONTENT AND TOPIC of the post, NOT the platform. The platform (e.g., "twitter", "x.com") belongs ONLY in the \`platform\` array. \`primaryDomain\` and \`primaryFunction\` must reflect what the post is ACTUALLY ABOUT:
+   - A tweet about an AI model release → primaryDomain="artificial intelligence", primaryFunction="AI research communication"
+   - A tweet about stock market trends → primaryDomain="finance", primaryFunction="market analysis"
+   - A tweet about a software tool → primaryDomain="software development", primaryFunction="developer tooling news"
+   - A tweet about a person's thoughts on productivity → primaryDomain="productivity", primaryFunction="personal insight sharing"
+   The \`resourceType\` should be "news" or "article" for most posts. The \`title\` should describe the TOPIC, not "Tweet by @handle".
+   NEVER set primaryDomain="social media" or primaryFunction="social media engagement" unless the resource is LITERALLY about social media marketing strategy as its subject matter.
+
 Respond with valid JSON matching the required schema. Do not include any text outside the JSON object.`;
 
 export function buildSemanticProfilePrompt(input: SemanticProfileInput): {

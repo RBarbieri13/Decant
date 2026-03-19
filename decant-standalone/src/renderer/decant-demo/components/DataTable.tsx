@@ -49,8 +49,8 @@ export const TOGGLEABLE_COLUMNS = [
 ] as const;
 
 export const DEFAULT_VISIBLE_COLUMNS = new Set(['title', 'type', 'category', 'quickPhrase', 'functionTags', 'tags', 'date', 'userTags']);
-export const COLUMN_VISIBILITY_KEY = 'decant-column-visibility-v2';
-export const COLUMN_ORDER_KEY = 'decant-column-order-v2';
+export const COLUMN_VISIBILITY_KEY = 'decant-column-visibility-v3';
+export const COLUMN_ORDER_KEY = 'decant-column-order-v3';
 export const DEFAULT_COLUMN_ORDER = TOGGLEABLE_COLUMNS.map(c => c.key);
 
 export const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
@@ -270,11 +270,12 @@ export const DataTable: React.FC<DataTableProps> = ({
   const sortedData = useMemo(() => {
     if (!sortKey) return data;
     return [...data].sort((a, b) => {
-      const aVal = (a[sortKey] ?? '').toLowerCase();
-      const bVal = (b[sortKey] ?? '').toLowerCase();
+      const aVal = String(a[sortKey] ?? '').toLowerCase();
+      const bVal = String(b[sortKey] ?? '').toLowerCase();
       if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
-      return 0;
+      // Stable tiebreaker by id
+      return a.id < b.id ? -1 : 1;
     });
   }, [data, sortKey, sortDir]);
 
@@ -477,12 +478,16 @@ export const DataTable: React.FC<DataTableProps> = ({
               className={`decant-table__header-cell ${sk ? 'decant-table__header-cell--sortable' : ''} ${isDragTarget ? 'decant-table__header-cell--drag-over' : ''} ${dragCol === col ? 'decant-table__header-cell--dragging' : ''}`}
               style={{ order: getColOrder(col) }}
               onClick={sk ? () => handleSort(sk) : undefined}
-              draggable
-              onDragStart={(e) => handleColumnDragStart(e, col)}
               onDragOver={(e) => handleColumnDragOver(e, col)}
               onDrop={() => handleColumnDrop(col)}
-              onDragEnd={handleColumnDragEnd}
             >
+              <span
+                className="decant-col-drag-grip"
+                draggable
+                onDragStart={(e) => { e.stopPropagation(); handleColumnDragStart(e, col); }}
+                onDragEnd={handleColumnDragEnd}
+                title="Drag to reorder column"
+              >⠿</span>
               {colDef.label} {sk && <SortIcon col={sk} />}
               {resizable && <div className="decant-col-resize-handle" onMouseDown={(e) => handleResizeStart(e, col)} />}
             </div>

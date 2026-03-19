@@ -66,7 +66,8 @@ function mapNodeToTableRow(
   const catCode = node.category_code || node.extracted_fields?.category || '';
   const ctCode = node.content_type_code || node.extracted_fields?.contentType || 'A';
   const segLabel = segLabels[segCode] || segCode || 'Uncategorized';
-  const catLabel = catLabels[segCode]?.[catCode] || catCode || 'General';
+  // Prefer the dynamic hierarchy branch label over legacy taxonomy lookup
+  const catLabel = node.branch_label || catLabels[segCode]?.[catCode] || catCode || 'General';
   const domain = (node.source_domain || '').toLowerCase();
 
   let typeLabel = CONTENT_TYPE_LABELS[ctCode] || 'Website';
@@ -169,6 +170,7 @@ export default function DecantDemo() {
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
   const [, setRefreshQueuedCount] = useState<number | null>(null);
   const [isReclassifying, setIsReclassifying] = useState(false);
+  const [reclassifyProgress, setReclassifyProgress] = useState<{ completed: number; total: number } | null>(null);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [pendingEnrichmentIds, setPendingEnrichmentIds] = useState<Set<string>>(new Set());
   const [columnFilters, setColumnFilters] = useState<ColumnFilters>({});
@@ -668,15 +670,29 @@ export default function DecantDemo() {
     if (isReclassifying) return;
     setIsReclassifying(true);
     try {
-      const result = await reclassifyAPI.reclassifyAll();
+      // Start the job (returns immediately with total count)
+      await reclassifyAPI.reclassifyAll();
+
+      // Poll until done, updating progress state
+      const poll = async (): Promise<void> => {
+        const prog = await reclassifyAPI.getProgress();
+        setReclassifyProgress({ completed: prog.completed, total: prog.total });
+        if (prog.isRunning || (!prog.completedAt && !prog.lastError)) {
+          await new Promise(r => setTimeout(r, 2000));
+          return poll();
+        }
+      };
+      await poll();
+
+      // Reload data once complete
       await loadNodes();
       await loadTree();
-      alert(`Reclassification complete: ${result.changedNodes} of ${result.totalNodes} nodes updated.`);
+      setReclassifyProgress(null);
     } catch (error) {
       console.error('Reclassification failed:', error);
-      alert(`Reclassification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsReclassifying(false);
+      setReclassifyProgress(null);
     }
   }, [isReclassifying, loadNodes, loadTree]);
 
@@ -809,6 +825,7 @@ export default function DecantDemo() {
         onRefreshAllClick={handleRefreshAll}
         onReclassifyClick={handleReclassifyAll}
         isReclassifying={isReclassifying}
+        reclassifyProgress={reclassifyProgress}
         onSettingsClick={() => appActions.openSettingsDialog()}
         onUserClick={() => {}}
         showStarredOnly={showStarredOnly}

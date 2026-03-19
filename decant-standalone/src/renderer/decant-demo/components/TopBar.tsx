@@ -16,6 +16,7 @@ interface TopBarProps {
   onRefreshAllClick?: () => void;
   onReclassifyClick?: () => void;
   isReclassifying?: boolean;
+  reclassifyProgress?: { completed: number; total: number } | null;
   onSettingsClick?: () => void;
   onUserClick?: () => void;
   userName?: string;
@@ -35,6 +36,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onRefreshAllClick,
   onReclassifyClick,
   isReclassifying: isReclassifyingProp,
+  reclassifyProgress,
   onSettingsClick,
   onUserClick,
   showStarredOnly,
@@ -136,7 +138,11 @@ export const TopBar: React.FC<TopBarProps> = ({
           title="Reclassify all nodes with AI"
           style={{ marginRight: '12px' }}
         >
-          {isReclassifyingProp ? 'Classifying...' : 'Reclassify'}
+          {isReclassifyingProp
+            ? reclassifyProgress && reclassifyProgress.total > 0
+              ? `${reclassifyProgress.completed}/${reclassifyProgress.total}`
+              : 'Starting...'
+            : 'Reclassify'}
         </button>
 
         <button className="decant-topbar__icon-btn" title="Notifications">
