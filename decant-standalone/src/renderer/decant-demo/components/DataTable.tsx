@@ -519,18 +519,15 @@ export const DataTable: React.FC<DataTableProps> = ({
       )}
       <div className="decant-table__body">
         {data.length === 0 ? (
-          // Skeleton loading rows
-          Array.from({ length: 8 }).map((_, i) => (
-            <div key={`skeleton-${i}`} className="decant-skeleton-row" style={{ gridTemplateColumns: gridTemplate }}>
-              <div className="decant-skeleton-cell decant-skeleton-cell--circle" />
-              <div className="decant-skeleton-cell decant-skeleton-cell--circle" />
-              <div className="decant-skeleton-cell decant-skeleton-cell--wide" />
-              <div className="decant-skeleton-cell decant-skeleton-cell--narrow" />
-              <div className="decant-skeleton-cell decant-skeleton-cell--medium" />
-              <div className="decant-skeleton-cell decant-skeleton-cell--tag" />
-              <div className="decant-skeleton-cell decant-skeleton-cell--narrow" />
+          <div className="decant-empty-state">
+            <div className="decant-empty-state__icon">
+              <i className="bx bx-search-alt" />
             </div>
-          ))
+            <div className="decant-empty-state__title">No items found</div>
+            <div className="decant-empty-state__description">
+              Try adjusting your search or filters, or import new content to get started.
+            </div>
+          </div>
         ) : groupedData ? (
           // Render with group headers (segment-level for All Items, category-level within a segment)
           groupedData.map((group) => {

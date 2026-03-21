@@ -3,9 +3,12 @@ name: Deploy to Fly.io
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - master
+      - main
     paths:
-      - "decant-standalone/**"
+      - 'decant-standalone/**'
+      - '.github/workflows/fly-deploy.yml'
 
 jobs:
   deploy:
