@@ -1077,7 +1077,7 @@ body {
 }
 
 .decant-topbar__search:focus-within {
-  width: 420px;
+  width: 440px;
   border-color: rgba(255, 255, 255, 0.6);
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15), 0 4px 12px rgba(0, 0, 0, 0.15);
   background-color: rgba(255, 255, 255, 0.22);
@@ -1396,6 +1396,7 @@ body {
 
 .decant-sidebar--collapsed > *:not(.decant-sidebar__toggle) {
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.15s ease;
 }
 
@@ -2015,16 +2016,16 @@ body {
 }
 
 .decant-table__row:hover {
-  background-color: #f5f7fa !important;
+  background-color: #edf2f0 !important;
   border-left-color: var(--row-segment-color, var(--decant-brand-primary));
   box-shadow: inset 4px 0 8px -4px var(--row-segment-color, rgba(45, 91, 71, 0.3));
-  transform: translateX(1px);
 }
 
 .decant-table__row--selected {
-  background-color: #e8f0eb !important;
+  background-color: #e1ece6 !important;
   border-left: 3px solid #2d5b47;
   padding-left: 9px;
+  box-shadow: inset 0 0 0 1px rgba(45, 91, 71, 0.1);
 }
 
 /* ============================================================================
@@ -2308,17 +2309,19 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
-  background: #2d5b47;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #2d5b47 0%, #234d3c 100%);
   color: #ffffff;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 -4px 16px rgba(26, 61, 47, 0.25), 0 -1px 4px rgba(0, 0, 0, 0.1);
   z-index: 10;
-  animation: batch-bar-slide-up 0.2s ease;
+  animation: batch-bar-slide-up 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
 }
 
 @keyframes batch-bar-slide-up {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from { transform: translateY(100%); opacity: 0; box-shadow: none; }
+  to { transform: translateY(0); opacity: 1; box-shadow: 0 -4px 16px rgba(26, 61, 47, 0.25), 0 -1px 4px rgba(0, 0, 0, 0.1); }
 }
 
 .decant-batch-bar__left {
@@ -2886,13 +2889,13 @@ body {
 
 .decant-tag--clickable {
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease, filter 0.15s ease;
 }
 
 .decant-tag--clickable:hover {
   transform: translateY(-1px) scale(1.05);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
-  filter: brightness(0.97) saturate(1.1);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  filter: brightness(0.97) saturate(1.15);
 }
 
 .decant-tag--clickable:active {
