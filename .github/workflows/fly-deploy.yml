@@ -1,6 +1,7 @@
 name: Deploy to Fly.io
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
@@ -16,7 +17,6 @@ jobs:
     defaults:
       run:
         working-directory: decant-standalone
-
     steps:
       - uses: actions/checkout@v4
 
