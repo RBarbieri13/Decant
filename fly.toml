@@ -2,7 +2,7 @@ app = "decant-app"
 primary_region = "ord"
 
 [build]
-dockerfile = "Dockerfile"
+dockerfile = "decant-standalone/Dockerfile"
 
 [env]
 DATABASE_PATH = "/data/decant.db"
