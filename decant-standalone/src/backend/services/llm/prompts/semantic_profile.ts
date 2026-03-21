@@ -13,7 +13,7 @@ import { z } from 'zod';
 
 export const SemanticProfileSchema = z.object({
   // Identity
-  title: z.string().max(500).describe('True subject name — not the HTML page title. Strip marketing fluff, site name suffixes, and click-bait wrappers.'),
+  title: z.string().max(500).describe('True subject name — not the HTML page title. Strip marketing fluff, site name suffixes, and click-bait wrappers. For social media posts: NEVER copy the post text. Write a 5-12 word descriptive headline about the TOPIC discussed. Third-person, objective, no first-person phrasing.'),
   company: z.string().max(200).describe('Source organization or company. Use canonical name (e.g., "Anthropic" not "anthropic.com").'),
   phraseDescription: z.string().max(100).describe('Ultra-brief tagline. No period at end. Title Case. Describe what it IS, not what the page is about.'),
   shortDescription: z.string().max(500).describe('1-3 sentence description. Concrete and specific — mention actual capabilities, not vague claims.'),
@@ -73,6 +73,13 @@ Your job is to analyze a URL and its extracted content, then produce a comprehen
 CRITICAL RULES:
 
 1. TITLE: Extract the TRUE subject name. Not the HTML <title> tag. Not "Home | Company Name". Not "The Best Tool for X". The actual name of the thing being described. If it's a product, use the product name. If it's an article, use a descriptive title that captures the subject matter.
+   FOR SOCIAL MEDIA POSTS: The title must NEVER be the raw post text or a truncation of it. Instead, synthesize a short descriptive headline (5-12 words) that captures the core TOPIC being discussed. Think like a newspaper editor writing a headline for the post's subject matter.
+   Examples:
+   - Tweet about using Karpathy's Autoresearch → "Autonomous AI Research Labs Using Karpathy's Autoresearch Framework"
+   - Tweet about a new Claude model release → "Anthropic Releases Claude 4 with Extended Context"
+   - Tweet about fantasy football waiver picks → "Week 12 Fantasy Football Waiver Wire Targets"
+   - Tweet with personal hot take on React vs Vue → "React vs Vue Framework Comparison for Modern Web Apps"
+   NEVER produce a title that starts with "My mind", "I just", "So I", "Just saw", "This is", or any first-person phrasing copied from the post. The title is a SUBJECT LABEL, not a quote.
 
 2. SPECIFICITY: Every field must be concrete and specific. Never use vague words like "powerful", "innovative", "cutting-edge", "comprehensive", "robust" without concrete supporting detail. If you can't be specific, say less rather than saying something vague.
 
@@ -103,7 +110,8 @@ CRITICAL RULES:
    - A tweet about stock market trends → primaryDomain="finance", primaryFunction="market analysis"
    - A tweet about a software tool → primaryDomain="software development", primaryFunction="developer tooling news"
    - A tweet about a person's thoughts on productivity → primaryDomain="productivity", primaryFunction="personal insight sharing"
-   The \`resourceType\` should be "news" or "article" for most posts. The \`title\` should describe the TOPIC, not "Tweet by @handle".
+   The \`resourceType\` should be "news" or "article" for most posts.
+   TITLE FOR SOCIAL POSTS — THIS IS CRITICAL: You will receive the raw tweet/post text as the "Title" input. DO NOT echo it back. DO NOT truncate it. DO NOT quote it. Instead, read the full content and write a NEW descriptive headline (5-12 words) that a librarian would use to catalog the topic. The title should be third-person and objective, never first-person. If the post discusses a specific tool, framework, or event, name it in the title.
    NEVER set primaryDomain="social media" or primaryFunction="social media engagement" unless the resource is LITERALLY about social media marketing strategy as its subject matter.
 
 Respond with valid JSON matching the required schema. Do not include any text outside the JSON object.`;
