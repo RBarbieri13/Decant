@@ -4,14 +4,16 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths-ignore:
-      - "docs/**"
-      - "*.md"
+    paths:
+      - "decant-standalone/**"
 
 jobs:
   deploy:
     name: Deploy to Fly.io
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: decant-standalone
     steps:
       - uses: actions/checkout@v4
 
