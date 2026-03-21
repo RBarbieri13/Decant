@@ -877,3 +877,278 @@ body {
     font-weight: 500;
     color: var(--decant-text-primary);
 }
+
+/* ============================================================================
+   VISUAL IMPROVEMENT 1: Row Hover Micro-Interactions
+   Sliding left accent bar + subtle shadow lift on table rows
+   ============================================================================ */
+
+.decant-table__row {
+    transition: border-left-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease !important;
+}
+
+.decant-table__row:hover {
+    box-shadow: 0 2px 8px rgba(45, 91, 71, 0.08) !important;
+    transform: translateX(1px);
+}
+
+.decant-table__row--selected {
+    box-shadow: inset 0 0 0 1px rgba(45, 91, 71, 0.12), 0 1px 4px rgba(45, 91, 71, 0.06) !important;
+}
+
+/* ============================================================================
+   VISUAL IMPROVEMENT 2: Search Bar Animated Focus
+   Smooth width expansion + glow ring on focus
+   ============================================================================ */
+
+.decant-topbar__search {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.decant-topbar__search:focus-within {
+    width: 340px;
+    border-color: var(--decant-forest-green);
+    box-shadow: 0 0 0 3px rgba(45, 91, 71, 0.12), 0 2px 8px rgba(45, 91, 71, 0.08);
+}
+
+.decant-topbar__search-icon {
+    transition: color 0.2s ease;
+}
+
+.decant-topbar__search:focus-within .decant-topbar__search-icon {
+    color: var(--decant-forest-green);
+}
+
+.decant-topbar__search-input::placeholder {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.decant-topbar__search:focus-within .decant-topbar__search-input::placeholder {
+    opacity: 0.5;
+    transform: translateX(4px);
+}
+
+/* ============================================================================
+   VISUAL IMPROVEMENT 3: Sidebar Tree Expand/Collapse Animations
+   Smooth height transitions for tree children
+   ============================================================================ */
+
+.decant-tree-node__children {
+    overflow: hidden;
+    animation: treeSlideDown 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    transform-origin: top;
+}
+
+@keyframes treeSlideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        max-height: 2000px;
+        transform: translateY(0);
+    }
+}
+
+.decant-tree-node__row {
+    transition: background-color 0.15s ease, border-left-color 0.15s ease, padding-left 0.15s ease;
+}
+
+.decant-tree-node__row:hover {
+    background-color: rgba(45, 91, 71, 0.06);
+}
+
+.decant-tree-node__toggle {
+    transition: transform 0.2s ease, background-color 0.15s ease;
+}
+
+.decant-tree-node__guide {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--decant-border-light);
+    transition: background-color 0.2s ease;
+}
+
+.decant-tree-node__children:hover > .decant-tree-node__guide {
+    background-color: rgba(45, 91, 71, 0.2);
+}
+
+.decant-tree-node__label {
+    transition: color 0.15s ease;
+}
+
+.decant-tree-node__row:hover .decant-tree-node__label {
+    color: var(--decant-forest-green);
+}
+
+/* ============================================================================
+   VISUAL IMPROVEMENT 4: Tag Pill Hover Effects
+   Scale-up, shadow, and smooth color transitions
+   ============================================================================ */
+
+.decant-tag {
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    cursor: default;
+}
+
+.decant-tag--clickable {
+    cursor: pointer;
+}
+
+.decant-tag--clickable:hover {
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    filter: brightness(0.95);
+}
+
+.decant-tag--clickable:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: none;
+}
+
+.decant-segment-badge {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.decant-segment-badge--clickable:hover {
+    transform: translateY(-1px) scale(1.04);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.decant-type-badge {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.decant-type-badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* User tags vibrant hover */
+.decant-user-tag--vibrant {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.decant-user-tag--vibrant:hover {
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================================================
+   VISUAL IMPROVEMENT 5: Loading Skeleton Pulse Animations
+   CSS skeleton placeholders for table rows while data loads
+   ============================================================================ */
+
+@keyframes skeletonPulse {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.decant-skeleton-row {
+    display: grid;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    min-height: 44px;
+    border-bottom: 1px solid #e0ddd8;
+}
+
+.decant-skeleton-cell {
+    height: 14px;
+    border-radius: 6px;
+    background: linear-gradient(
+        90deg,
+        #f0ece8 0%,
+        #e8e4dc 25%,
+        #f0ece8 50%,
+        #e8e4dc 75%,
+        #f0ece8 100%
+    );
+    background-size: 200% 100%;
+    animation: skeletonPulse 1.8s ease-in-out infinite;
+}
+
+.decant-skeleton-cell--wide {
+    width: 70%;
+}
+
+.decant-skeleton-cell--medium {
+    width: 50%;
+}
+
+.decant-skeleton-cell--narrow {
+    width: 30%;
+}
+
+.decant-skeleton-cell--circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.decant-skeleton-cell--tag {
+    width: 60px;
+    height: 20px;
+    border-radius: 100px;
+}
+
+/* Stagger animation for multiple skeleton rows */
+.decant-skeleton-row:nth-child(1) .decant-skeleton-cell { animation-delay: 0s; }
+.decant-skeleton-row:nth-child(2) .decant-skeleton-cell { animation-delay: 0.1s; }
+.decant-skeleton-row:nth-child(3) .decant-skeleton-cell { animation-delay: 0.2s; }
+.decant-skeleton-row:nth-child(4) .decant-skeleton-cell { animation-delay: 0.3s; }
+.decant-skeleton-row:nth-child(5) .decant-skeleton-cell { animation-delay: 0.4s; }
+.decant-skeleton-row:nth-child(6) .decant-skeleton-cell { animation-delay: 0.5s; }
+.decant-skeleton-row:nth-child(7) .decant-skeleton-cell { animation-delay: 0.6s; }
+.decant-skeleton-row:nth-child(8) .decant-skeleton-cell { animation-delay: 0.7s; }
+
+/* Fade-in animation for content appearing after skeleton */
+.decant-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Empty state styling */
+.decant-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--decant-text-secondary);
+    gap: 12px;
+}
+
+.decant-empty-state__icon {
+    font-size: 48px;
+    color: var(--decant-border-medium);
+    animation: emptyBounce 2s ease-in-out infinite;
+}
+
+@keyframes emptyBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+.decant-empty-state__title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--decant-text-primary);
+}
+
+.decant-empty-state__subtitle {
+    font-size: 13px;
+    color: var(--decant-text-secondary);
+}
