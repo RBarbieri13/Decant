@@ -3,25 +3,25 @@
    ============================================================================ */
 
 :root {
-  /* Colors */
+  /* Colors — consolidated warm palette (see variables.css for full token set) */
   --decant-white: #ffffff;
-  --decant-off-white: #f8f7f5;
-  --decant-gray-50: #fafaf9;
-  --decant-gray-100: #f5f5f4;
-  --decant-gray-200: #e7e5e4;
-  --decant-gray-300: #d6d3d1;
-  --decant-gray-400: #a8a29e;
-  --decant-gray-500: #78716c;
-  --decant-gray-600: #57534e;
-  --decant-gray-700: #44403c;
-  --decant-gray-800: #292524;
-  --decant-gray-900: #1c1917;
+  --decant-off-white: #faf8f6;
+  --decant-gray-50: #f8f6f3;
+  --decant-gray-100: #f0ece8;
+  --decant-gray-200: #e8e4dc;
+  --decant-gray-300: #d5d0c8;
+  --decant-gray-400: #b8b2a8;
+  --decant-gray-500: #9a9388;
+  --decant-gray-600: #7a7468;
+  --decant-gray-700: #5a5549;
+  --decant-gray-800: #3a3632;
+  --decant-gray-900: #2a2a2a;
 
-  /* Brand Colors - Dark Green Theme */
-  --decant-brand-dark: #1a3a2f;
+  /* Brand Colors - Forest Green */
+  --decant-brand-dark: #1a3d2f;
   --decant-brand-primary: #2d5b47;
   --decant-brand-light: #3d7a5f;
-  --decant-brand-accent: #4a9d6e;
+  --decant-brand-accent: #478569;
 
   /* Accent Colors */
   --decant-pink: #ec4899;
@@ -275,83 +275,6 @@ body {
 }
 
 /* ============================================================================
-   SUB HEADER ROW
-   ============================================================================ */
-
-.decant-subheader {
-  display: flex;
-  height: var(--decant-subheader-height);
-  border-bottom: none;
-  background-color: var(--decant-brand-dark);
-}
-
-.decant-subheader__section {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.decant-subheader__section:last-child {
-  border-right: none;
-}
-
-.decant-subheader__section--spaces {
-  width: var(--decant-sidebar-width);
-}
-
-.decant-subheader__section--main {
-  flex: 1;
-}
-
-.decant-subheader__section--details {
-  width: var(--decant-panel-width);
-}
-
-.decant-subheader__title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--decant-white);
-}
-
-.decant-subheader__subtitle {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-left: 8px;
-}
-
-.decant-subheader__import-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 12px;
-  background-color: var(--decant-green);
-  border: 2px solid var(--decant-gray-900);
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--decant-gray-900);
-  cursor: pointer;
-}
-
-.decant-subheader__refresh-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--decant-gray-500);
-}
-
-.decant-subheader__refresh-btn:hover {
-  color: var(--decant-gray-900);
-}
-
-/* ============================================================================
    MAIN CONTENT AREA
    ============================================================================ */
 
@@ -531,26 +454,29 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: 60px 40px;
   text-align: center;
 }
 
 .decant-empty-state__icon {
-  font-size: 64px;
+  font-size: 48px;
   margin-bottom: 16px;
+  opacity: 0.4;
 }
 
 .decant-empty-state__title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--decant-gray-700);
-  margin-bottom: 8px;
+  color: var(--decant-gray-600);
+  margin-bottom: 6px;
 }
 
 .decant-empty-state__text {
-  font-size: 14px;
-  color: var(--decant-gray-500);
-  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--decant-gray-400);
+  margin-bottom: 24px;
+  max-width: 320px;
+  line-height: 1.5;
 }
 
 .decant-empty-state__btn {
@@ -653,11 +579,12 @@ body {
 .decant-table__filter-row {
   display: grid;
   gap: 8px;
-  padding: 0 12px;
+  padding: 2px 12px;
   position: sticky;
   top: 36px;
   z-index: 9;
   background: var(--decant-gray-50);
+  border-top: 1px solid var(--decant-gray-200);
   border-bottom: 1px solid var(--decant-border);
 }
 
@@ -668,23 +595,29 @@ body {
 .decant-table__filter-input {
   width: 100%;
   padding: 4px 8px;
-  font-size: 12px;
-  border: 1px solid var(--decant-border);
+  font-size: 11px;
+  border: 1px solid transparent;
   border-radius: 4px;
-  background: var(--decant-white);
-  color: var(--decant-gray-900);
+  background: transparent;
+  color: var(--decant-gray-700);
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: all 0.15s ease;
+}
+
+.decant-table__filter-input:hover {
+  background: var(--decant-white);
+  border-color: var(--decant-border);
 }
 
 .decant-table__filter-input:focus {
+  background: var(--decant-white);
   border-color: var(--decant-brand-primary);
   box-shadow: 0 0 0 2px rgba(45, 91, 71, 0.1);
 }
 
 .decant-table__filter-input::placeholder {
   color: var(--decant-gray-400);
-  opacity: 0.7;
+  opacity: 0.5;
 }
 
 /* ============================================================================
@@ -937,6 +870,7 @@ body {
   user-select: none;
   border-radius: 0;
   transition: box-shadow 0.15s ease;
+  overflow: hidden;
 }
 
 .bottom-bar-slot:hover {
@@ -1051,11 +985,9 @@ body {
 }
 
 .decant-topbar__logo {
-  width: 38px;
-  height: 38px;
-  border-radius: 6px;
-  object-fit: cover;
-  object-position: center 15%; /* Show mostly the flask icon, crop out the text */
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
 }
 
 .decant-topbar__brand-name {
@@ -1299,116 +1231,6 @@ body {
   color: #6b7280;
   font-weight: 500;
   white-space: nowrap;
-}
-
-/* ============================================================================
-   VIEW TOGGLE
-   ============================================================================ */
-
-.decant-view-toggle {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background-color: rgba(255, 255, 255, 0.6);
-  padding: 3px;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.decant-view-toggle__option {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: #2d5b47;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 4px;
-  position: relative;
-  transition: background-color 0.15s ease;
-}
-
-.decant-view-toggle__option i {
-  font-size: 18px;
-}
-
-.decant-view-toggle__option:hover {
-  background-color: rgba(45, 91, 71, 0.08);
-}
-
-.decant-view-toggle__option--active {
-  background-color: rgba(45, 91, 71, 0.12);
-}
-
-.decant-view-toggle__option--active::after {
-  content: "";
-  position: absolute;
-  bottom: 3px;
-  left: 6px;
-  right: 6px;
-  height: 2px;
-  background-color: #a4704a;
-  border-radius: 1px;
-}
-
-/* ============================================================================
-   TITLE BAR - Light theme matching top bar
-   ============================================================================ */
-
-.decant-titlebar {
-  display: flex;
-  align-items: center;
-  height: 44px;
-  padding: 0 16px;
-  background-color: #f0ebe4;
-  border-bottom: 1px solid #e0dcd4;
-  flex-shrink: 0;
-}
-
-.decant-titlebar__title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0;
-}
-
-.decant-titlebar__spacer {
-  flex: 1;
-}
-
-.decant-titlebar__tabs {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: 16px;
-}
-
-.decant-titlebar__tab {
-  padding: 6px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  color: #57534e;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.15s ease;
-}
-
-.decant-titlebar__tab:hover {
-  color: #2d5b47;
-  background-color: rgba(45, 91, 71, 0.08);
-}
-
-.decant-titlebar__tab--active {
-  color: #2d5b47;
-  background-color: rgba(45, 91, 71, 0.12);
-  font-weight: 700;
 }
 
 /* ============================================================================
@@ -1906,15 +1728,9 @@ body {
 
 .decant-table__body {
   flex: 1;
-  overflow: auto;
+  overflow-y: scroll;
   min-width: min-content;
   scrollbar-gutter: stable;
-}
-
-/* Compensate for scrollbar gutter in header and filter row */
-.decant-table__header,
-.decant-table__filter-row {
-  padding-right: calc(12px + var(--scrollbar-width, 0px));
 }
 
 /* Subcategory group header row */
@@ -1969,6 +1785,42 @@ body {
 .decant-table__group-header--yellow:hover {
   background: linear-gradient(to right, #fef08a, #fef9c3) !important;
 }
+.decant-table__group-header--purple {
+  background: linear-gradient(to right, #ede9fe, #f5f3ff);
+  border-top-color: #c4b5fd;
+  border-bottom-color: #c4b5fd;
+  border-left: 4px solid #a78bfa;
+}
+.decant-table__group-header--purple:hover {
+  background: linear-gradient(to right, #ddd6fe, #ede9fe) !important;
+}
+.decant-table__group-header--orange {
+  background: linear-gradient(to right, #ffedd5, #fff7ed);
+  border-top-color: #fdba74;
+  border-bottom-color: #fdba74;
+  border-left: 4px solid #f97316;
+}
+.decant-table__group-header--orange:hover {
+  background: linear-gradient(to right, #fed7aa, #ffedd5) !important;
+}
+.decant-table__group-header--teal {
+  background: linear-gradient(to right, #ccfbf1, #f0fdfa);
+  border-top-color: #5eead4;
+  border-bottom-color: #5eead4;
+  border-left: 4px solid #14b8a6;
+}
+.decant-table__group-header--teal:hover {
+  background: linear-gradient(to right, #99f6e4, #ccfbf1) !important;
+}
+.decant-table__group-header--red {
+  background: linear-gradient(to right, #fee2e2, #fef2f2);
+  border-top-color: #fca5a5;
+  border-bottom-color: #fca5a5;
+  border-left: 4px solid #ef4444;
+}
+.decant-table__group-header--red:hover {
+  background: linear-gradient(to right, #fecaca, #fee2e2) !important;
+}
 
 .decant-table__group-header:hover {
   background: linear-gradient(to right, #e8e4dc, #ece8e0);
@@ -1981,6 +1833,10 @@ body {
 .decant-table__group-header--blue .decant-table__group-icon { color: #3b82f6; }
 .decant-table__group-header--green .decant-table__group-icon { color: #22c55e; }
 .decant-table__group-header--yellow .decant-table__group-icon { color: #ca8a04; }
+.decant-table__group-header--purple .decant-table__group-icon { color: #a78bfa; }
+.decant-table__group-header--orange .decant-table__group-icon { color: #f97316; }
+.decant-table__group-header--teal .decant-table__group-icon { color: #14b8a6; }
+.decant-table__group-header--red .decant-table__group-icon { color: #ef4444; }
 
 .decant-table__group-label {
   font-size: 15px;
@@ -2693,6 +2549,26 @@ body {
   color: #1a1a1a;
 }
 
+.decant-segment-badge--purple {
+  background-color: #a78bfa;
+  color: #1a1a1a;
+}
+
+.decant-segment-badge--orange {
+  background-color: #f97316;
+  color: #ffffff;
+}
+
+.decant-segment-badge--teal {
+  background-color: #14b8a6;
+  color: #ffffff;
+}
+
+.decant-segment-badge--red {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
 .decant-segment-badge--clickable {
   cursor: pointer;
   transition: transform 0.1s ease, box-shadow 0.1s ease;
@@ -3313,52 +3189,6 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* ============================================================================
-   VIEW TOGGLE - Light theme matching title bar
-   ============================================================================ */
-
-.decant-view-toggle {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background-color: #f5f1ed;
-  padding: 4px;
-  border-radius: 6px;
-  border: 1px solid #e0dcd4;
-}
-
-.decant-view-toggle__option {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: #6b7280;
-  font-size: 18px;
-  cursor: pointer;
-  border-radius: 4px;
-  position: relative;
-  transition: all 0.15s ease;
-}
-
-.decant-view-toggle__option i {
-  font-size: 18px;
-}
-
-.decant-view-toggle__option:hover {
-  background-color: #e8e4dc;
-  color: #374151;
-}
-
-.decant-view-toggle__option--active {
-  background-color: #fff;
-  color: #1f2937;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* ============================================================================

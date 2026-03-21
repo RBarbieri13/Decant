@@ -137,6 +137,7 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
   // Map segment color names to hex for CSS variable
   const segmentColorHex: Record<string, string> = {
     pink: '#ec4899', blue: '#3b82f6', green: '#22c55e', yellow: '#eab308',
+    purple: '#a78bfa', orange: '#f97316', teal: '#14b8a6', red: '#ef4444',
   };
   const rowSegmentColor = segmentColorHex[getSegmentColor(data.segmentCode?.charAt(0).toUpperCase() ?? '')] ?? '#6b7280';
 
@@ -477,31 +478,6 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
                 {data.title}
                 <span className="decant-expanded-row__type-badge">{data.type}</span>
               </h3>
-              <div className="decant-expanded-row__meta-grid">
-                <div className="decant-expanded-row__meta-item">
-                  <span className="decant-expanded-row__meta-label">Created by:</span>
-                  <span className="decant-expanded-row__meta-value">{data.author || data.company}</span>
-                </div>
-                <div className="decant-expanded-row__meta-item">
-                  <span className="decant-expanded-row__meta-label">Initial release:</span>
-                  <span className="decant-expanded-row__meta-value">2013</span>
-                </div>
-                <div className="decant-expanded-row__meta-item">
-                  <span className="decant-expanded-row__meta-label">Version:</span>
-                  <span className="decant-expanded-row__meta-value">{data.version || '1.0.0'}</span>
-                </div>
-              </div>
-              <div className="decant-expanded-row__stats">
-                <span className="decant-expanded-row__stat">
-                  <strong>Repository:</strong> <i className="bx bx-git-repo-forked" /> {data.stars || '210k'}
-                </span>
-                <span className="decant-expanded-row__stat">
-                  <i className="bx bx-git-branch" /> {data.forks || '45k'}
-                </span>
-                <span className="decant-expanded-row__stat">
-                  <strong>Used by:</strong> {data.usedBy?.join(', ') || 'Facebook, Netflix, Airbnb'}
-                </span>
-              </div>
               {/* Visual Intelligence Card */}
               {(data.shortDescription || data.aiSummary || data.quickPhrase || (data.keyConcepts && data.keyConcepts.length > 0)) && (
                 <div className="decant-visual-card">
@@ -568,23 +544,6 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
                   )}
                 </div>
               )}
-            </div>
-            <div className="decant-expanded-row__actions">
-              <button className="decant-expanded-row__btn decant-expanded-row__btn--primary">
-                <i className="bx bx-folder-open" /> Open
-              </button>
-              <button className="decant-expanded-row__btn">
-                <i className="bx bx-edit" /> Edit
-              </button>
-              <button className="decant-expanded-row__btn">
-                <i className="bx bx-link" /> Link
-              </button>
-              <button className="decant-expanded-row__btn">
-                <i className="bx bx-share-alt" /> Share
-              </button>
-              <button className="decant-expanded-row__btn">
-                <i className="bx bx-book-open" /> Learn More
-              </button>
             </div>
           </div>
         </div>

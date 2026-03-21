@@ -148,6 +148,10 @@ export const GUMROAD_COLORS: Record<GumroadColor, string> = {
   yellow: '#E1FF3C',
   blue: '#90A8ED',
   green: '#23C66B',
+  purple: '#A78BFA',
+  orange: '#F97316',
+  teal: '#14B8A6',
+  red: '#EF4444',
 };
 
 // ============================================================

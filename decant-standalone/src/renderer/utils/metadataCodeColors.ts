@@ -55,16 +55,16 @@ export function getMetadataCodeColor(type: string): GumroadColor {
  */
 export function getSegmentColor(segmentCode: string): GumroadColor {
   const colorMap: Record<string, GumroadColor> = {
-    'A': 'pink',   // AI
-    'T': 'blue',   // Technology
-    'F': 'green',  // Finance
-    'S': 'yellow', // Sports
-    'H': 'pink',   // Health
-    'B': 'blue',   // Business
-    'E': 'yellow', // Entertainment
-    'L': 'green',  // Lifestyle
-    'X': 'blue',   // Science
-    'C': 'pink',   // Creative
+    'A': 'pink',    // AI
+    'T': 'blue',    // Technology
+    'F': 'green',   // Finance
+    'S': 'yellow',  // Sports
+    'H': 'purple',  // Health
+    'B': 'orange',  // Business
+    'E': 'teal',    // Entertainment
+    'L': 'red',     // Lifestyle
+    'X': 'blue',    // Science
+    'C': 'purple',  // Creative
   };
 
   return colorMap[segmentCode.toUpperCase()] || 'blue';

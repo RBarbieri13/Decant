@@ -38,19 +38,19 @@ export const TOGGLEABLE_COLUMNS = [
   { key: 'segment',      label: 'Segment' },
   { key: 'type',         label: 'Type' },
   { key: 'category',     label: 'Category' },
+  { key: 'date',         label: 'Date Added' },
   { key: 'subcategory',  label: 'Subcategory' },
   { key: 'quickPhrase',  label: 'Quick Phrase' },
   { key: 'description',  label: 'Description' },
   { key: 'functionTags', label: 'Function' },
   { key: 'tags',         label: 'Tags' },
-  { key: 'date',         label: 'Date Added' },
   { key: 'company',      label: 'Company' },
   { key: 'userTags',     label: 'User Tags' },
 ] as const;
 
 export const DEFAULT_VISIBLE_COLUMNS = new Set(['title', 'type', 'category', 'quickPhrase', 'functionTags', 'tags', 'date', 'userTags']);
-export const COLUMN_VISIBILITY_KEY = 'decant-column-visibility-v5';
-export const COLUMN_ORDER_KEY = 'decant-column-order-v5';
+export const COLUMN_VISIBILITY_KEY = 'decant-column-visibility-v6';
+export const COLUMN_ORDER_KEY = 'decant-column-order-v6';
 export const DEFAULT_COLUMN_ORDER = TOGGLEABLE_COLUMNS.map(c => c.key);
 
 export const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
@@ -60,7 +60,7 @@ export const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
   tags: 140, date: 130, company: 100, userTags: 160,
 };
 export const RESIZABLE_COLUMNS = ['title', 'segment', 'category', 'subcategory', 'quickPhrase', 'description', 'functionTags', 'tags', 'date', 'company', 'userTags'];
-export const COLUMN_WIDTHS_KEY = 'decant-column-widths-v5';
+export const COLUMN_WIDTHS_KEY = 'decant-column-widths-v6';
 
 export const DataTable: React.FC<DataTableProps> = ({
   data,
@@ -221,7 +221,7 @@ export const DataTable: React.FC<DataTableProps> = ({
     const w = columnWidths;
     const orderedVisible = columnOrder.filter(col => visibleColumns.has(col));
     const dynamicWidths = orderedVisible.map(col => `${w[col] || 100}px`);
-    return [`${w.checkbox}px`, `${w.expand}px`, ...dynamicWidths, '0px'].join(' ');
+    return [`${w.checkbox}px`, `${w.expand}px`, ...dynamicWidths, '1fr'].join(' ');
   }, [columnWidths, columnOrder, visibleColumns]);
 
   const handleToggleExpand = useCallback((id: string) => {

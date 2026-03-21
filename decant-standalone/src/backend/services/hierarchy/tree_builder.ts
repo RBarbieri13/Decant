@@ -40,7 +40,7 @@ interface NodeRow {
 // Color Assignment
 // ============================================================
 
-const DEPTH_COLORS: GumroadColor[] = ['pink', 'blue', 'green', 'yellow'];
+const DEPTH_COLORS: GumroadColor[] = ['pink', 'blue', 'green', 'yellow', 'purple', 'orange', 'teal', 'red'];
 const DIMENSION_COLORS: Record<string, GumroadColor> = {
   function: 'pink',
   domain: 'blue',
@@ -58,7 +58,7 @@ const DIMENSION_COLORS: Record<string, GumroadColor> = {
   subcategory: 'green',
 };
 
-const SEGMENT_PALETTE: GumroadColor[] = ['pink', 'blue', 'green', 'yellow'];
+const SEGMENT_PALETTE: GumroadColor[] = ['pink', 'blue', 'green', 'yellow', 'purple', 'orange', 'teal', 'red'];
 
 function getBranchColor(branch: BranchRow): GumroadColor {
   // Depth-1 segment branches: color based on discriminator_value (segment code letter)

@@ -317,11 +317,30 @@ export function getContentTypeIcon(contentTypeCode: string): Icon {
   return CONTENT_TYPE_ICONS[contentTypeCode] || IconCircle;
 }
 
+// Map BoxIcons hint names to Tabler icons for dynamic hierarchy branches
+const BOXICON_TO_TABLER: Record<string, Icon> = {
+  'bxs-cog': IconSettings,
+  'bxs-book-content': IconBook,
+  'bxs-chip': IconCpu,
+  'bxs-bulb': IconSparkles,
+  'bxs-group': IconUsers,
+  'bxs-devices': IconBrowser,
+  'bxs-buildings': IconBuilding,
+  'bxs-file': IconFileText,
+  'bxs-factory': IconBuildingSkyscraper,
+  'bxs-dollar-circle': IconCoin,
+  'bxs-category': IconFolder,
+  'bxs-folder': IconFolder,
+  'bxs-folder-open': IconFolderOpen,
+  'bxs-folder-plus': IconFolder,
+  'bxs-home': IconHome,
+};
+
 /**
- * Get the appropriate icon for a tree node based on its ID and type.
- * Tree node IDs follow patterns: seg-A, cat-A-LLM, or item UUIDs.
+ * Get the appropriate icon for a tree node based on its ID, type, and iconHint.
+ * Supports legacy seg-/cat- IDs and dynamic hierarchy UUID branches.
  */
-export function getTreeNodeIcon(nodeId: string, nodeType?: string): Icon {
+export function getTreeNodeIcon(nodeId: string, nodeType?: string, iconHint?: string): Icon {
   if (nodeId.startsWith('seg-')) {
     const segCode = nodeId.replace('seg-', '');
     return getSegmentIcon(segCode);
@@ -332,6 +351,11 @@ export function getTreeNodeIcon(nodeId: string, nodeType?: string): Icon {
     const segCode = parts[0];
     const catCode = parts[1];
     return getCategoryIcon(segCode, catCode);
+  }
+
+  // Dynamic hierarchy branches: resolve iconHint from backend
+  if (iconHint && BOXICON_TO_TABLER[iconHint]) {
+    return BOXICON_TO_TABLER[iconHint];
   }
 
   if (nodeType === 'organization') {

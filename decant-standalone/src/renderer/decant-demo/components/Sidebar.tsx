@@ -34,7 +34,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   const isExpanded = expandedIds.has(node.id);
   const isSelected = selectedId === node.id;
 
-  const NodeIcon = getTreeNodeIcon(node.id, node.iconType);
+  const NodeIcon = getTreeNodeIcon(node.id, node.iconType, node.iconHint);
 
   // Dynamic hierarchy: use node's own color or derive from level
   const iconColor = node.iconColor || SEGMENT_HEX_MAP[node.id.charAt(0)?.toUpperCase()] || '#6b7280';
@@ -84,10 +84,6 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           <span className="decant-tree-node__toggle-spacer" />
         )}
         <NodeIcon {...iconProps} className="decant-tree-node__icon" />
-        <i
-          className={`bx ${node.iconHint || 'bx-file'} decant-tree-node__icon`}
-          style={{ color: node.iconColor || '#6b7280' }}
-        />
         <span className="decant-tree-node__label">{node.name}</span>
         {itemCounts?.get(node.id) != null && itemCounts.get(node.id)! > 0 && (
           <span className="decant-tree-node__count">{itemCounts.get(node.id)}</span>

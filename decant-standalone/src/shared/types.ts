@@ -43,7 +43,7 @@ export type HierarchyView = 'function' | 'organization';
 export type ProcessingStatus = 'pending' | 'processing' | 'complete' | 'failed';
 
 // Gumroad colors
-export type GumroadColor = 'pink' | 'yellow' | 'blue' | 'green';
+export type GumroadColor = 'pink' | 'yellow' | 'blue' | 'green' | 'purple' | 'orange' | 'teal' | 'red';
 
 // ============================================================
 // Core Node Interface

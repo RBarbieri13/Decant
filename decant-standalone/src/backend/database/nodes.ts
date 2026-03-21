@@ -1232,11 +1232,23 @@ export function applyDynamicAssignments(
         phrase_description = ?,
         short_description = ?,
         function_tags = ?,
+        metadata_tags = ?,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `);
 
     for (const assignment of assignments) {
+      const tags: string[] = [];
+      if (assignment.segmentCode) tags.push(`segment:${assignment.segmentCode}`);
+      if (assignment.categoryCode) tags.push(`category:${assignment.categoryCode}`);
+      if (assignment.contentType) tags.push(`type:${assignment.contentType}`);
+      if (assignment.functionTags) {
+        for (const ft of assignment.functionTags.split(',')) {
+          const trimmed = ft.trim();
+          if (trimmed) tags.push(trimmed);
+        }
+      }
+
       stmt.run(
         assignment.segmentCode,
         assignment.categoryCode,
@@ -1245,6 +1257,7 @@ export function applyDynamicAssignments(
         assignment.quickPhrase || null,
         assignment.description || null,
         assignment.functionTags || null,
+        JSON.stringify(tags),
         assignment.nodeId,
       );
     }

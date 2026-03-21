@@ -42,11 +42,18 @@ export function formatRelativeDate(dateStr: string): { display: string; full: st
 
 export const SEGMENT_COLOR_HEX: Record<string, string> = {
   pink: '#ec4899', blue: '#3b82f6', green: '#22c55e', yellow: '#eab308',
+  purple: '#a78bfa', orange: '#f97316', teal: '#14b8a6', red: '#ef4444',
 };
 
 export const SEGMENT_HEX_MAP: Record<string, string> = {
-  A: '#ec4899', H: '#ec4899', C: '#ec4899',
-  T: '#3b82f6', B: '#3b82f6', X: '#3b82f6',
-  F: '#22c55e', L: '#22c55e',
-  S: '#eab308', E: '#eab308',
+  A: '#ec4899',  // AI — pink
+  T: '#3b82f6',  // Technology — blue
+  F: '#22c55e',  // Finance — green
+  S: '#eab308',  // Sports — yellow
+  H: '#a78bfa',  // Health — purple
+  B: '#f97316',  // Business — orange
+  E: '#14b8a6',  // Entertainment — teal
+  L: '#ef4444',  // Lifestyle — red
+  X: '#3b82f6',  // Science — blue
+  C: '#a78bfa',  // Creative — purple
 };

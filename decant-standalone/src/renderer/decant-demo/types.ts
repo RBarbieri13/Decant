@@ -104,6 +104,10 @@ export const GUMROAD_ICON_COLORS: Record<string, string> = {
   blue: '#90a8ed',
   green: '#23a094',
   yellow: '#f1c40f',
+  purple: '#a78bfa',
+  orange: '#f97316',
+  teal: '#14b8a6',
+  red: '#ef4444',
 };
 
 export const SAMPLE_TREE_DATA: TreeNodeData[] = [];

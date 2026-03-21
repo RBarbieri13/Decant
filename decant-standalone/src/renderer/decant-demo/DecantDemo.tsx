@@ -19,7 +19,7 @@ import { CommandPalette } from '../components/CommandPalette';
 import { UserTagManager } from './components/UserTagManager';
 
 import type {
-  ViewMode, PanelTab, TagColor, RowColor, ColumnFilters,
+  ViewMode, TagColor, RowColor, ColumnFilters,
   TableRow, TreeNodeData, BreadcrumbItem, HierarchyFilter,
 } from './types';
 import {
@@ -29,7 +29,6 @@ import {
 } from './types';
 
 import { TopBar } from './components/TopBar';
-import { TitleBar } from './components/TitleBar';
 import { Sidebar } from './components/Sidebar';
 import { DataTable } from './components/DataTable';
 import { FIELD_TO_API } from './components/DataTableRow';
@@ -147,7 +146,7 @@ export default function DecantDemo() {
   // State
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('table');
-  const [panelTab, setPanelTab] = useState<PanelTab>('properties');
+
   const [selectedTreeId, setSelectedTreeId] = useState<string | null>('project-phoenix');
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [rightPanelVisible, setRightPanelVisible] = useState(false);
@@ -830,14 +829,6 @@ export default function DecantDemo() {
         onUserClick={() => {}}
         showStarredOnly={showStarredOnly}
         onToggleStarredFilter={() => setShowStarredOnly(prev => !prev)}
-      />
-
-      <TitleBar
-        title={currentCategoryTitle}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        activeTab={panelTab}
-        onTabChange={setPanelTab}
       />
 
       <div className="decant-app__body">
