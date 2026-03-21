@@ -518,7 +518,20 @@ export const DataTable: React.FC<DataTableProps> = ({
         </div>
       )}
       <div className="decant-table__body">
-        {groupedData ? (
+        {data.length === 0 ? (
+          // Skeleton loading rows
+          Array.from({ length: 8 }).map((_, i) => (
+            <div key={`skeleton-${i}`} className="decant-skeleton-row" style={{ gridTemplateColumns: gridTemplate }}>
+              <div className="decant-skeleton-cell decant-skeleton-cell--circle" />
+              <div className="decant-skeleton-cell decant-skeleton-cell--circle" />
+              <div className="decant-skeleton-cell decant-skeleton-cell--wide" />
+              <div className="decant-skeleton-cell decant-skeleton-cell--narrow" />
+              <div className="decant-skeleton-cell decant-skeleton-cell--medium" />
+              <div className="decant-skeleton-cell decant-skeleton-cell--tag" />
+              <div className="decant-skeleton-cell decant-skeleton-cell--narrow" />
+            </div>
+          ))
+        ) : groupedData ? (
           // Render with group headers (segment-level for All Items, category-level within a segment)
           groupedData.map((group) => {
             const effectiveSegCode = group.segCode || segmentCode;
