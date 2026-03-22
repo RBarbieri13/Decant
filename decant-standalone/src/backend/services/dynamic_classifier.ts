@@ -359,6 +359,7 @@ export class DynamicClassifier {
 
       assignmentMap.set(assignment.nodeId, {
         ...assignment,
+        title: (assignment.title || '').slice(0, 200),
         segmentCode: segCode,
         categoryCode: catCode,
         subcategoryLabel: (assignment.subcategoryLabel || '').slice(0, 40),
@@ -380,6 +381,7 @@ export class DynamicClassifier {
         });
         assignmentMap.set(node.id, {
           nodeId: node.id,
+          title: node.title,
           segmentCode: defaultSeg,
           categoryCode: defaultCat,
           subcategoryLabel: '',
