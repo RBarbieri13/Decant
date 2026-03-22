@@ -580,6 +580,7 @@ body {
   display: grid;
   gap: 8px;
   padding: 2px 12px;
+  border-left: 3px solid transparent; /* Match row border-left for alignment */
   position: sticky;
   top: 36px;
   z-index: 9;
@@ -1745,6 +1746,7 @@ body {
   padding: 0 12px;
   background: linear-gradient(to bottom, #2d5b47, #3d7a5f);
   border-bottom: 2px solid #1a3a2f;
+  border-left: 3px solid transparent; /* Match row border-left for alignment */
   flex-shrink: 0;
   position: sticky;
   top: 0;
@@ -1763,6 +1765,13 @@ body {
   gap: 4px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+  padding-right: 4px;
+  cursor: grab;
+}
+
+.decant-table__header-cell:active {
+  cursor: grabbing;
 }
 
 .decant-table__header-cell--sortable {
@@ -2057,6 +2066,8 @@ body {
   font-weight: 450;
   color: var(--decant-gray-700);
   letter-spacing: -0.005em;
+  border-right: 1px solid #e8e5e1;
+  padding-right: 4px;
 }
 
 .decant-table__cell--center {
@@ -2456,25 +2467,15 @@ body {
   justify-content: center;
   width: 12px;
   margin-right: 4px;
-  color: #aaaaaa;
+  color: rgba(255, 255, 255, 0.25);
   font-size: 12px;
-  cursor: grab;
-  opacity: 0;
-  transition: opacity 0.15s;
   flex-shrink: 0;
   user-select: none;
+  pointer-events: none; /* Let parent header cell handle all drag events */
 }
 
 .decant-table__header-cell:hover .decant-col-drag-grip {
-  opacity: 0.4;
-}
-
-.decant-col-drag-grip:hover {
-  opacity: 0.8;
-}
-
-.decant-col-drag-grip:active {
-  cursor: grabbing;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .decant-star-btn {
