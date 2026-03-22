@@ -125,7 +125,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <button
           className="decant-topbar__batch-btn"
           onClick={onImessageImportClick}
-          title="Import last 5 URLs from iMessage self-texts"
+          title="Browse iMessage links"
         >
           <i className="bx bx-message-square-dots" />
           iMessage
