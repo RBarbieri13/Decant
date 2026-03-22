@@ -11,8 +11,9 @@ import { BatchImportModal } from '../components/import/BatchImportModal';
 import { QuickAddModal } from '../components/import/QuickAddModal';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
 import { useApp } from '../context/AppContext';
-import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI, userTagsAPI, imessageAPI } from '../services/api';
+import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI, userTagsAPI } from '../services/api';
 import type { UserTag } from '../services/api';
+import { ImessageLinkPicker } from '../components/import/ImessageLinkPicker';
 import { createIntegratedSSEClient, getEnrichmentTracker } from '../services/realtimeService';
 import { getSegmentColor, formatMetadataCodesForDisplay } from '../utils/metadataCodeColors';
 import { CommandPalette } from '../components/CommandPalette';
@@ -151,7 +152,16 @@ export default function DecantDemo() {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [rightPanelVisible, setRightPanelVisible] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(280);
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    try {
+      const saved = localStorage.getItem('decant-sidebar-width-v1');
+      if (saved) {
+        const parsed = Number(saved);
+        if (parsed >= 180 && parsed <= 500) return parsed;
+      }
+      return 280;
+    } catch { return 280; }
+  });
   const isResizingRef = useRef(false);
   const [tableData, setTableData] = useState<TableRow[]>(SAMPLE_TABLE_DATA);
   const [treeData, setTreeData] = useState<TreeNodeData[]>(SAMPLE_TREE_DATA);
@@ -164,6 +174,7 @@ export default function DecantDemo() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBatchImportOpen, setIsBatchImportOpen] = useState(false);
   const [imessageInitialUrls, setImessageInitialUrls] = useState('');
+  const [isImessagePickerOpen, setIsImessagePickerOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
@@ -241,6 +252,12 @@ export default function DecantDemo() {
         isResizingRef.current = false;
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
+        // Persist final sidebar width
+        const el = document.documentElement;
+        const currentWidth = el.style.getPropertyValue('--decant-sidebar-width');
+        if (currentWidth) {
+          localStorage.setItem('decant-sidebar-width-v1', currentWidth.replace('px', ''));
+        }
       }
     };
     document.addEventListener('mousemove', handleMouseMove);
@@ -256,6 +273,11 @@ export default function DecantDemo() {
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
   }, []);
+
+  // Set CSS variable on mount to match persisted sidebar width
+  useEffect(() => {
+    document.documentElement.style.setProperty('--decant-sidebar-width', `${sidebarWidth}px`);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---- Data loading ----
 
@@ -636,17 +658,15 @@ export default function DecantDemo() {
     setSelectedTreeId(null);
   }, []);
 
-  const handleImessageImport = useCallback(async () => {
-    try {
-      const result = await imessageAPI.extractUrls(5);
-      if (result.success && result.urls.length > 0) {
-        setImessageInitialUrls(result.urls.join('\n'));
-        setIsBatchImportOpen(true);
-      } else {
-        alert(result.error || 'No URLs found in recent iMessage self-texts.');
-      }
-    } catch {
-      alert('Failed to read iMessages. Make sure Full Disk Access is granted in System Settings > Privacy & Security.');
+  const handleImessageImport = useCallback(() => {
+    setIsImessagePickerOpen(true);
+  }, []);
+
+  const handleImessagePickerConfirm = useCallback((urls: string[]) => {
+    setIsImessagePickerOpen(false);
+    if (urls.length > 0) {
+      setImessageInitialUrls(urls.join('\n'));
+      setIsBatchImportOpen(true);
     }
   }, []);
 
@@ -919,6 +939,12 @@ export default function DecantDemo() {
           setIsQuickAddOpen(false);
           setIsBatchImportOpen(true);
         }}
+      />
+
+      <ImessageLinkPicker
+        isOpen={isImessagePickerOpen}
+        onClose={() => setIsImessagePickerOpen(false)}
+        onConfirm={handleImessagePickerConfirm}
       />
 
       <BatchImportModal

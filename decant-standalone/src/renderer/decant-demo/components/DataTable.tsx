@@ -61,6 +61,11 @@ export const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
 };
 export const RESIZABLE_COLUMNS = ['title', 'segment', 'category', 'subcategory', 'quickPhrase', 'description', 'functionTags', 'tags', 'date', 'company', 'userTags'];
 export const COLUMN_WIDTHS_KEY = 'decant-column-widths-v6';
+export const ZOOM_KEY = 'decant-zoom-level-v1';
+const ZOOM_MIN = 50;
+const ZOOM_MAX = 150;
+const ZOOM_STEP = 10;
+const ZOOM_DEFAULT = 100;
 
 export const DataTable: React.FC<DataTableProps> = ({
   data,
@@ -200,6 +205,43 @@ export const DataTable: React.FC<DataTableProps> = ({
       return next;
     });
   }, []);
+
+  // ---- Zoom ----
+  const [zoomLevel, setZoomLevel] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(ZOOM_KEY);
+      if (saved) {
+        const parsed = Number(saved);
+        if (parsed >= ZOOM_MIN && parsed <= ZOOM_MAX) return parsed;
+      }
+      return ZOOM_DEFAULT;
+    } catch { return ZOOM_DEFAULT; }
+  });
+
+  const applyZoom = useCallback((level: number) => {
+    const clamped = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, level));
+    setZoomLevel(clamped);
+    localStorage.setItem(ZOOM_KEY, String(clamped));
+  }, []);
+
+  const zoomIn = useCallback(() => applyZoom(zoomLevel + ZOOM_STEP), [zoomLevel, applyZoom]);
+  const zoomOut = useCallback(() => applyZoom(zoomLevel - ZOOM_STEP), [zoomLevel, applyZoom]);
+  const zoomReset = useCallback(() => applyZoom(ZOOM_DEFAULT), [applyZoom]);
+
+  // Keyboard shortcuts for zoom
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+      if (e.key === '=' || e.key === '+') { e.preventDefault(); zoomIn(); }
+      else if (e.key === '-') { e.preventDefault(); zoomOut(); }
+      else if (e.key === '0') { e.preventDefault(); zoomReset(); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [zoomIn, zoomOut, zoomReset]);
+
+  const zoomScale = zoomLevel / 100;
 
   const handleResizeStart = useCallback((e: React.MouseEvent, col: string) => {
     e.preventDefault();
@@ -368,6 +410,32 @@ export const DataTable: React.FC<DataTableProps> = ({
               </div>
             )}
           </div>
+          {/* Zoom controls */}
+          <div className="decant-zoom-controls">
+            <button
+              className="decant-zoom-controls__btn"
+              title="Zoom out (Ctrl+−)"
+              onClick={zoomOut}
+              disabled={zoomLevel <= ZOOM_MIN}
+            >
+              <i className="bx bx-minus" />
+            </button>
+            <span
+              className="decant-zoom-controls__label"
+              title="Double-click to reset zoom"
+              onDoubleClick={zoomReset}
+            >
+              {zoomLevel}%
+            </span>
+            <button
+              className="decant-zoom-controls__btn"
+              title="Zoom in (Ctrl++)"
+              onClick={zoomIn}
+              disabled={zoomLevel >= ZOOM_MAX}
+            >
+              <i className="bx bx-plus" />
+            </button>
+          </div>
         </div>
       </div>
       {/* Quick Filters */}
@@ -453,6 +521,11 @@ export const DataTable: React.FC<DataTableProps> = ({
           </button>
         )}
       </div>
+      {/* Zoom wrapper — scales header, filter row, and body */}
+      <div
+        className="decant-table__zoom-wrapper"
+        style={{ zoom: zoomScale }}
+      >
       {/* Column headers */}
       <div className="decant-table__header" style={{ gridTemplateColumns: gridTemplate }}>
         <div className="decant-table__header-cell" style={{ order: -3 }}>
@@ -671,6 +744,7 @@ export const DataTable: React.FC<DataTableProps> = ({
           ))
         )}
       </div>
+      </div>{/* end zoom wrapper */}
       {checkedIds.size > 0 && (
         <div className="decant-batch-bar">
           <div className="decant-batch-bar__left">

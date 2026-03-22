@@ -1681,6 +1681,63 @@ body {
   border-color: #d1d5db;
 }
 
+/* Zoom controls */
+.decant-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 8px;
+  padding-left: 8px;
+  border-left: 1px solid #e5e7eb;
+}
+
+.decant-zoom-controls__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  background: white;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.decant-zoom-controls__btn:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.decant-zoom-controls__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.decant-zoom-controls__label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  min-width: 36px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.decant-zoom-controls__label:hover {
+  color: #374151;
+}
+
+/* Zoom wrapper */
+.decant-table__zoom-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .decant-table__header {
   display: grid;
   align-items: center;
