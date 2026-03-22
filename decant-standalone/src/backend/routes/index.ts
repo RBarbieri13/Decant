@@ -224,6 +224,9 @@ export function registerAPIRoutes(app: Express): void {
   // POST /api/imessage/extract-urls - Extract recent URLs from self-texts
   app.post('/api/imessage/extract-urls', imessageRoutes.extractUrls);
 
+  // POST /api/imessage/check-duplicates - Check which URLs already exist in Decant
+  app.post('/api/imessage/check-duplicates', imessageRoutes.checkDuplicates);
+
   // ============================================================
   // Settings routes (with rate limiting for sensitive endpoints)
   // ============================================================

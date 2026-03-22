@@ -518,19 +518,53 @@ export const batchImportAPI = {
 // iMessage API
 // ============================================================
 
+export interface ExtractedImessageUrl {
+  url: string;
+  messageDate: string | null;
+}
+
+export interface ExtractUrlsResponse {
+  success: boolean;
+  urls: ExtractedImessageUrl[];
+  hasMore: boolean;
+  error?: string;
+}
+
+export interface CheckDuplicatesResponse {
+  success: boolean;
+  duplicates: Record<string, { nodeId: string; title: string }>;
+  error?: string;
+}
+
 export const imessageAPI = {
   /**
-   * Extract recent URLs from iMessage self-text thread
+   * Extract recent URLs from iMessage self-text thread with pagination
    */
-  async extractUrls(count = 5): Promise<{ success: boolean; urls: string[]; error?: string }> {
+  async extractUrls(count = 20, offset = 0): Promise<ExtractUrlsResponse> {
     const res = await fetchWithAuth(`${API_BASE}/imessage/extract-urls`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ count }),
+      body: JSON.stringify({ count, offset }),
     });
     const data = await res.json();
     if (!res.ok) {
-      return { success: false, urls: [], error: data.error || 'Failed to extract iMessage URLs' };
+      return { success: false, urls: [], hasMore: false, error: data.error || 'Failed to extract iMessage URLs' };
+    }
+    return data;
+  },
+
+  /**
+   * Check which URLs already exist as nodes in Decant
+   */
+  async checkDuplicates(urls: string[]): Promise<CheckDuplicatesResponse> {
+    const res = await fetchWithAuth(`${API_BASE}/imessage/check-duplicates`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ urls }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, duplicates: {}, error: data.error || 'Failed to check duplicates' };
     }
     return data;
   },

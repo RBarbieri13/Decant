@@ -18,7 +18,8 @@ import { log } from '../../logger/index.js';
 const IMESSAGE_DB_PATH = join(homedir(), 'Library/Messages/chat.db');
 const TEMP_DB_PATH = '/tmp/decant_chat_copy.db';
 const DEFAULT_CHAT_ID = 117;
-const DEFAULT_COUNT = 5;
+const DEFAULT_COUNT = 20;
+const MAX_MESSAGES_SCAN = 1000;
 
 /** Regex to extract URLs from message text and binary blobs */
 const URL_PATTERN = /https?:\/\/[^\s<>"{|}\\^\x60\[\]\x00-\x1f]+/g;
@@ -32,14 +33,24 @@ const WHTTPURL_SUFFIX = /W?HttpURL\/?$/;
 // ============================================================
 
 export interface ExtractUrlsOptions {
-  /** Number of unique URLs to return (default: 5) */
+  /** Number of unique URLs to return (default: 20) */
   count?: number;
+  /** Number of unique URLs to skip before collecting (for pagination) */
+  offset?: number;
   /** iMessage chat ID for self-texts (default: 117) */
   chatId?: number;
 }
 
+export interface ExtractedUrl {
+  url: string;
+  /** ISO date string from iMessage (Apple epoch → JS Date) */
+  messageDate: string | null;
+}
+
 export interface ExtractUrlsResult {
-  urls: string[];
+  urls: ExtractedUrl[];
+  /** Whether there are more URLs beyond this page */
+  hasMore: boolean;
   error?: string;
 }
 
@@ -124,23 +135,37 @@ function extractUrlsFromMessage(text: string | null, blob: Buffer | null): strin
   return cleaned;
 }
 
+/** Convert Apple's Core Data timestamp (seconds since 2001-01-01) to ISO string */
+function appleTimestampToISO(timestamp: number | null): string | null {
+  if (timestamp == null || timestamp === 0) return null;
+  // Apple epoch is 2001-01-01T00:00:00Z = 978307200 Unix seconds
+  // iMessage stores in nanoseconds (10^9) since Apple epoch
+  const unixSeconds = (timestamp / 1_000_000_000) + 978307200;
+  return new Date(unixSeconds * 1000).toISOString();
+}
+
 /**
  * Extract the most recent unique URLs from iMessage self-texts.
  *
  * Copies the iMessage database to a temp location (permission workaround),
  * queries the specified chat for messages with URLs, and returns
  * up to `count` unique URLs ordered most-recent-first.
+ *
+ * Supports offset-based pagination: skip `offset` unique URLs before
+ * collecting the next `count`.
  */
 export async function extractRecentUrls(
   options?: ExtractUrlsOptions
 ): Promise<ExtractUrlsResult> {
   const count = options?.count ?? DEFAULT_COUNT;
+  const offset = options?.offset ?? 0;
   const chatId = options?.chatId ?? DEFAULT_CHAT_ID;
 
   // Verify iMessage database exists
   if (!existsSync(IMESSAGE_DB_PATH)) {
     return {
       urls: [],
+      hasMore: false,
       error: 'iMessage database not found. This feature requires macOS with Messages app.',
     };
   }
@@ -154,59 +179,72 @@ export async function extractRecentUrls(
 
     try {
       // Step 3: Query messages from the self-text chat, newest first.
-      // We fetch more rows than needed since not all messages contain URLs.
+      // We fetch many rows since not all messages contain URLs.
       const rows = db.prepare(`
-        SELECT m.ROWID, m.text, m.attributedBody
+        SELECT m.ROWID, m.text, m.attributedBody, m.date
         FROM message m
         JOIN chat_message_join cmj ON m.ROWID = cmj.message_id
         WHERE cmj.chat_id = ?
         ORDER BY m.ROWID DESC
-        LIMIT 200
-      `).all(chatId) as Array<{
+        LIMIT ?
+      `).all(chatId, MAX_MESSAGES_SCAN) as Array<{
         ROWID: number;
         text: string | null;
         attributedBody: Buffer | null;
+        date: number | null;
       }>;
 
       if (rows.length === 0) {
         return {
           urls: [],
+          hasMore: false,
           error: `No messages found in chat ID ${chatId}. Verify this is your self-text thread.`,
         };
       }
 
       // Step 4: Extract and deduplicate URLs across messages
-      const uniqueUrls: string[] = [];
+      const allUniqueUrls: ExtractedUrl[] = [];
       const seen = new Set<string>();
 
       for (const row of rows) {
         const urls = extractUrlsFromMessage(row.text, row.attributedBody);
+        const messageDate = appleTimestampToISO(row.date);
         for (const url of urls) {
           if (!seen.has(url)) {
             seen.add(url);
-            uniqueUrls.push(url);
-            if (uniqueUrls.length >= count) break;
+            allUniqueUrls.push({ url, messageDate });
           }
         }
-        if (uniqueUrls.length >= count) break;
+        // Collect enough to cover offset + count + 1 (to detect hasMore)
+        if (allUniqueUrls.length >= offset + count + 1) break;
       }
+
+      // Apply pagination
+      const page = allUniqueUrls.slice(offset, offset + count);
+      const hasMore = allUniqueUrls.length > offset + count;
 
       log.info('Extracted iMessage URLs', {
         chatId,
         requested: count,
-        found: uniqueUrls.length,
+        offset,
+        found: page.length,
+        totalUnique: allUniqueUrls.length,
         messagesScanned: rows.length,
+        hasMore,
         module: 'imessage',
       });
 
-      if (uniqueUrls.length === 0) {
+      if (page.length === 0) {
         return {
           urls: [],
-          error: 'No URLs found in recent self-texts.',
+          hasMore: false,
+          error: offset > 0
+            ? 'No more URLs found.'
+            : 'No URLs found in recent self-texts.',
         };
       }
 
-      return { urls: uniqueUrls };
+      return { urls: page, hasMore };
 
     } finally {
       db.close();
@@ -218,7 +256,7 @@ export async function extractRecentUrls(
       error: message,
       module: 'imessage',
     });
-    return { urls: [], error: message };
+    return { urls: [], hasMore: false, error: message };
 
   } finally {
     cleanupTempDb();
