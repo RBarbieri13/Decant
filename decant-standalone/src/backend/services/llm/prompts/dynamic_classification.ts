@@ -43,6 +43,7 @@ export const DynamicTaxonomySchema = z.object({
 
 export const NodeAssignmentSchema = z.object({
   nodeId: z.string(),
+  title: z.string().max(200),
   segmentCode: z.string().min(1).max(1),
   categoryCode: z.string().min(3).max(3),
   subcategoryLabel: z.string().max(40),
@@ -131,12 +132,13 @@ ORGANIZATION CODE: 4 uppercase letters identifying the company/org behind each i
 
 ASSIGNMENT FIELDS (per item):
 - nodeId: the item's ID (copy exactly from the input)
+- title: A clear, descriptive 5-12 word subject headline. NOT the raw page title or tweet text. Synthesize what the resource is actually about. Third-person, objective. For social posts: never copy the post text — write a librarian-style topic headline naming specific tools, frameworks, or subjects discussed.
 - segmentCode: 1-letter segment code from YOUR taxonomy
 - categoryCode: 3-letter category code from YOUR taxonomy
 - subcategoryLabel: 2-4 word label within the category (Title Case) or empty string
 - contentType: 1-letter content type code from the static list above
 - organization: 4-letter org code or UNKN
-- quickPhrase: Ultra-brief tagline (max 100 chars, NO period at end)
+- quickPhrase: What is the core topic and function described in the URL? In one sentence or less. Mention explicit subjects, terms, products, companies, etc. if applicable. If it is a social media post, do not summarize the text — extract the main point, main subject, and overall message. Max 100 chars, NO period at end, Title Case.
 - description: 1-2 sentence factual summary (max 300 chars)
 - functionTags: Comma-separated use-case phrases, 2-5 phrases of 2-4 words each
 - confidence: 0.0-1.0 how confident you are in this classification
@@ -144,7 +146,7 @@ ASSIGNMENT FIELDS (per item):
 RESPONSE FORMAT: JSON object with three top-level keys:
 - "segments": array of {code, label, description}
 - "categories": array of {segmentCode, code, label, description}
-- "assignments": array of {nodeId, segmentCode, categoryCode, subcategoryLabel, contentType, organization, quickPhrase, description, functionTags, confidence}`;
+- "assignments": array of {nodeId, title, segmentCode, categoryCode, subcategoryLabel, contentType, organization, quickPhrase, description, functionTags, confidence}`;
 
 const TAXONOMY_ONLY_SYSTEM_PROMPT = `You are a knowledge organizer. You will receive a collection of content items and must create a hierarchical taxonomy by clustering them by semantic similarity.
 
@@ -189,12 +191,13 @@ SOCIAL MEDIA CLASSIFICATION RULES:
 
 For each item, provide:
 - nodeId: copy exactly from input
+- title: A clear, descriptive 5-12 word subject headline. NOT the raw page title or tweet text. Synthesize what the resource is actually about. Third-person, objective. For social posts: never copy the post text — write a topic headline naming specific subjects discussed.
 - segmentCode: from the provided taxonomy
 - categoryCode: from the provided taxonomy
 - subcategoryLabel: 2-4 word label (Title Case) or empty string
 - contentType: 1-letter code from the content type list
 - organization: 4-letter org code or UNKN
-- quickPhrase: Ultra-brief tagline (max 100 chars, no period)
+- quickPhrase: What is the core topic and function? Mention explicit subjects, terms, products, companies. For social posts, extract the main point — not the way it was said. Max 100 chars, no period, Title Case.
 - description: 1-2 sentence summary (max 300 chars)
 - functionTags: Comma-separated use-case phrases, 2-5 phrases
 - confidence: 0.0-1.0

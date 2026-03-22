@@ -15,7 +15,7 @@ export const SemanticProfileSchema = z.object({
   // Identity
   title: z.string().max(500).describe('True subject name — not the HTML page title. Strip marketing fluff, site name suffixes, and click-bait wrappers. For social media posts: NEVER copy the post text. Write a 5-12 word descriptive headline about the TOPIC discussed. Third-person, objective, no first-person phrasing.'),
   company: z.string().max(200).describe('Source organization or company. Use canonical name (e.g., "Anthropic" not "anthropic.com").'),
-  phraseDescription: z.string().max(100).describe('Ultra-brief tagline. No period at end. Title Case. Describe what it IS, not what the page is about.'),
+  phraseDescription: z.string().max(100).describe('What is the core topic and function described in the URL? In one sentence or less. Mention explicit subjects, terms, products, companies, etc. if applicable. If it is a social media post, do not summarize the text and the way things are said — instead extract the main point, main subject, and overall message. No period at end. Title Case.'),
   shortDescription: z.string().max(500).describe('1-3 sentence description. Concrete and specific — mention actual capabilities, not vague claims.'),
   aiSummary: z.string().max(5000).describe('Detailed 3-8 paragraph analysis. MUST include specific features, capabilities, use cases, pricing if available, competitors, and adoption metrics. No generic language.'),
 

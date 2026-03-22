@@ -1209,6 +1209,7 @@ export function getNodesNeedingPhase2Enrichment(limit: number = 50): string[] {
 export function applyDynamicAssignments(
   assignments: Array<{
     nodeId: string;
+    title: string;
     segmentCode: string;
     categoryCode: string;
     subcategoryLabel: string;
@@ -1225,6 +1226,7 @@ export function applyDynamicAssignments(
   withTransaction(() => {
     const stmt = db.prepare(`
       UPDATE nodes SET
+        title = ?,
         segment_code = ?,
         category_code = ?,
         subcategory_label = ?,
@@ -1250,6 +1252,7 @@ export function applyDynamicAssignments(
       }
 
       stmt.run(
+        assignment.title || null,
         assignment.segmentCode,
         assignment.categoryCode,
         assignment.subcategoryLabel || null,
