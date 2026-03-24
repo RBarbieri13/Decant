@@ -611,13 +611,7 @@ textarea:focus-visible {
   background: var(--decant-gray-50);
   border-top: 1px solid var(--decant-gray-200);
   border-bottom: 1px solid var(--decant-border);
-  overflow-y: auto;
-  scrollbar-gutter: stable;
-  scrollbar-width: none;
-}
-
-.decant-table__filter-row::-webkit-scrollbar {
-  display: none;
+  flex-shrink: 0;
 }
 
 .decant-table__filter-cell {
@@ -1784,13 +1778,6 @@ textarea:focus-visible {
   position: sticky;
   top: 0;
   z-index: 3;
-  overflow-y: auto;
-  scrollbar-gutter: stable;
-  scrollbar-width: none; /* Firefox */
-}
-
-.decant-table__header::-webkit-scrollbar {
-  display: none;
 }
 
 .decant-table__header-cell {
