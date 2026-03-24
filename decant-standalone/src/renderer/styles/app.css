@@ -587,6 +587,13 @@ body {
   background: var(--decant-gray-50);
   border-top: 1px solid var(--decant-gray-200);
   border-bottom: 1px solid var(--decant-border);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: none;
+}
+
+.decant-table__filter-row::-webkit-scrollbar {
+  display: none;
 }
 
 .decant-table__filter-cell {
@@ -1751,6 +1758,13 @@ body {
   position: sticky;
   top: 0;
   z-index: 3;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: none; /* Firefox */
+}
+
+.decant-table__header::-webkit-scrollbar {
+  display: none;
 }
 
 .decant-table__header-cell {
@@ -1991,8 +2005,7 @@ body {
 
 .decant-table__row--selected {
   background-color: #e1ece6 !important;
-  border-left: 3px solid #2d5b47;
-  padding-left: 9px;
+  border-left-color: #2d5b47;
   box-shadow: inset 0 0 0 1px rgba(45, 91, 71, 0.1);
 }
 
@@ -2001,13 +2014,14 @@ body {
    ============================================================================ */
 
 .decant-row-actions {
-  position: sticky;
+  position: absolute;
   right: 0;
+  top: 0;
+  bottom: 0;
   display: flex;
   gap: 2px;
   align-items: center;
   padding: 3px 6px;
-  margin-left: -120px;
   background: linear-gradient(90deg, transparent, #ffffff 20%, #ffffff);
   border-radius: 6px;
   opacity: 0;
