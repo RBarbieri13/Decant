@@ -350,9 +350,9 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
                   key={tag.id}
                   className="decant-user-tag decant-user-tag--vibrant"
                   style={{
-                    backgroundColor: tag.color + '20',
+                    backgroundColor: tag.color + '28',
                     color: tag.color,
-                    borderColor: tag.color + '40',
+                    borderColor: tag.color + '60',
                   }}
                 >
                   <span className="decant-user-tag__name">{tag.name}</span>

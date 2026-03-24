@@ -43,6 +43,11 @@
   --decant-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --decant-font-mono: 'SF Mono', Monaco, Consolas, monospace;
 
+  /* Standardized Transitions (#1) */
+  --decant-transition-fast: 0.15s ease;
+  --decant-transition-normal: 0.25s ease;
+  --decant-transition-slow: 0.35s ease;
+
   /* Spacing */
   --decant-header-height: 56px;
   --decant-subheader-height: 44px;
@@ -75,6 +80,20 @@ body {
   color: var(--decant-gray-900);
   background-color: var(--decant-off-white);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Global Focus-Visible States (#2 — Accessibility) */
+:focus-visible {
+  outline: 2px solid var(--decant-brand-primary);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--decant-brand-primary);
+  outline-offset: 2px;
 }
 
 /* Green Scrollbar Styling — hover-only visibility */
@@ -456,18 +475,23 @@ body {
   justify-content: center;
   padding: 60px 40px;
   text-align: center;
+  background: var(--decant-gray-50);
+  border: 1px dashed var(--decant-gray-200);
+  border-radius: 12px;
+  margin: 24px;
 }
 
 .decant-empty-state__icon {
-  font-size: 48px;
+  font-size: 52px;
   margin-bottom: 16px;
-  opacity: 0.4;
+  opacity: 0.35;
+  color: var(--decant-gray-400);
 }
 
 .decant-empty-state__title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--decant-gray-600);
+  color: var(--decant-gray-700);
   margin-bottom: 6px;
 }
 
@@ -1098,7 +1122,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 18px;
+  padding: 9px 20px;
   border: 2px solid #1a1a1a;
   border-radius: 8px;
   background: #ffffff;
@@ -1106,9 +1130,10 @@ body {
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  transition: background var(--decant-transition-fast), transform 0.1s ease, box-shadow var(--decant-transition-fast);
   margin-left: 4px;
   box-shadow: 2px 2px 0 #1a1a1a;
+  letter-spacing: 0.01em;
 }
 
 .decant-topbar__add-btn:hover {
@@ -1130,7 +1155,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 18px;
+  padding: 9px 20px;
   border: 2px solid #1a1a1a;
   border-radius: 8px;
   background: #fbbf24;
@@ -1138,9 +1163,10 @@ body {
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  transition: background var(--decant-transition-fast), transform 0.1s ease, box-shadow var(--decant-transition-fast);
   margin-left: 4px;
   box-shadow: 2px 2px 0 #1a1a1a;
+  letter-spacing: 0.01em;
 }
 
 .decant-topbar__batch-btn:hover {
@@ -1998,9 +2024,10 @@ body {
 }
 
 .decant-table__row:hover {
-  background-color: #edf2f0 !important;
+  background-color: #e8efeb !important;
   border-left-color: var(--row-segment-color, var(--decant-brand-primary));
-  box-shadow: inset 4px 0 8px -4px var(--row-segment-color, rgba(45, 91, 71, 0.3));
+  box-shadow: inset 4px 0 8px -4px var(--row-segment-color, rgba(45, 91, 71, 0.3)),
+              0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .decant-table__row--selected {
@@ -2090,7 +2117,7 @@ body {
 }
 
 .decant-table__cell--title {
-  font-weight: 550;
+  font-weight: 600;
   font-size: 13.5px;
   color: var(--decant-gray-900);
   display: flex;
@@ -2696,7 +2723,9 @@ body {
 .decant-expanded-row {
   background-color: #f5f0e8;
   border-bottom: 1px solid #e0dcd4;
+  border-left: 3px solid var(--row-segment-color, var(--decant-brand-primary));
   padding: 16px 20px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .decant-expanded-row__content {
@@ -2914,14 +2943,17 @@ body {
 }
 
 .decant-tag--overflow {
-  background-color: #e5e7eb;
-  color: #374151;
+  background-color: var(--decant-gray-100);
+  color: var(--decant-gray-600);
+  border: 1px solid var(--decant-gray-200);
   font-size: 10px;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 10px;
   white-space: nowrap;
   flex-shrink: 0;
+  cursor: pointer;
+  font-style: italic;
 }
 
 .decant-tag--clickable {
@@ -4976,6 +5008,8 @@ body {
   font-weight: 600;
   letter-spacing: 0.01em;
   max-width: 90px;
+  border-width: 1.5px;
+  text-shadow: 0 0 0.5px currentColor;
 }
 
 /* Add tag "+" button — always visible */
