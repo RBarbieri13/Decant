@@ -605,8 +605,6 @@ textarea:focus-visible {
   gap: 8px;
   padding: 2px 12px;
   border-left: 3px solid transparent; /* Match row border-left for alignment */
-  position: sticky;
-  top: 36px;
   z-index: 9;
   background: var(--decant-gray-50);
   border-top: 1px solid var(--decant-gray-200);
@@ -1775,8 +1773,6 @@ textarea:focus-visible {
   border-bottom: 2px solid #1a3a2f;
   border-left: 3px solid transparent; /* Match row border-left for alignment */
   flex-shrink: 0;
-  position: sticky;
-  top: 0;
   z-index: 3;
 }
 
