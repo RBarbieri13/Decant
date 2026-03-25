@@ -57,3 +57,25 @@ export const SEGMENT_HEX_MAP: Record<string, string> = {
   X: '#3b82f6',  // Science — blue
   C: '#a78bfa',  // Creative — purple
 };
+
+/** Get the hex color for a segment code character (e.g. 'A' → '#ec4899') */
+export function getSegmentHex(segCode: string): string {
+  const char = (segCode || '').charAt(0).toUpperCase();
+  return SEGMENT_HEX_MAP[char] || '#6b7280';
+}
+
+/** Get a style object for a segment pill/badge: { color, backgroundColor, borderColor } */
+export function getSegmentStyle(segCode: string): { color: string; backgroundColor: string; borderColor: string } {
+  const hex = getSegmentHex(segCode);
+  return { color: hex, backgroundColor: hex + '18', borderColor: hex + '50' };
+}
+
+/** Get RGBA background for glyph/expanded card areas */
+export function getSegmentGlyphBg(segCode: string): string {
+  const hex = getSegmentHex(segCode);
+  // Convert hex to rgba with 0.1 alpha
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},0.1)`;
+}

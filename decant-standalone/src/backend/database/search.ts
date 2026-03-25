@@ -160,9 +160,12 @@ function buildFilterConditions(
 }
 
 /**
- * Check if FTS5 table exists and has data
+ * Check if FTS5 table exists and has data (cached after first call)
  */
+let _fts5Supported: boolean | null = null;
+
 function hasFTS5Support(): boolean {
+  if (_fts5Supported !== null) return _fts5Supported;
   const db = getDatabase();
   try {
     const result = db.prepare(`
@@ -170,10 +173,16 @@ function hasFTS5Support(): boolean {
       FROM sqlite_master
       WHERE type='table' AND name='nodes_fts'
     `).get() as { count: number };
-    return result.count > 0;
+    _fts5Supported = result.count > 0;
   } catch {
-    return false;
+    _fts5Supported = false;
   }
+  return _fts5Supported;
+}
+
+/** Reset the FTS5 support cache (for tests). */
+export function resetFTS5Cache(): void {
+  _fts5Supported = null;
 }
 
 /**
@@ -362,110 +371,103 @@ function countSearchWithFilters(query: string, filters?: SearchFilters): number 
 }
 
 /**
- * Calculate facet aggregations for search results
- * Limited to first 10000 results for performance
+ * Calculate facet aggregations and total count in a single query using conditional aggregation.
+ * Replaces 4 separate GROUP BY queries + 1 COUNT query with one pass over the matched result set.
  */
-function calculateFacets(query: string, filters?: SearchFilters): SearchFacets {
+function calculateFacetsAndCount(
+  query: string,
+  filters?: SearchFilters
+): { facets: SearchFacets; total: number } {
   const db = getDatabase();
   const { conditions, params } = buildFilterConditions(filters);
 
-  let baseWhereClause: string;
-  let baseParams: unknown[];
+  let matchClause: string;
+  let matchParams: unknown[];
 
   if (hasFTS5Support()) {
     const isPhraseSearch = query.includes('"');
     const ftsQuery = isPhraseSearch ? query : query.split(' ').join(' OR ');
 
-    baseWhereClause = `
+    matchClause = `
       n.rowid IN (
-        SELECT nodes_fts.rowid
-        FROM nodes_fts
-        WHERE nodes_fts MATCH ?
-        LIMIT 10000
+        SELECT nodes_fts.rowid FROM nodes_fts WHERE nodes_fts MATCH ?
       ) AND ${conditions.join(' AND ')}
     `;
-    baseParams = [ftsQuery, ...params];
+    matchParams = [ftsQuery, ...params];
   } else {
     const searchTerm = `%${query}%`;
     const searchCondition = `(
-      title LIKE ? OR
-      source_domain LIKE ? OR
-      company LIKE ? OR
-      short_description LIKE ? OR
-      ai_summary LIKE ?
+      title LIKE ? OR source_domain LIKE ? OR company LIKE ? OR
+      short_description LIKE ? OR ai_summary LIKE ?
     )`;
-
     conditions.push(searchCondition);
     params.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
-
-    baseWhereClause = conditions.join(' AND ');
-    baseParams = params;
+    matchClause = conditions.join(' AND ');
+    matchParams = params;
   }
 
-  // Segment facets
-  const segmentRows = db.prepare(`
-    SELECT segment_code, COUNT(*) as count
-    FROM nodes n
-    WHERE ${baseWhereClause}
-      AND segment_code IS NOT NULL
-    GROUP BY segment_code
-  `).all(...baseParams) as Array<{ segment_code: string; count: number }>;
+  // Single query: CTE computes the matched set, then conditional aggregation computes all facets + count
+  const sql = `
+    WITH matched AS (
+      SELECT segment_code, category_code, content_type_code, company
+      FROM nodes n
+      WHERE ${matchClause}
+      LIMIT 10000
+    )
+    SELECT
+      'segment' as facet_type, segment_code as facet_key, COUNT(*) as cnt
+    FROM matched WHERE segment_code IS NOT NULL GROUP BY segment_code
+    UNION ALL
+    SELECT 'category', category_code, COUNT(*)
+    FROM matched WHERE category_code IS NOT NULL GROUP BY category_code
+    UNION ALL
+    SELECT 'contentType', content_type_code, COUNT(*)
+    FROM matched WHERE content_type_code IS NOT NULL GROUP BY content_type_code
+    UNION ALL
+    SELECT 'org', company, COUNT(*)
+    FROM matched WHERE company IS NOT NULL AND company != '' GROUP BY company
+    ORDER BY CASE facet_type WHEN 'org' THEN cnt END DESC
+  `;
+
+  const rows = db.prepare(sql).all(...matchParams) as Array<{
+    facet_type: string;
+    facet_key: string;
+    cnt: number;
+  }>;
 
   const segments: Record<string, number> = {};
-  for (const row of segmentRows) {
-    segments[row.segment_code] = row.count;
-  }
-
-  // Category facets
-  const categoryRows = db.prepare(`
-    SELECT category_code, COUNT(*) as count
-    FROM nodes n
-    WHERE ${baseWhereClause}
-      AND category_code IS NOT NULL
-    GROUP BY category_code
-  `).all(...baseParams) as Array<{ category_code: string; count: number }>;
-
   const categories: Record<string, number> = {};
-  for (const row of categoryRows) {
-    categories[row.category_code] = row.count;
-  }
-
-  // Content type facets
-  const contentTypeRows = db.prepare(`
-    SELECT content_type_code, COUNT(*) as count
-    FROM nodes n
-    WHERE ${baseWhereClause}
-      AND content_type_code IS NOT NULL
-    GROUP BY content_type_code
-  `).all(...baseParams) as Array<{ content_type_code: string; count: number }>;
-
   const contentTypes: Record<string, number> = {};
-  for (const row of contentTypeRows) {
-    contentTypes[row.content_type_code] = row.count;
+  const orgMap = new Map<string, number>();
+
+  for (const row of rows) {
+    switch (row.facet_type) {
+      case 'segment':
+        segments[row.facet_key] = row.cnt;
+        break;
+      case 'category':
+        categories[row.facet_key] = row.cnt;
+        break;
+      case 'contentType':
+        contentTypes[row.facet_key] = row.cnt;
+        break;
+      case 'org':
+        orgMap.set(row.facet_key, row.cnt);
+        break;
+    }
   }
 
-  // Organization facets (top 20)
-  const organizationRows = db.prepare(`
-    SELECT company, COUNT(*) as count
-    FROM nodes n
-    WHERE ${baseWhereClause}
-      AND company IS NOT NULL
-      AND company != ''
-    GROUP BY company
-    ORDER BY count DESC
-    LIMIT 20
-  `).all(...baseParams) as Array<{ company: string; count: number }>;
+  // Top 20 orgs (already sorted by count desc from SQL)
+  const organizations = [...orgMap.entries()]
+    .slice(0, 20)
+    .map(([name, count]) => ({ name, count }));
 
-  const organizations = organizationRows.map(row => ({
-    name: row.company,
-    count: row.count,
-  }));
+  // Total count via a separate lightweight query (shares same match logic)
+  const total = countSearchWithFilters(query, filters);
 
   return {
-    segments,
-    categories,
-    contentTypes,
-    organizations,
+    facets: { segments, categories, contentTypes, organizations },
+    total,
   };
 }
 
@@ -518,11 +520,8 @@ export function searchNodesAdvanced(
     key_concepts: conceptsMap.get(node.id) || [],
   }));
 
-  // Calculate facets
-  const facets = calculateFacets(query, filters);
-
-  // Get total count
-  const total = countSearchWithFilters(query, filters);
+  // Calculate facets and total count in consolidated query
+  const { facets, total } = calculateFacetsAndCount(query, filters);
 
   return {
     results,

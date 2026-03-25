@@ -265,7 +265,7 @@ interface PropertiesPanelProps {
   isVisible: boolean;
 }
 
-export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ item, onClose, onToggle, isVisible }) => {
+export const PropertiesPanel: React.FC<PropertiesPanelProps> = React.memo(({ item, onClose, onToggle, isVisible }) => {
   const [activeTab, setActiveTab] = useState<PanelTab>('properties');
   const [panelWidth, setPanelWidth] = useState(380);
   const isResizing = useRef(false);
@@ -555,7 +555,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ item, onClose,
       )}
     </div>
   );
-};
+});
 
 // ============================================================================
 // Panel-specific styles (scoped to pp- and ns- prefixes)

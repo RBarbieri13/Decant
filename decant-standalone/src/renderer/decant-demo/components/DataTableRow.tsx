@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { TableRow, TagColor } from '../types';
 import type { UserTag } from '../../services/api';
-import { getTypeBadgeClass, formatRelativeDate, SEGMENT_COLOR_HEX } from '../helpers';
+import { getTypeBadgeClass, formatRelativeDate, getSegmentHex, getSegmentStyle, getSegmentGlyphBg } from '../helpers';
 import { getSegmentColor, getMetadataCodeColor, formatMetadataCodesForDisplay, parseRawTag } from '../../utils/metadataCodeColors';
 import { getCategoryIcon } from '../../utils/hierarchyIcons';
 
@@ -46,7 +46,7 @@ export const FIELD_TO_API: Record<string, string> = {
 
 const EDITABLE_FIELDS = new Set(Object.keys(FIELD_TO_API));
 
-export const DataTableRow: React.FC<DataTableRowProps> = ({
+export const DataTableRow: React.FC<DataTableRowProps> = React.memo(({
   data,
   isSelected,
   isExpanded,
@@ -134,12 +134,7 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
     return '';
   };
 
-  // Map segment color names to hex for CSS variable
-  const segmentColorHex: Record<string, string> = {
-    pink: '#ec4899', blue: '#3b82f6', green: '#22c55e', yellow: '#eab308',
-    purple: '#a78bfa', orange: '#f97316', teal: '#14b8a6', red: '#ef4444',
-  };
-  const rowSegmentColor = segmentColorHex[getSegmentColor(data.segmentCode?.charAt(0).toUpperCase() ?? '')] ?? '#6b7280';
+  const rowSegmentColor = getSegmentHex(data.segmentCode ?? '');
 
   return (
     <>
@@ -237,13 +232,7 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
           {data.category ? (
             <span
               className="decant-category-pill"
-              style={(() => {
-                const SEGMENT_COLORS = ['#ec4899', '#3b82f6', '#22c55e', '#eab308', '#8b5cf6', '#f97316', '#06b6d4', '#ef4444'];
-                const segChar = (data.segmentCode || '').charAt(0).toUpperCase();
-                const colorIndex = segChar ? segChar.charCodeAt(0) % SEGMENT_COLORS.length : 4;
-                const color = SEGMENT_COLORS[colorIndex];
-                return { color, backgroundColor: color + '18', borderColor: color + '50' };
-              })()}
+              style={getSegmentStyle(data.segmentCode || '')}
             >
               {data.category}
             </span>
@@ -489,14 +478,7 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
                     {/* Zone A: Type glyph */}
                     <div
                       className="decant-visual-card__glyph"
-                      style={{
-                        backgroundColor: (() => {
-                          const GLYPH_COLORS = ['rgba(236,72,153,0.1)', 'rgba(59,130,246,0.1)', 'rgba(34,197,94,0.1)', 'rgba(234,179,8,0.1)', 'rgba(139,92,246,0.1)', 'rgba(249,115,22,0.1)', 'rgba(6,182,212,0.1)', 'rgba(239,68,68,0.1)'];
-                          const gc = (data.segmentCode || '').charAt(0).toUpperCase();
-                          const gi = gc ? gc.charCodeAt(0) % GLYPH_COLORS.length : 4;
-                          return GLYPH_COLORS[gi];
-                        })()
-                      }}
+                      style={{ backgroundColor: getSegmentGlyphBg(data.segmentCode || '') }}
                     >
                       <span className="decant-visual-card__glyph-emoji">{data.typeSymbol}</span>
                       <div className="decant-visual-card__glyph-crumb">
@@ -550,4 +532,4 @@ export const DataTableRow: React.FC<DataTableRowProps> = ({
       )}
     </>
   );
-};
+});

@@ -24,7 +24,7 @@ interface TopBarProps {
   onToggleStarredFilter?: () => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({
+export const TopBar: React.FC<TopBarProps> = React.memo(({
   searchQuery,
   onSearchChange,
   breadcrumbs,
@@ -187,4 +187,4 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
     </header>
   );
-};
+});

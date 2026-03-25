@@ -19,7 +19,7 @@ interface TreeNodeProps {
   onDropItem?: (itemId: string, targetNodeId: string) => void;
 }
 
-const TreeNode: React.FC<TreeNodeProps> = ({
+const TreeNode: React.FC<TreeNodeProps> = React.memo(({
   node,
   level,
   selectedId,
@@ -109,7 +109,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
       )}
     </div>
   );
-};
+});
 
 // ============================================================================
 // SIDEBAR COMPONENT

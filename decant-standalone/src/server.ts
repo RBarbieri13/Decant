@@ -5,6 +5,7 @@
 // Load environment variables from .env file (must be first)
 import 'dotenv/config';
 
+import compression from 'compression';
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -51,6 +52,9 @@ app.use(createCorsMiddleware());
 
 // Security headers (X-Content-Type-Options, X-Frame-Options, etc.)
 app.use(securityHeaders());
+
+// Response compression (gzip/deflate)
+app.use(compression());
 
 // JSON body parser with size limit
 app.use(express.json({ limit: REQUEST_BODY_LIMIT }));

@@ -5,6 +5,25 @@ import { getSegmentColor } from '../../utils/metadataCodeColors';
 import { getCategoryIcon } from '../../utils/hierarchyIcons';
 import type { UserTag } from '../../services/api';
 
+/** Shared sort comparator for table rows, used in both flat and grouped rendering. */
+function compareTableRows(a: TableRow, b: TableRow, sortKey: SortKey | null, sortDir: SortDir): number {
+  if (!sortKey) return 0;
+  let aVal: string, bVal: string;
+  if (sortKey === 'tags') {
+    aVal = (a.tags || []).map((t: { label: string }) => t.label).join(', ').toLowerCase();
+    bVal = (b.tags || []).map((t: { label: string }) => t.label).join(', ').toLowerCase();
+  } else if (sortKey === 'userTags') {
+    aVal = (a.userTags || []).map((t: { name: string }) => t.name).join(', ').toLowerCase();
+    bVal = (b.userTags || []).map((t: { name: string }) => t.name).join(', ').toLowerCase();
+  } else {
+    aVal = String(a[sortKey] ?? '').toLowerCase();
+    bVal = String(b[sortKey] ?? '').toLowerCase();
+  }
+  if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
+  if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
+  return a.id < b.id ? -1 : 1;
+}
+
 interface DataTableProps {
   data: TableRow[];
   selectedId: string | null;
@@ -315,22 +334,7 @@ export const DataTable: React.FC<DataTableProps> = ({
 
   const sortedData = useMemo(() => {
     if (!sortKey) return data;
-    return [...data].sort((a, b) => {
-      let aVal: string, bVal: string;
-      if (sortKey === 'tags') {
-        aVal = (a.tags || []).map((t: { label: string }) => t.label).join(', ').toLowerCase();
-        bVal = (b.tags || []).map((t: { label: string }) => t.label).join(', ').toLowerCase();
-      } else if (sortKey === 'userTags') {
-        aVal = (a.userTags || []).map((t: { name: string }) => t.name).join(', ').toLowerCase();
-        bVal = (b.userTags || []).map((t: { name: string }) => t.name).join(', ').toLowerCase();
-      } else {
-        aVal = String(a[sortKey] ?? '').toLowerCase();
-        bVal = String(b[sortKey] ?? '').toLowerCase();
-      }
-      if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
-      return a.id < b.id ? -1 : 1;
-    });
+    return [...data].sort((a, b) => compareTableRows(a, b, sortKey, sortDir));
   }, [data, sortKey, sortDir]);
 
   const quickFilteredData = useMemo(() => {
@@ -653,23 +657,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                 </div>
                 {!collapsedGroups.has(group.catCode) && (() => {
                   // Sort items within each group by the current sort key/direction
-                  const sortedItems = [...group.items].sort((a, b) => {
-                    if (!sortKey) return 0;
-                    let aVal: string, bVal: string;
-                    if (sortKey === 'tags') {
-                      aVal = (a.tags || []).map((t: { label: string }) => t.label).join(', ').toLowerCase();
-                      bVal = (b.tags || []).map((t: { label: string }) => t.label).join(', ').toLowerCase();
-                    } else if (sortKey === 'userTags') {
-                      aVal = (a.userTags || []).map((t: { name: string }) => t.name).join(', ').toLowerCase();
-                      bVal = (b.userTags || []).map((t: { name: string }) => t.name).join(', ').toLowerCase();
-                    } else {
-                      aVal = String(a[sortKey] ?? '').toLowerCase();
-                      bVal = String(b[sortKey] ?? '').toLowerCase();
-                    }
-                    if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
-                    if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
-                    return 0;
-                  });
+                  const sortedItems = [...group.items].sort((a, b) => compareTableRows(a, b, sortKey, sortDir));
                   // Pre-compute subcategory counts to only show dividers for groups with 3+ items
                   const subcatCounts = new Map<string, number>();
                   for (const item of sortedItems) {

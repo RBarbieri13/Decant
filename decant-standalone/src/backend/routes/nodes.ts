@@ -6,6 +6,7 @@ import { Request, Response } from 'express';
 import {
   createNode as dbCreateNode,
   readNode,
+  readNodes,
   updateNode as dbUpdateNode,
   deleteNode as dbDeleteNode,
   getAllNodes as dbGetAllNodes,
@@ -45,9 +46,16 @@ export async function getAllNodes(req: Request, res: Response): Promise<void> {
       // Return paginated response
       res.json(buildPaginatedResponse(nodes, total, pagination.page, pagination.limit));
     } else {
-      // Backward compatible: return all nodes without pagination wrapper
-      const nodes = dbGetAllNodes();
-      res.json(nodes);
+      // Safety cap: if total exceeds 500, return paginated response instead of unbounded
+      const total = countNodes();
+      if (total <= 500) {
+        const nodes = dbGetAllNodes();
+        res.json(nodes);
+      } else {
+        const pagination = { page: 1, limit: 500 };
+        const nodes = getNodesPaginated(pagination);
+        res.json(buildPaginatedResponse(nodes, total, pagination.page, pagination.limit));
+      }
     }
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
@@ -173,7 +181,7 @@ export async function getRelatedNodes(req: Request, res: Response): Promise<void
 
     // Batch load full node details
     const nodeIds = similarNodes.map(s => s.node_id);
-    const nodes = await Promise.all(nodeIds.map(id => readNode(id)));
+    const nodes = readNodes(nodeIds) as Record<string, any>[];
 
     // Build response with node details and similarity scores
     const related = similarNodes.map((sim, index) => {
@@ -242,7 +250,7 @@ export async function getBacklinks(req: Request, res: Response): Promise<void> {
 
     // Batch load full node details
     const nodeIds = similarNodes.map(s => s.node_id);
-    const nodes = await Promise.all(nodeIds.map(id => readNode(id)));
+    const nodes = readNodes(nodeIds) as Record<string, any>[];
 
     // Build response with backlink details
     const backlinks = similarNodes.map((sim, index) => {
