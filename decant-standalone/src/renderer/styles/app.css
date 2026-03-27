@@ -1100,21 +1100,26 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   border: none;
   background: transparent;
   color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 18px;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
 .decant-topbar__icon-btn:hover {
   background-color: rgba(255, 255, 255, 0.12);
   color: #fff;
+  transform: scale(1.08);
+}
+
+.decant-topbar__icon-btn:active {
+  transform: scale(0.95);
 }
 
 .decant-topbar__add-btn {
@@ -1122,25 +1127,28 @@ textarea:focus-visible {
   align-items: center;
   gap: 5px;
   padding: 6px 14px;
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.22);
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--decant-transition-fast), border-color var(--decant-transition-fast);
+  transition: background var(--decant-transition-fast), border-color var(--decant-transition-fast), box-shadow var(--decant-transition-fast);
   letter-spacing: 0.01em;
   white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 
 .decant-topbar__add-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .decant-topbar__add-btn:active {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .decant-topbar__add-btn i {
@@ -1152,10 +1160,10 @@ textarea:focus-visible {
   align-items: center;
   gap: 5px;
   padding: 6px 14px;
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.65);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -1165,13 +1173,13 @@ textarea:focus-visible {
 }
 
 .decant-topbar__batch-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
   border-color: rgba(255, 255, 255, 0.3);
 }
 
 .decant-topbar__batch-btn:active {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .decant-topbar__batch-btn i {
@@ -1229,21 +1237,23 @@ textarea:focus-visible {
   align-items: center;
   gap: 5px;
   padding: 6px 14px;
-  border: 1.5px solid rgba(43, 174, 130, 0.4);
-  border-radius: 6px;
-  background: rgba(43, 174, 130, 0.15);
+  border: 1px solid rgba(43, 174, 130, 0.35);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(43, 174, 130, 0.18), rgba(30, 140, 100, 0.12));
   color: #5cedb8;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--decant-transition-fast), border-color var(--decant-transition-fast);
+  transition: background var(--decant-transition-fast), border-color var(--decant-transition-fast), box-shadow var(--decant-transition-fast);
   letter-spacing: 0.01em;
   white-space: nowrap;
+  box-shadow: 0 0 8px rgba(43, 174, 130, 0.12);
 }
 
 .decant-topbar__reclassify-btn:hover {
-  background: rgba(43, 174, 130, 0.25);
-  border-color: rgba(43, 174, 130, 0.6);
+  background: linear-gradient(135deg, rgba(43, 174, 130, 0.28), rgba(30, 140, 100, 0.2));
+  border-color: rgba(43, 174, 130, 0.55);
+  box-shadow: 0 0 14px rgba(43, 174, 130, 0.2);
 }
 
 .decant-topbar__reclassify-btn:disabled {
