@@ -2016,8 +2016,8 @@ textarea:focus-visible {
   display: grid;
   align-items: center;
   gap: 8px;
-  padding: 2px 12px;
-  min-height: 36px;
+  padding: 0px 12px;
+  min-height: 30px;
   overflow: visible;
   cursor: pointer;
   border-bottom: 1px solid #e0ddd8;
