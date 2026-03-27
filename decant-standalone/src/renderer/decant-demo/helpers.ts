@@ -3,7 +3,7 @@ export function getTypeBadgeClass(type: string): string {
     'Website': 'website', 'Video': 'video', 'X': 'x', 'Tool': 'tool',
     'Social': 'social', 'Repo': 'repo', 'Tutorial': 'tutorial', 'Course': 'course',
     'Guide': 'guide', 'News': 'news', 'Image': 'image', 'Reference': 'reference',
-    'Unknown': 'unknown',
+    'Service': 'service', 'Article': 'article', 'Unknown': 'unknown',
   };
   return map[type] || 'unknown';
 }

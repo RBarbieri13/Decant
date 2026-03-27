@@ -603,45 +603,43 @@ textarea:focus-visible {
 .decant-table__filter-row {
   display: grid;
   gap: 8px;
-  padding: 2px 12px;
-  border-left: 3px solid transparent; /* Match row border-left for alignment */
+  padding: 6px 12px;
+  border-left: 3px solid transparent;
   z-index: 9;
   background: var(--decant-gray-50);
-  border-top: 1px solid var(--decant-gray-200);
   border-bottom: 1px solid var(--decant-border);
   flex-shrink: 0;
 }
 
 .decant-table__filter-cell {
-  padding: 4px 6px;
+  padding: 2px 4px;
 }
 
 .decant-table__filter-input {
   width: 100%;
-  padding: 4px 8px;
-  font-size: 11px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  background: transparent;
+  height: 28px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  border: 1px solid var(--decant-border);
+  border-radius: 5px;
+  background: var(--decant-white);
   color: var(--decant-gray-700);
   outline: none;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .decant-table__filter-input:hover {
-  background: var(--decant-white);
-  border-color: var(--decant-border);
+  border-color: var(--decant-border-dark);
 }
 
 .decant-table__filter-input:focus {
-  background: var(--decant-white);
   border-color: var(--decant-brand-primary);
-  box-shadow: 0 0 0 2px rgba(45, 91, 71, 0.1);
+  box-shadow: 0 0 0 2px rgba(45, 91, 71, 0.08);
 }
 
 .decant-table__filter-input::placeholder {
   color: var(--decant-gray-400);
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 /* ============================================================================
@@ -1086,7 +1084,16 @@ textarea:focus-visible {
 .decant-topbar__actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+}
+
+/* Separator between button groups in topbar */
+.decant-topbar__separator {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 0 6px;
+  flex-shrink: 0;
 }
 
 .decant-topbar__icon-btn {
@@ -1113,67 +1120,62 @@ textarea:focus-visible {
 .decant-topbar__add-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 9px 20px;
-  border: 2px solid #1a1a1a;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #1a1a1a;
-  font-size: 14px;
-  font-weight: 700;
+  gap: 5px;
+  padding: 6px 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background var(--decant-transition-fast), transform 0.1s ease, box-shadow var(--decant-transition-fast);
-  margin-left: 4px;
-  box-shadow: 2px 2px 0 #1a1a1a;
+  transition: background var(--decant-transition-fast), border-color var(--decant-transition-fast);
   letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .decant-topbar__add-btn:hover {
-  background: #f0f0f0;
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0 #1a1a1a;
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .decant-topbar__add-btn:active {
-  transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0 #1a1a1a;
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .decant-topbar__add-btn i {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .decant-topbar__batch-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 9px 20px;
-  border: 2px solid #1a1a1a;
-  border-radius: 8px;
-  background: #fbbf24;
-  color: #1a1a1a;
-  font-size: 14px;
-  font-weight: 700;
+  gap: 5px;
+  padding: 6px 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background var(--decant-transition-fast), transform 0.1s ease, box-shadow var(--decant-transition-fast);
-  margin-left: 4px;
-  box-shadow: 2px 2px 0 #1a1a1a;
+  transition: background var(--decant-transition-fast), color var(--decant-transition-fast), border-color var(--decant-transition-fast);
   letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .decant-topbar__batch-btn:hover {
-  background: #f59e0b;
-  transform: translate(-1px, -1px);
-  box-shadow: 3px 3px 0 #1a1a1a;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .decant-topbar__batch-btn:active {
-  transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0 #1a1a1a;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .decant-topbar__batch-btn i {
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .decant-topbar__star-filter {
@@ -1221,6 +1223,38 @@ textarea:focus-visible {
   font-size: 14px;
 }
 
+/* Reclassify button — accent style */
+.decant-topbar__reclassify-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border: 1.5px solid rgba(43, 174, 130, 0.4);
+  border-radius: 6px;
+  background: rgba(43, 174, 130, 0.15);
+  color: #5cedb8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--decant-transition-fast), border-color var(--decant-transition-fast);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.decant-topbar__reclassify-btn:hover {
+  background: rgba(43, 174, 130, 0.25);
+  border-color: rgba(43, 174, 130, 0.6);
+}
+
+.decant-topbar__reclassify-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.decant-topbar__reclassify-btn i {
+  font-size: 15px;
+}
+
 /* Reclassify progress bar */
 .decant-reclassify-wrapper {
   display: flex;
@@ -1247,16 +1281,20 @@ textarea:focus-visible {
 
 .decant-reclassify-progress__fill {
   height: 100%;
-  background: linear-gradient(90deg, #ec4899, #f472b6);
+  background: linear-gradient(90deg, #1b7a5a, #2bae82);
   border-radius: 2px;
   transition: width 0.6s ease;
 }
 
 .decant-reclassify-progress__label {
   font-size: 9px;
-  color: #6b7280;
+  color: rgba(255, 255, 255, 0.5);
   font-weight: 500;
   white-space: nowrap;
+}
+
+.decant-reclassify-progress__bar {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* ============================================================================
@@ -1449,8 +1487,6 @@ textarea:focus-visible {
 
 .decant-tree-node__row:hover {
   background-color: #d8d2c8;
-  transform: translateX(2px);
-  box-shadow: -2px 0 0 0 rgba(45, 91, 71, 0.3);
 }
 
 .decant-tree-node__row--selected {
@@ -1980,13 +2016,13 @@ textarea:focus-visible {
   display: grid;
   align-items: center;
   gap: 8px;
-  padding: 0 12px;
-  min-height: 30px;
+  padding: 2px 12px;
+  min-height: 36px;
   overflow: visible;
   cursor: pointer;
   border-bottom: 1px solid #e0ddd8;
   border-left: 3px solid transparent;
-  transition: border-left-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  transition: border-left-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
   position: relative;
 }
 
@@ -2122,19 +2158,24 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #2d5b47;
-  background: rgba(45, 91, 71, 0.1);
+  color: var(--decant-gray-400);
+  background: transparent;
   border-radius: 4px;
-  width: 22px;
-  height: 22px;
-  transition: background 0.15s ease, color 0.15s ease;
+  width: 20px;
+  height: 20px;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13px;
+  opacity: 0;
+}
+
+.decant-table__row:hover .decant-table__title-link {
+  opacity: 1;
 }
 
 .decant-table__title-link:hover {
-  color: #ffffff;
-  background: #2d5b47;
+  color: #1b7a5a;
+  background: rgba(27, 122, 90, 0.08);
 }
 
 .decant-enriching-badge {
@@ -2442,9 +2483,9 @@ textarea:focus-visible {
   height: 20px;
   border-radius: 4px;
   object-fit: contain;
-  background-color: #f0f4f8;
-  padding: 1px;
-  border: 1px solid #e5e7eb;
+  background-color: #f5f6f8;
+  padding: 2px;
+  border: none;
   flex-shrink: 0;
 }
 
@@ -2459,47 +2500,52 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 7px;
-  border-radius: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   white-space: nowrap;
-  max-width: 68px;
+  max-width: 80px;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-transform: uppercase;
+  border: 1px solid transparent;
 }
 
-.decant-type-badge--website  { background: #e8e8e8; color: #555555; }
-.decant-type-badge--video    { background: #ffe0e0; color: #c0392b; }
-.decant-type-badge--x        { background: #111111; color: #ffffff; }
-.decant-type-badge--tool     { background: #dbeafe; color: #1d4ed8; }
-.decant-type-badge--social   { background: #ede9fe; color: #7c3aed; }
-.decant-type-badge--repo     { background: #fff3e0; color: #e65100; }
-.decant-type-badge--tutorial { background: #e8f5e9; color: #2e7d32; }
-.decant-type-badge--course   { background: #e8f5e9; color: #1b5e20; }
-.decant-type-badge--guide    { background: #e3f2fd; color: #0277bd; }
-.decant-type-badge--news     { background: #fce4ec; color: #880e4f; }
-.decant-type-badge--image    { background: #f3e5f5; color: #6a1b9a; }
-.decant-type-badge--reference{ background: #e0f2f1; color: #00695c; }
-.decant-type-badge--unknown  { background: #e8e8e8; color: #666666; border: 1px solid #cccccc; }
+.decant-type-badge--website  { background: #f0f1f5; color: #565d6c; border-color: #dfe2ea; }
+.decant-type-badge--video    { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+.decant-type-badge--x        { background: #1a1a1a; color: #ffffff; }
+.decant-type-badge--tool     { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+.decant-type-badge--social   { background: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; }
+.decant-type-badge--repo     { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+.decant-type-badge--tutorial { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.decant-type-badge--course   { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+.decant-type-badge--guide    { background: #eff6ff; color: #0369a1; border-color: #bae6fd; }
+.decant-type-badge--news     { background: #fdf2f8; color: #9d174d; border-color: #fbcfe8; }
+.decant-type-badge--image    { background: #faf5ff; color: #7e22ce; border-color: #e9d5ff; }
+.decant-type-badge--reference{ background: #f0fdfa; color: #0f766e; border-color: #99f6e4; }
+.decant-type-badge--unknown  { background: #f3f4f8; color: #747b8b; border-color: #dfe2ea; }
+.decant-type-badge--service  { background: #f0f1f5; color: #565d6c; border-color: #dfe2ea; }
+.decant-type-badge--article  { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
 
-/* Column drag grip — only the grip icon triggers drag, not the whole header */
+/* Column drag grip — hidden by default, visible on hover */
 .decant-col-drag-grip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 12px;
   margin-right: 4px;
-  color: rgba(255, 255, 255, 0.25);
-  font-size: 12px;
+  color: transparent;
+  font-size: 10px;
   flex-shrink: 0;
   user-select: none;
-  pointer-events: none; /* Let parent header cell handle all drag events */
+  pointer-events: none;
+  transition: color 0.15s ease;
 }
 
 .decant-table__header-cell:hover .decant-col-drag-grip {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.45);
 }
 
 .decant-star-btn {

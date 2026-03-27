@@ -104,6 +104,8 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
           <i className={`bx ${showStarredOnly ? 'bxs-star' : 'bx-star'}`} />
         </button>
 
+        <div className="decant-topbar__separator" />
+
         <button
           className="decant-topbar__add-btn"
           onClick={onQuickAddClick}
@@ -119,7 +121,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
           title="Batch Import URLs"
         >
           <i className="bx bx-cloud-upload" />
-          Batch Import
+          Batch
         </button>
 
         <button
@@ -131,13 +133,16 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
           iMessage
         </button>
 
-        <div className="decant-reclassify-wrapper" style={{ position: 'relative', marginRight: '12px' }}>
+        <div className="decant-topbar__separator" />
+
+        <div className="decant-reclassify-wrapper">
           <button
-            className="gum-button gum-button--small gum-button--pink"
+            className="decant-topbar__reclassify-btn"
             onClick={onReclassifyClick}
             disabled={isReclassifyingProp}
             title="Reclassify all nodes with AI"
           >
+            <i className="bx bx-analyse" />
             {isReclassifyingProp
               ? reclassifyProgress && reclassifyProgress.total > 0
                 ? ['Classifying...', 'Applying...', 'Building...', 'Done'][reclassifyProgress.completed] || `${reclassifyProgress.completed}/${reclassifyProgress.total}`
@@ -159,13 +164,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
           )}
         </div>
 
-        <button className="decant-topbar__icon-btn" title="Notifications">
-          <i className="bx bx-bell" />
-        </button>
-
-        <button className="decant-topbar__icon-btn" title="Messages">
-          <i className="bx bx-message-square-detail" />
-        </button>
+        <div className="decant-topbar__separator" />
 
         <button
           className="decant-topbar__icon-btn"

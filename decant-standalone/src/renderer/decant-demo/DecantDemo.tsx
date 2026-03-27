@@ -7,6 +7,7 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import '../styles/app.css';
+import '../styles/theme-c-slate.css';
 import { BatchImportModal } from '../components/import/BatchImportModal';
 import { QuickAddModal } from '../components/import/QuickAddModal';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
