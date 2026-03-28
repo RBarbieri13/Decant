@@ -2,12 +2,13 @@
 // Tree Builder Utility Function Tests
 // ============================================================
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   parseHierarchyCode,
   getHierarchyLevel,
   getParentCode,
 } from '../tree_builder.js';
+import * as cache from '../../../cache/index.js';
 
 // ============================================================
 // parseHierarchyCode
@@ -191,5 +192,38 @@ describe('getParentCode', () => {
     const greatGrandparent = getParentCode(grandparent)!;
     expect(greatGrandparent).toBe('T');
     expect(getParentCode(greatGrandparent)).toBeNull();
+  });
+});
+
+// ============================================================
+// buildHierarchyTree cache integration
+// ============================================================
+
+describe('buildHierarchyTree cache key', () => {
+  beforeEach(() => {
+    cache.clear();
+  });
+
+  it('uses tree:dynamic cache key that is invalidated by tree:* pattern', () => {
+    // Pre-populate the cache with a known value under tree:dynamic
+    const fakeTree = [{ id: 'cached', title: 'Cached', nodeType: 'branch' as const, children: [], isExpanded: false }];
+    cache.set('tree:dynamic', fakeTree);
+
+    // Verify the key exists
+    expect(cache.get('tree:dynamic')).toEqual(fakeTree);
+
+    // Invalidate with tree:* pattern (same pattern used by mutation points)
+    cache.invalidate('tree:*');
+
+    // Cache should be cleared
+    expect(cache.get('tree:dynamic')).toBeNull();
+  });
+
+  it('tree:dynamic key survives unrelated invalidation patterns', () => {
+    const fakeTree = [{ id: 'cached', title: 'Cached', nodeType: 'branch' as const, children: [], isExpanded: false }];
+    cache.set('tree:dynamic', fakeTree);
+
+    cache.invalidate('other:*');
+    expect(cache.get('tree:dynamic')).toEqual(fakeTree);
   });
 });

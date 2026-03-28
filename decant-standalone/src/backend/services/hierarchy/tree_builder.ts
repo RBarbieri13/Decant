@@ -11,6 +11,10 @@ import {
   CONTENT_TYPE_ICONS as SHARED_CONTENT_TYPE_ICONS,
   getIconByKeyword,
 } from '../../../shared/iconDatabase.js';
+import * as cache from '../../cache/index.js';
+
+const TREE_CACHE_KEY = 'tree:dynamic';
+const TREE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // ============================================================
 // Types
@@ -109,8 +113,20 @@ function getBranchIcon(branch: BranchRow): string {
 /**
  * Build the dynamic hierarchy tree from hierarchy_branches table.
  * Returns a recursive N-deep tree structure for the UI.
+ * Results are cached under 'tree:dynamic' and invalidated by
+ * any mutation that calls cache.invalidate('tree:*').
  */
 export function buildHierarchyTree(): TreeNode[] {
+  const cached = cache.get<TreeNode[]>(TREE_CACHE_KEY);
+  if (cached) return cached;
+
+  const tree = buildHierarchyTreeUncached();
+  cache.set(TREE_CACHE_KEY, tree, TREE_CACHE_TTL);
+  return tree;
+}
+
+/** Internal uncached tree builder — always hits the database. */
+function buildHierarchyTreeUncached(): TreeNode[] {
   const db = getDatabase();
 
   // Check if dynamic hierarchy tables exist
