@@ -1109,7 +1109,7 @@ textarea:focus-visible {
   cursor: pointer;
   border-radius: 8px;
   font-size: 18px;
-  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .decant-topbar__icon-btn:hover {
@@ -1119,7 +1119,8 @@ textarea:focus-visible {
 }
 
 .decant-topbar__icon-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.96);
+  background-color: rgba(255, 255, 255, 0.18);
 }
 
 .decant-topbar__add-btn {
@@ -1134,7 +1135,7 @@ textarea:focus-visible {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--decant-transition-fast), border-color var(--decant-transition-fast), box-shadow var(--decant-transition-fast);
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, color 0.2s ease;
   letter-spacing: 0.01em;
   white-space: nowrap;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
@@ -1147,6 +1148,7 @@ textarea:focus-visible {
 }
 
 .decant-topbar__add-btn:active {
+  transform: scale(0.96);
   background: rgba(255, 255, 255, 0.35);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
@@ -1167,7 +1169,7 @@ textarea:focus-visible {
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background var(--decant-transition-fast), color var(--decant-transition-fast), border-color var(--decant-transition-fast);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   letter-spacing: 0.01em;
   white-space: nowrap;
 }
@@ -1179,6 +1181,7 @@ textarea:focus-visible {
 }
 
 .decant-topbar__batch-btn:active {
+  transform: scale(0.96);
   background: rgba(255, 255, 255, 0.12);
 }
 
@@ -1188,15 +1191,22 @@ textarea:focus-visible {
 
 .decant-topbar__star-filter {
   color: rgba(255, 255, 255, 0.5);
-  transition: color 0.15s ease;
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
 .decant-topbar__star-filter--active {
   color: #f5a623 !important;
+  animation: starBounce 0.25s ease;
 }
 
 .decant-topbar__star-filter--active i {
   text-shadow: 0 0 8px rgba(245, 166, 35, 0.5);
+}
+
+@keyframes starBounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 
 .decant-topbar__user {
@@ -1209,10 +1219,16 @@ textarea:focus-visible {
   cursor: pointer;
   border-radius: 50%;
   margin-left: 4px;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .decant-topbar__user:hover {
   background-color: rgba(255, 255, 255, 0.12);
+}
+
+.decant-topbar__user:active {
+  transform: scale(0.96);
+  background-color: rgba(255, 255, 255, 0.18);
 }
 
 .decant-topbar__user-avatar {
@@ -1244,7 +1260,7 @@ textarea:focus-visible {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--decant-transition-fast), border-color var(--decant-transition-fast), box-shadow var(--decant-transition-fast);
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, color 0.2s ease;
   letter-spacing: 0.01em;
   white-space: nowrap;
   box-shadow: 0 0 8px rgba(43, 174, 130, 0.12);
@@ -1254,6 +1270,11 @@ textarea:focus-visible {
   background: linear-gradient(135deg, rgba(43, 174, 130, 0.28), rgba(30, 140, 100, 0.2));
   border-color: rgba(43, 174, 130, 0.55);
   box-shadow: 0 0 14px rgba(43, 174, 130, 0.2);
+}
+
+.decant-topbar__reclassify-btn:active:not(:disabled) {
+  transform: scale(0.96);
+  background: linear-gradient(135deg, rgba(43, 174, 130, 0.35), rgba(30, 140, 100, 0.28));
 }
 
 .decant-topbar__reclassify-btn:disabled {
@@ -1294,6 +1315,26 @@ textarea:focus-visible {
   background: linear-gradient(90deg, #1b7a5a, #2bae82);
   border-radius: 2px;
   transition: width 0.6s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.decant-reclassify-progress__fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  animation: reclassifyShimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes reclassifyShimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 .decant-reclassify-progress__label {
@@ -4019,6 +4060,12 @@ textarea:focus-visible {
   border-radius: 18px;
   padding: 5px 10px 5px 14px;
   flex-shrink: 0;
+  animation: breadcrumbFadeIn 0.25s ease;
+}
+
+@keyframes breadcrumbFadeIn {
+  0%   { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 .decant-filter-breadcrumb__sep {
@@ -4036,6 +4083,7 @@ textarea:focus-visible {
   cursor: pointer;
   padding: 0 4px;
   border-radius: 4px;
+  transition: color 0.2s ease, background 0.2s ease;
 }
 
 .decant-filter-breadcrumb__crumb:hover {
@@ -4069,10 +4117,53 @@ textarea:focus-visible {
   justify-content: center;
   margin-left: 4px;
   flex-shrink: 0;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .decant-filter-breadcrumb__clear:hover {
   background: rgba(255,255,255,0.35);
+}
+
+.decant-filter-breadcrumb__clear:active {
+  transform: scale(0.96);
+  background: rgba(255,255,255,0.45);
+}
+
+/* --- Reduced motion: disable all TopBar micro-interactions --- */
+@media (prefers-reduced-motion: reduce) {
+  .decant-topbar__icon-btn,
+  .decant-topbar__add-btn,
+  .decant-topbar__batch-btn,
+  .decant-topbar__reclassify-btn,
+  .decant-topbar__user,
+  .decant-topbar__star-filter,
+  .decant-topbar__search,
+  .decant-filter-breadcrumb__crumb,
+  .decant-filter-breadcrumb__clear {
+    transition: none !important;
+  }
+
+  .decant-topbar__icon-btn:hover,
+  .decant-topbar__icon-btn:active,
+  .decant-topbar__add-btn:active,
+  .decant-topbar__batch-btn:active,
+  .decant-topbar__reclassify-btn:active:not(:disabled),
+  .decant-topbar__user:active,
+  .decant-filter-breadcrumb__clear:active {
+    transform: none !important;
+  }
+
+  .decant-topbar__star-filter--active {
+    animation: none !important;
+  }
+
+  .decant-filter-breadcrumb {
+    animation: none !important;
+  }
+
+  .decant-reclassify-progress__fill::after {
+    animation: none !important;
+  }
 }
 
 /* ============================================================================
