@@ -99,7 +99,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
         <button
           className={`decant-topbar__icon-btn decant-topbar__star-filter ${showStarredOnly ? 'decant-topbar__star-filter--active' : ''}`}
           onClick={onToggleStarredFilter}
-          title={showStarredOnly ? 'Showing starred only (click to show all)' : 'Filter to starred items'}
+          data-tooltip={showStarredOnly ? 'Show all' : 'Starred only'}
         >
           <i className={`bx ${showStarredOnly ? 'bxs-star' : 'bx-star'}`} />
         </button>
@@ -169,16 +169,16 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
         <button
           className="decant-topbar__icon-btn"
           onClick={onRefreshAllClick}
-          title="Re-analyze and rebuild hierarchy for all content"
+          data-tooltip="Refresh"
         >
           <i className="bx bx-refresh" />
         </button>
 
-        <button className="decant-topbar__icon-btn" onClick={onSettingsClick} title="Settings">
+        <button className="decant-topbar__icon-btn" onClick={onSettingsClick} data-tooltip="Settings">
           <i className="bx bx-cog" />
         </button>
 
-        <button className="decant-topbar__user" onClick={onUserClick}>
+        <button className="decant-topbar__user" onClick={onUserClick} data-tooltip="Account">
           <div className="decant-topbar__user-avatar decant-topbar__user-avatar--placeholder">
             <i className="bx bx-user" />
           </div>
