@@ -77,6 +77,7 @@
 body {
   font-family: var(--decant-font);
   font-size: 14px;
+  line-height: 1.5;
   color: var(--decant-gray-900);
   background-color: var(--decant-off-white);
   -webkit-font-smoothing: antialiased;
@@ -424,7 +425,7 @@ textarea:focus-visible {
 .decant-spaces__segment-dot--orange { background-color: var(--decant-segment-orange); }
 
 .decant-spaces__segment-label {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--decant-gray-700);
 }
 
@@ -442,7 +443,7 @@ textarea:focus-visible {
 
 .decant-spaces__empty {
   padding: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--decant-gray-400);
 }
 
@@ -496,7 +497,7 @@ textarea:focus-visible {
 }
 
 .decant-empty-state__text {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--decant-gray-400);
   margin-bottom: 24px;
   max-width: 320px;
@@ -619,7 +620,7 @@ textarea:focus-visible {
   width: 100%;
   height: 28px;
   padding: 4px 10px;
-  font-size: 11.5px;
+  font-size: 12px;
   border: 1px solid var(--decant-border);
   border-radius: 5px;
   background: var(--decant-white);
@@ -710,7 +711,7 @@ textarea:focus-visible {
 }
 
 .decant-details__url {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--decant-gray-500);
   text-align: center;
   word-break: break-all;
@@ -743,12 +744,12 @@ textarea:focus-visible {
 }
 
 .decant-details__label {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--decant-gray-500);
 }
 
 .decant-details__value {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--decant-gray-900);
   text-align: right;
   max-width: 60%;
@@ -782,7 +783,7 @@ textarea:focus-visible {
   padding: 10px;
   border: 2px solid var(--decant-gray-900);
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1132,7 +1133,7 @@ textarea:focus-visible {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.22);
   color: #fff;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, color 0.2s ease;
@@ -1165,8 +1166,8 @@ textarea:focus-visible {
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 8px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
@@ -1257,7 +1258,7 @@ textarea:focus-visible {
   border-radius: 8px;
   background: linear-gradient(135deg, rgba(43, 174, 130, 0.18), rgba(30, 140, 100, 0.12));
   color: #5cedb8;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, color 0.2s ease;
@@ -1726,7 +1727,7 @@ textarea:focus-visible {
   gap: 8px;
   padding: 5px 12px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   color: #1f2937;
   user-select: none;
 }
@@ -1864,8 +1865,8 @@ textarea:focus-visible {
 }
 
 .decant-table__header-cell {
-  font-size: 11.5px;
-  font-weight: 650;
+  font-size: 12px;
+  font-weight: 700;
   color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
@@ -2173,8 +2174,10 @@ textarea:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 13px;
-  font-weight: 450;
+  font-size: 14px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
   color: var(--decant-gray-700);
   letter-spacing: -0.005em;
   border-right: 1px solid #e8e5e1;
@@ -2188,7 +2191,7 @@ textarea:focus-visible {
 
 .decant-table__cell--title {
   font-weight: 600;
-  font-size: 13.5px;
+  font-size: 14px;
   color: var(--decant-gray-900);
   display: flex;
   align-items: center;
@@ -2216,7 +2219,7 @@ textarea:focus-visible {
   height: 20px;
   transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
   text-decoration: none;
-  font-size: 13px;
+  font-size: 14px;
   opacity: 0;
 }
 
@@ -2246,7 +2249,7 @@ textarea:focus-visible {
 }
 
 .decant-enriching-badge i {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 @keyframes decant-enriching-pulse {
@@ -2255,7 +2258,7 @@ textarea:focus-visible {
 }
 
 .decant-table__cell--secondary {
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 400;
   color: var(--decant-gray-600);
 }
@@ -2293,7 +2296,7 @@ textarea:focus-visible {
 }
 
 .decant-table__cell--quick-phrase {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
   color: var(--decant-gray-700);
   white-space: normal;
@@ -2307,7 +2310,7 @@ textarea:focus-visible {
 }
 
 .decant-table__cell--description {
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--decant-gray-700);
   white-space: normal;
   overflow: hidden;
@@ -2319,8 +2322,8 @@ textarea:focus-visible {
 }
 
 .decant-table__cell--function-tags {
-  font-size: 12.5px;
-  font-weight: 450;
+  font-size: 12px;
+  font-weight: 400;
   color: var(--decant-gray-600);
   white-space: normal;
   overflow: hidden;
@@ -2340,7 +2343,7 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--decant-gray-700);
 }
@@ -2358,8 +2361,8 @@ textarea:focus-visible {
   align-items: center;
   padding: 2px 7px;
   border-radius: 4px;
-  font-size: 11.5px;
-  font-weight: 550;
+  font-size: 12px;
+  font-weight: 500;
   border: 1px solid;
   white-space: nowrap;
   overflow: hidden;
@@ -2432,7 +2435,7 @@ textarea:focus-visible {
 }
 
 .decant-batch-bar__count {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -2872,7 +2875,7 @@ textarea:focus-visible {
 .decant-expanded-row__meta-item {
   display: flex;
   gap: 6px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .decant-expanded-row__meta-label {
@@ -2888,7 +2891,7 @@ textarea:focus-visible {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
-  font-size: 13px;
+  font-size: 14px;
   color: #6b7280;
 }
 
@@ -2917,7 +2920,7 @@ textarea:focus-visible {
   border: 1px solid #d1d5db;
   background-color: white;
   color: #374151;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   border-radius: 6px;
   cursor: pointer;
@@ -3224,7 +3227,7 @@ textarea:focus-visible {
   padding: 12px;
   border: none;
   background: transparent;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: #2d5b47;
   cursor: pointer;
@@ -3276,7 +3279,7 @@ textarea:focus-visible {
   border: 1px solid #d0cbc3;
   background: white;
   color: #374151;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   border-radius: 6px;
   cursor: pointer;
@@ -3313,7 +3316,7 @@ textarea:focus-visible {
 
 .decant-card__title {
   margin: 0 0 12px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #2a2a2a;
 }
@@ -3339,7 +3342,7 @@ textarea:focus-visible {
 }
 
 .decant-card__value {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: #2a2a2a;
   text-align: right;
@@ -3493,7 +3496,7 @@ textarea:focus-visible {
 }
 
 .decant-detail-card__meta {
-  font-size: 13px;
+  font-size: 14px;
   color: #666666;
   display: flex;
   align-items: center;
@@ -3518,7 +3521,7 @@ textarea:focus-visible {
   padding: 12px;
   border: none;
   background: transparent;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: #2d5b47;
   cursor: pointer;
@@ -3578,7 +3581,7 @@ textarea:focus-visible {
 
 .decant-detail-card__section-title {
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #2a2a2a;
   display: flex;
@@ -3624,7 +3627,7 @@ textarea:focus-visible {
 }
 
 .decant-detail-card__value {
-  font-size: 13px;
+  font-size: 14px;
   color: #2a2a2a;
   text-align: right;
   max-width: 60%;
@@ -3658,7 +3661,7 @@ textarea:focus-visible {
   border: 1px solid #d0cbc3;
   background: white;
   color: #374151;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   border-radius: 6px;
   cursor: pointer;
@@ -3805,7 +3808,7 @@ textarea:focus-visible {
 }
 
 .decant-hybrid-card__quick-stats {
-  font-size: 13px;
+  font-size: 14px;
   color: #666666;
   display: flex;
   align-items: center;
@@ -3831,7 +3834,7 @@ textarea:focus-visible {
   padding: 14px 12px;
   border: none;
   background: transparent;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: #57534e;
   cursor: pointer;
@@ -3898,7 +3901,7 @@ textarea:focus-visible {
 
 .decant-hybrid-card__section-title {
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: #1f2937;
   display: flex;
@@ -3959,13 +3962,13 @@ textarea:focus-visible {
 }
 
 .decant-hybrid-card__label {
-  font-size: 13px;
+  font-size: 14px;
   color: #6b7280;
   font-weight: 500;
 }
 
 .decant-hybrid-card__value {
-  font-size: 13px;
+  font-size: 14px;
   color: #1f2937;
   font-weight: 500;
   text-align: right;
@@ -4017,7 +4020,7 @@ textarea:focus-visible {
   border: 1px solid #d0cbc3;
   background: white;
   color: #374151;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   border-radius: 6px;
   cursor: pointer;
@@ -4356,7 +4359,7 @@ textarea:focus-visible {
 .decant-inline-edit {
   width: 100%;
   padding: 2px 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-family: var(--decant-font);
   border: 1.5px solid var(--decant-brand-primary);
   border-radius: 4px;
@@ -4444,7 +4447,7 @@ textarea:focus-visible {
 
 /* Item-level rows */
 .decant-tree-node__row--item .decant-tree-node__label {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: #4b5563;
 }
@@ -4645,7 +4648,7 @@ textarea:focus-visible {
 .command-palette__empty {
   padding: 24px 16px;
   text-align: center;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--decant-gray-400);
 }
 
@@ -4965,7 +4968,7 @@ textarea:focus-visible {
 }
 
 .decant-dashboard__segment-label {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--decant-gray-700);
 }
 
@@ -5017,7 +5020,7 @@ textarea:focus-visible {
 
 .decant-dashboard__category-label {
   flex: 1;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--decant-gray-700);
 }
 
@@ -5087,7 +5090,7 @@ textarea:focus-visible {
 }
 
 .decant-dashboard__recent-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--decant-gray-800);
   white-space: nowrap;
@@ -5308,7 +5311,7 @@ textarea:focus-visible {
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--decant-gray-700);
   text-align: left;
   transition: background 0.1s;
@@ -5337,7 +5340,7 @@ textarea:focus-visible {
   width: 22px;
   height: 22px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
@@ -5460,7 +5463,7 @@ textarea:focus-visible {
   padding: 8px 12px;
   border: 1px solid var(--decant-gray-200);
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 14px;
   outline: none;
   background: var(--decant-gray-50, #f9f7f4);
   color: var(--decant-gray-800);
@@ -5507,7 +5510,7 @@ textarea:focus-visible {
   border-radius: 6px;
   background: var(--decant-brand-primary, #2d5b47);
   color: #fff;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s;
@@ -5530,7 +5533,7 @@ textarea:focus-visible {
 .decant-tag-manager__empty {
   padding: 24px 20px;
   text-align: center;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--decant-gray-400);
 }
 

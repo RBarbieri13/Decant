@@ -134,15 +134,15 @@
   --decant-font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   --decant-font-mono: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
 
-  /* Font Sizes */
-  --decant-text-xs: 11px;
-  --decant-text-sm: 12px;
-  --decant-text-base: 13px;
+  /* Font Sizes — 1.25 modular scale, anchored at 14px body */
+  --decant-text-xs: 10px;
+  --decant-text-sm: 11px;
+  --decant-text-base: 12px;
   --decant-text-md: 14px;
   --decant-text-lg: 16px;
   --decant-text-xl: 18px;
-  --decant-text-2xl: 20px;
-  --decant-text-3xl: 24px;
+  --decant-text-2xl: 22px;
+  --decant-text-3xl: 28px;
 
   /* Font Weights */
   --decant-font-normal: 400;

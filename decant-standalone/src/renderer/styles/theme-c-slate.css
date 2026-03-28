@@ -41,9 +41,10 @@
 }
 
 .decant-header__logo {
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.5px;
   font-size: 22px;
+  line-height: 1.2;
   color: #f0f2f6 !important;
 }
 
@@ -97,7 +98,7 @@
 
 .decant-sidebar__search input {
   color: #3d4453 !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
 }
 
 .decant-sidebar__search input::placeholder {
@@ -141,8 +142,9 @@
 }
 
 .decant-tree-node__label {
-  font-size: 13.5px !important;
+  font-size: 14px !important;
   font-weight: 500 !important;
+  line-height: 1.4 !important;
   color: #3d4453 !important;
 }
 
@@ -152,7 +154,8 @@
 }
 
 .decant-tree-node__count {
-  font-size: 10.5px !important;
+  font-size: 10px !important;
+  font-variant-numeric: tabular-nums !important;
   color: #747b8b !important;
   background: rgba(0,0,0,0.05) !important;
 }
@@ -167,8 +170,9 @@
 }
 
 .decant-tree-node__root-label {
-  font-size: 13.5px !important;
+  font-size: 14px !important;
   font-weight: 600 !important;
+  line-height: 1.4 !important;
   color: #282e3a !important;
 }
 
@@ -218,6 +222,7 @@
   font-weight: 700 !important;
   color: #181c24 !important;
   font-size: 18px !important;
+  line-height: 1.2 !important;
   letter-spacing: -0.3px !important;
 }
 
@@ -235,7 +240,7 @@
 
 .decant-quick-filter {
   border-radius: 6px !important;
-  font-weight: 550 !important;
+  font-weight: 500 !important;
   font-size: 12px !important;
   padding: 5px 12px !important;
   border: 1px solid #dfe2ea !important;
@@ -289,7 +294,7 @@
   background: #ffffff !important;
   border: 1px solid #dfe2ea !important;
   border-radius: 5px !important;
-  font-size: 11.5px !important;
+  font-size: 12px !important;
   color: #3d4453 !important;
   height: 28px !important;
 }
@@ -323,28 +328,30 @@
 
 /* Cells — high contrast */
 .decant-table__cell {
-  font-size: 13px !important;
-  font-weight: 440 !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.45 !important;
+  font-variant-numeric: tabular-nums !important;
   color: #3d4453 !important;
   border-right-color: #eceef4 !important;
 }
 
 .decant-table__cell--title {
-  font-weight: 580 !important;
+  font-weight: 600 !important;
   color: #181c24 !important;
 }
 
 /* Tags — sharp, tighter */
 .decant-meta-tag {
   border-radius: 3px !important;
-  font-weight: 580 !important;
-  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  font-size: 10px !important;
   letter-spacing: 0.03em;
 }
 
 .decant-type-badge {
   border-radius: 3px !important;
-  font-weight: 650 !important;
+  font-weight: 700 !important;
   font-size: 10px !important;
   letter-spacing: 0.05em;
   padding: 2px 7px !important;
@@ -365,13 +372,13 @@
 
 .decant-table__group-header .decant-table__group-label {
   font-size: 12px !important;
-  font-weight: 650 !important;
+  font-weight: 700 !important;
   letter-spacing: 0.03em !important;
   color: #3d4453 !important;
 }
 
 .decant-table__group-header .decant-table__group-count {
-  font-size: 10.5px !important;
+  font-size: 10px !important;
   color: #747b8b !important;
   background: rgba(0,0,0,0.05) !important;
   padding: 1px 7px !important;
@@ -382,7 +389,7 @@
 .decant-table__status {
   color: #9ca2b0 !important;
   font-size: 11px !important;
-  font-weight: 450 !important;
+  font-weight: 400 !important;
   letter-spacing: 0.01em !important;
   border-top: 1px solid #eceef4 !important;
   background: #f9fafb !important;
@@ -425,7 +432,7 @@
 
 .decant-zoom-controls__label {
   color: #565d6c !important;
-  font-weight: 550 !important;
+  font-weight: 500 !important;
 }
 
 /* Scrollbar — slate */
@@ -467,7 +474,7 @@
 
 .bottom-bar-slot .collections-panel__bar-label,
 .bottom-bar-slot .utag-panel-header-label {
-  font-size: 12.5px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
   letter-spacing: 0.02em !important;
 }
