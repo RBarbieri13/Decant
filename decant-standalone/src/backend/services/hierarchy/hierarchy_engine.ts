@@ -759,35 +759,36 @@ export class HierarchyEngine {
 
   private markBranchDirty(branchId: string): void {
     const db = getDatabase();
-    // Mark this branch and all ancestors as dirty
-    let currentId: string | null = branchId;
-    while (currentId) {
-      db.prepare(`
-        UPDATE hierarchy_branches SET is_dirty = 1, updated_at = datetime('now') WHERE id = ?
-      `).run(currentId);
-
-      const parent = db.prepare(`
-        SELECT parent_id FROM hierarchy_branches WHERE id = ?
-      `).get(currentId) as { parent_id: string | null } | undefined;
-
-      currentId = parent?.parent_id ?? null;
-    }
+    // Mark this branch and all ancestors as dirty in a single query
+    db.prepare(`
+      WITH RECURSIVE ancestors(id) AS (
+        SELECT id FROM hierarchy_branches WHERE id = ?
+        UNION ALL
+        SELECT hb.parent_id FROM hierarchy_branches hb
+        JOIN ancestors a ON hb.id = a.id
+        WHERE hb.parent_id IS NOT NULL
+      )
+      UPDATE hierarchy_branches
+      SET is_dirty = 1, updated_at = datetime('now')
+      WHERE id IN (SELECT id FROM ancestors)
+    `).run(branchId);
   }
 
   private incrementNodeCounts(branchId: string): void {
     const db = getDatabase();
-    let currentId: string | null = branchId;
-    while (currentId) {
-      db.prepare(`
-        UPDATE hierarchy_branches SET node_count = node_count + 1 WHERE id = ?
-      `).run(currentId);
-
-      const parent = db.prepare(`
-        SELECT parent_id FROM hierarchy_branches WHERE id = ?
-      `).get(currentId) as { parent_id: string | null } | undefined;
-
-      currentId = parent?.parent_id ?? null;
-    }
+    // Increment node_count for this branch and all ancestors in a single query
+    db.prepare(`
+      WITH RECURSIVE ancestors(id) AS (
+        SELECT id FROM hierarchy_branches WHERE id = ?
+        UNION ALL
+        SELECT hb.parent_id FROM hierarchy_branches hb
+        JOIN ancestors a ON hb.id = a.id
+        WHERE hb.parent_id IS NOT NULL
+      )
+      UPDATE hierarchy_branches
+      SET node_count = node_count + 1
+      WHERE id IN (SELECT id FROM ancestors)
+    `).run(branchId);
   }
 
   private retireBranch(branchId: string): void {
@@ -934,20 +935,19 @@ export class HierarchyEngine {
    */
   getBranchPath(branchId: string): string[] {
     const db = getDatabase();
-    const path: string[] = [];
-    let currentId: string | null = branchId;
+    // Collect all ancestor labels in a single recursive CTE, ordered root-first
+    const rows = db.prepare(`
+      WITH RECURSIVE ancestors(id, parent_id, label, lvl) AS (
+        SELECT id, parent_id, label, 0 FROM hierarchy_branches WHERE id = ?
+        UNION ALL
+        SELECT hb.id, hb.parent_id, hb.label, a.lvl + 1
+        FROM hierarchy_branches hb
+        JOIN ancestors a ON hb.id = a.parent_id
+      )
+      SELECT label FROM ancestors ORDER BY lvl DESC
+    `).all(branchId) as { label: string }[];
 
-    while (currentId) {
-      const branch = db.prepare(`
-        SELECT id, parent_id, label FROM hierarchy_branches WHERE id = ?
-      `).get(currentId) as { id: string; parent_id: string | null; label: string } | undefined;
-
-      if (!branch) break;
-      path.unshift(branch.label);
-      currentId = branch.parent_id;
-    }
-
-    return path;
+    return rows.map(r => r.label);
   }
 
   /**
