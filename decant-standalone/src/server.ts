@@ -117,6 +117,14 @@ registerAPIRoutes(app);
 
 // Serve static files from dist (built React app)
 const distPath = path.join(__dirname, '../dist');
+
+// Hashed assets (Vite fingerprinted filenames) — cache indefinitely
+app.use('/assets', express.static(path.join(distPath, 'assets'), {
+  maxAge: '1y',
+  immutable: true,
+}));
+
+// Remaining static files (index.html, etc.) — no long-lived cache
 app.use(express.static(distPath));
 
 // SPA fallback - serve index.html for all non-API routes
