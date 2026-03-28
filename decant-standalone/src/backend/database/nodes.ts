@@ -538,12 +538,27 @@ export function deleteNode(id: string): void {
   cache.invalidate('tree:*');
 }
 
+/**
+ * Columns returned by list endpoints (getAllNodes, getNodesPaginated).
+ * Excludes ai_summary and extracted_fields to cut payload ~80%.
+ * Full data is available via readNode() (single-node detail fetch).
+ */
+const NODE_LIST_COLUMNS = [
+  'id', 'title', 'url', 'source_domain', 'date_added',
+  'company', 'phrase_description', 'short_description', 'logo_url',
+  'metadata_tags', 'function_parent_id', 'organization_parent_id',
+  'is_deleted', 'created_at', 'updated_at',
+  'segment_code', 'category_code', 'content_type_code', 'subcategory_label',
+  'function_tags', 'extraction_quality', 'extraction_source', 'extraction_notes',
+  'function_hierarchy_code', 'organization_hierarchy_code',
+].join(', ');
+
 export function getAllNodes(): unknown[] {
   const db = getDatabase();
 
-  // Step 1: Get all nodes in one query
+  // Step 1: Get all nodes in one query (projected columns — no ai_summary/extracted_fields)
   const nodes = db.prepare(`
-    SELECT * FROM nodes WHERE is_deleted = 0 ORDER BY date_added DESC
+    SELECT ${NODE_LIST_COLUMNS} FROM nodes WHERE is_deleted = 0 ORDER BY date_added DESC
   `).all() as Array<Record<string, unknown>>;
 
   if (nodes.length === 0) return [];
@@ -561,15 +576,13 @@ export function getAllNodes(): unknown[] {
   const branchLabelsMap = batchLoadBranchLabels(nodeIds);
 
   // Step 6: Map over nodes and attach all enriched data
+  // Note: ai_summary and extracted_fields are excluded from list projection
   return nodes.map(node => {
-    const extractedFields = JSON.parse((node.extracted_fields as string) || '{}');
     const branchInfo = branchLabelsMap.get(node.id as string);
     return {
       ...node,
-      extracted_fields: extractedFields,
       metadata_tags: JSON.parse((node.metadata_tags as string) || '[]'),
       key_concepts: conceptsMap.get(node.id as string) || [],
-      metadataCodes: extractedFields.metadataCodes || null,
       user_tags: userTagsMap.get(node.id as string) || [],
       branch_label: branchInfo?.label || null,
       branch_depth: branchInfo?.depth ?? null,
@@ -837,9 +850,9 @@ export function getNodesPaginated(options?: Partial<PaginationParams>): unknown[
   const limit = options?.limit ?? DEFAULT_LIMIT;
   const offset = calculateOffset(page, limit);
 
-  // Step 1: Get paginated nodes
+  // Step 1: Get paginated nodes (projected columns — no ai_summary/extracted_fields)
   const nodes = db.prepare(`
-    SELECT * FROM nodes
+    SELECT ${NODE_LIST_COLUMNS} FROM nodes
     WHERE is_deleted = 0
     ORDER BY date_added DESC
     LIMIT ? OFFSET ?
@@ -854,16 +867,12 @@ export function getNodesPaginated(options?: Partial<PaginationParams>): unknown[
   const conceptsMap = batchLoadKeyConcepts(nodeIds);
 
   // Step 4: Map over nodes and attach concepts from the Map
-  return nodes.map(node => {
-    const extractedFields = JSON.parse((node.extracted_fields as string) || '{}');
-    return {
-      ...node,
-      extracted_fields: extractedFields,
-      metadata_tags: JSON.parse((node.metadata_tags as string) || '[]'),
-      key_concepts: conceptsMap.get(node.id as string) || [],
-      metadataCodes: extractedFields.metadataCodes || null,
-    };
-  });
+  // Note: ai_summary and extracted_fields are excluded from list projection
+  return nodes.map(node => ({
+    ...node,
+    metadata_tags: JSON.parse((node.metadata_tags as string) || '[]'),
+    key_concepts: conceptsMap.get(node.id as string) || [],
+  }));
 }
 
 /**

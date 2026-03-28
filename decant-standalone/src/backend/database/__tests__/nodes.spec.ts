@@ -334,7 +334,8 @@ describe('Node Operations', () => {
 
       const nodes = getAllNodes();
 
-      expect(nodes[0].extracted_fields).toEqual({ test: true });
+      // List view excludes ai_summary and extracted_fields for payload reduction
+      expect(nodes[0].extracted_fields).toBeUndefined();
       expect(nodes[0].metadata_tags).toEqual(['tag1']);
       expect(nodes[0].key_concepts).toEqual(['concept1']);
     });
@@ -488,7 +489,8 @@ describe('Node Operations', () => {
       });
 
       const nodes = getNodesPaginated({ limit: 5 });
-      expect(nodes[0].extracted_fields).toEqual({ test: 'data' });
+      // List view excludes ai_summary and extracted_fields for payload reduction
+      expect(nodes[0].extracted_fields).toBeUndefined();
       expect(nodes[0].metadata_tags).toEqual(['pag-tag']);
       expect(nodes[0].key_concepts).toEqual(['pag-concept']);
     });
