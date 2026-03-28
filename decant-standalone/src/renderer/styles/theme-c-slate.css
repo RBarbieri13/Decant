@@ -1,12 +1,19 @@
 /* ============================================================================
-   THEME C: "SLATE"
+   THEME C: "SLATE" — Refined Edition
    Cool, editorial, high-contrast. Charcoal header, snow-white table,
-   blue-steel accents. Feels like Bloomberg Terminal meets modern SaaS.
+   blue-steel accents. Bloomberg Terminal meets modern SaaS.
    Maximum legibility, maximum crispness.
+
+   Typography: SF Pro / system-ui with normalized weight scale.
+   Borders: Three-tier hierarchy (hairline / standard / structural).
+   Shadows: Layered multi-value for realistic depth.
+   Contrast: WCAG AA compliant throughout.
    ============================================================================ */
 
 :root {
-  /* Cool-bright palette */
+  /* -----------------------------------------------------------------------
+     PALETTE — Cool-bright
+     ----------------------------------------------------------------------- */
   --decant-off-white: #f8f9fc;
   --decant-gray-50: #f3f4f8;
   --decant-gray-100: #eceef4;
@@ -29,23 +36,85 @@
   --decant-border: #dfe2ea;
   --decant-border-dark: #c5c9d4;
 
-  /* Typography — editorial */
-  --decant-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+  /* -----------------------------------------------------------------------
+     TYPOGRAPHY — System UI
+     ----------------------------------------------------------------------- */
+  --decant-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+                 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+  --decant-font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display',
+                         'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+  --decant-font-mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono',
+                      'Fira Code', Consolas, monospace;
+
+  /* Typographic scale — slightly larger base for legibility */
+  --slate-text-2xs: 10px;
+  --slate-text-xs: 11px;
+  --slate-text-sm: 12px;
+  --slate-text-base: 13.5px;
+  --slate-text-md: 14.5px;
+  --slate-text-lg: 16px;
+  --slate-text-xl: 18px;
+  --slate-text-2xl: 22px;
+
+  /* Normalized weight scale — portable across variable & static fonts */
+  --slate-wt-normal: 400;
+  --slate-wt-medium: 500;
+  --slate-wt-semibold: 600;
+  --slate-wt-bold: 700;
+  --slate-wt-heavy: 800;
+
+  /* -----------------------------------------------------------------------
+     BORDER TIERS
+     ----------------------------------------------------------------------- */
+  --slate-border-hairline: 0.5px solid #eceef4;
+  --slate-border-standard: 1px solid #dfe2ea;
+  --slate-border-structural: 2px solid #c5c9d4;
+
+  /* -----------------------------------------------------------------------
+     LAYERED SHADOW SYSTEM
+     ----------------------------------------------------------------------- */
+  --slate-shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --slate-shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --slate-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
+  --slate-shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+  --slate-shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.03);
+  --slate-shadow-inset: inset 0 1px 3px rgba(0,0,0,0.06);
+  --slate-shadow-inset-sm: inset 0 1px 2px rgba(0,0,0,0.04);
 }
 
-/* --- Header: deep charcoal, no green --- */
+/* ============================================================================
+   GLOBAL TEXT RENDERING
+   ============================================================================ */
+
+body {
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1 !important;
+  font-family: var(--decant-font) !important;
+  font-size: var(--slate-text-base) !important;
+  line-height: 1.5 !important;
+}
+
+/* ============================================================================
+   HEADER — Deep charcoal with layered depth
+   ============================================================================ */
+
 .decant-header {
   background: linear-gradient(180deg, #1e2530 0%, #181c24 100%) !important;
   border-bottom: 1px solid #2d3442 !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15),
+              0 1px 3px rgba(0,0,0,0.1),
+              inset 0 1px 0 rgba(255,255,255,0.04) !important;
 }
 
 .decant-header__logo {
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  font-size: 22px;
-  line-height: 1.2;
+  font-family: var(--decant-font-display) !important;
+  font-weight: var(--slate-wt-heavy) !important;
+  letter-spacing: -0.025em !important;
+  font-size: 22px !important;
   color: #f0f2f6 !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
 }
 
 /* Search — steel blue glow */
@@ -58,34 +127,50 @@
 .decant-header__search:focus-within {
   background: rgba(255,255,255,0.1) !important;
   border-color: rgba(43, 174, 130, 0.4) !important;
-  box-shadow: 0 0 0 2px rgba(43, 174, 130, 0.12);
+  box-shadow: 0 0 0 2.5px rgba(43, 174, 130, 0.12) !important;
 }
 
 .decant-header__search input {
   color: #e8eaf0 !important;
+  font-size: var(--slate-text-base) !important;
 }
 
 .decant-header__search input::placeholder {
-  color: rgba(232, 234, 240, 0.4) !important;
+  color: rgba(232, 234, 240, 0.45) !important;
 }
 
-/* Header buttons — sharp */
+/* Header buttons — sharp with interactive depth */
 .decant-header__btn {
   border-radius: 7px !important;
-  font-weight: 600 !important;
-  letter-spacing: -0.01em;
+  font-weight: var(--slate-wt-semibold) !important;
+  letter-spacing: -0.01em !important;
   border-width: 1.5px !important;
+  transition: box-shadow 0.12s ease, transform 0.12s ease !important;
 }
 
-/* --- Sidebar: cool light gray --- */
+.decant-header__btn:hover {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12) !important;
+}
+
+.decant-header__btn:active {
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.15) !important;
+  transform: translateY(0.5px) !important;
+}
+
+/* ============================================================================
+   SIDEBAR — Cool light gray with recessed depth
+   ============================================================================ */
+
 .decant-spaces {
   background-color: #f0f1f5 !important;
-  border-right: 1px solid #dfe2ea !important;
+  border-right: 1px solid #d5d9e2 !important;
+  box-shadow: inset -8px 0 16px rgba(0,0,0,0.04),
+              inset -1px 0 0 rgba(0,0,0,0.06) !important;
 }
 
 .decant-sidebar {
   background-color: #f0f1f5 !important;
-  border-right: 1px solid #dfe2ea !important;
+  border-right: 1px solid #d5d9e2 !important;
 }
 
 .decant-sidebar__search {
@@ -98,44 +183,53 @@
 
 .decant-sidebar__search input {
   color: #3d4453 !important;
-  font-size: 14px !important;
+  font-size: var(--slate-text-base) !important;
+  letter-spacing: -0.006em !important;
 }
 
 .decant-sidebar__search input::placeholder {
-  color: #9ca2b0 !important;
+  color: #858c9a !important;
 }
 
 .decant-sidebar__search i {
-  color: #9ca2b0 !important;
+  color: #858c9a !important;
 }
 
 .decant-sidebar__expand-all {
   border-color: #dfe2ea !important;
   background: #ffffff !important;
   color: #747b8b !important;
+  transition: box-shadow 0.12s ease, background-color 0.12s ease !important;
 }
 
 .decant-sidebar__expand-all:hover {
   background: #eceef4 !important;
   color: #3d4453 !important;
   border-color: #c5c9d4 !important;
+  box-shadow: var(--slate-shadow-xs) !important;
 }
 
-/* Tree nodes — Slate colors with depth */
+.decant-sidebar__expand-all:active {
+  box-shadow: var(--slate-shadow-inset-sm) !important;
+}
+
+/* ============================================================================
+   SIDEBAR TREE NODES — Refined typography + interactive states
+   ============================================================================ */
+
+.decant-tree-node__row {
+  transition: background-color 0.12s ease !important;
+}
+
 .decant-tree-node__row:hover {
   background-color: #e4e7ee !important;
   transform: none !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
-}
-
-.decant-tree-node__row--segment:hover {
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), inset 0 0 12px rgba(0, 0, 0, 0.02) !important;
+  box-shadow: inset 2px 0 0 rgba(27,122,90,0.15) !important;
 }
 
 .decant-tree-node__row--selected {
   background-color: #dce8e2 !important;
   border-left-color: #1b7a5a !important;
-  box-shadow: inset 3px 0 0 #1b7a5a, 0 0 8px rgba(27, 122, 90, 0.06) !important;
 }
 
 .decant-tree-node__row--selected .decant-tree-node__label {
@@ -144,107 +238,57 @@
 
 .decant-tree-node__row--selected .decant-tree-node__icon {
   color: #1b7a5a !important;
-  opacity: 1 !important;
 }
 
 .decant-tree-node__label {
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  line-height: 1.4 !important;
+  font-size: var(--slate-text-base) !important;
+  font-weight: var(--slate-wt-medium) !important;
   color: #3d4453 !important;
-  transition: color 0.15s ease !important;
+  line-height: 1.4 !important;
+  letter-spacing: -0.008em !important;
 }
 
 .decant-tree-node__row--segment .decant-tree-node__label {
-  font-weight: 600 !important;
+  font-weight: var(--slate-wt-semibold) !important;
   color: #282e3a !important;
+  letter-spacing: -0.01em !important;
 }
 
 .decant-tree-node__count {
-  font-size: 10px !important;
-  font-variant-numeric: tabular-nums !important;
-  color: #747b8b !important;
-  background: rgba(0, 0, 0, 0.04) !important;
-  border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
+  font-size: var(--slate-text-2xs) !important;
+  font-weight: var(--slate-wt-medium) !important;
+  color: #636a78 !important;
+  background: rgba(0,0,0,0.05) !important;
+  font-feature-settings: 'tnum' 1 !important;
 }
 
 .decant-tree-node__root-row:hover {
   background-color: #e4e7ee !important;
 }
 
-.decant-tree-node__root-row:hover .decant-tree-node__root-icon {
-  color: #1b7a5a !important;
-  stroke: #1b7a5a !important;
-}
-
 .decant-tree-node__root-row.decant-tree-node__row--selected {
   background-color: #dce8e2 !important;
   border-left-color: #1b7a5a !important;
-  box-shadow: inset 3px 0 0 #1b7a5a !important;
 }
 
 .decant-tree-node__root-label {
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  line-height: 1.4 !important;
+  font-size: var(--slate-text-base) !important;
+  font-weight: var(--slate-wt-semibold) !important;
   color: #282e3a !important;
+  letter-spacing: -0.01em !important;
 }
 
 .decant-tree-node__root-count {
-  background: rgba(0, 0, 0, 0.04) !important;
-  color: #747b8b !important;
-  border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  border-radius: 10px !important;
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
+  background: rgba(0,0,0,0.05) !important;
+  color: #636a78 !important;
+  font-feature-settings: 'tnum' 1 !important;
 }
 
 .decant-tree-node__root-row {
-  border-bottom: none !important;
+  border-bottom: 1px solid #dfe2ea !important;
 }
 
-.decant-tree-node__root-row::after {
-  background: linear-gradient(90deg, transparent 0%, #dfe2ea 20%, #dfe2ea 80%, transparent 100%) !important;
-}
-
-/* Segment-specific selected state — colored glow */
-.decant-tree-node__row--selected.decant-tree-node__row--seg-A,
-.decant-tree-node__row--selected.decant-tree-node__row--seg-H,
-.decant-tree-node__row--selected.decant-tree-node__row--seg-C {
-  box-shadow: inset 3px 0 0 #ec4899, 0 0 8px rgba(236, 72, 153, 0.08) !important;
-}
-
-.decant-tree-node__row--selected.decant-tree-node__row--seg-T,
-.decant-tree-node__row--selected.decant-tree-node__row--seg-B,
-.decant-tree-node__row--selected.decant-tree-node__row--seg-X {
-  box-shadow: inset 3px 0 0 #3b82f6, 0 0 8px rgba(59, 130, 246, 0.08) !important;
-}
-
-.decant-tree-node__row--selected.decant-tree-node__row--seg-F,
-.decant-tree-node__row--selected.decant-tree-node__row--seg-L {
-  box-shadow: inset 3px 0 0 #22c55e, 0 0 8px rgba(34, 197, 94, 0.08) !important;
-}
-
-.decant-tree-node__row--selected.decant-tree-node__row--seg-S,
-.decant-tree-node__row--selected.decant-tree-node__row--seg-E {
-  box-shadow: inset 3px 0 0 #eab308, 0 0 8px rgba(234, 179, 8, 0.08) !important;
-}
-
-/* Segment row — frosted depth */
-.decant-tree-node__row--segment {
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.04) !important;
-  backdrop-filter: blur(2px) !important;
-  -webkit-backdrop-filter: blur(2px) !important;
-}
-
-/* Category row — faint separator */
-.decant-tree-node__row--category {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.025) !important;
-}
-
-/* Sidebar resize handle — subtle but discoverable */
+/* Sidebar resize handle */
 .decant-sidebar__resize-handle:hover,
 .decant-sidebar__resize-handle:active {
   background-color: #1b7a5a !important;
@@ -263,45 +307,30 @@
   color: #3d4453 !important;
 }
 
-/* Tree connector lines — Slate tones */
+/* Tree connector lines */
 .decant-tree-node__children::before {
-  background: linear-gradient(to bottom, rgba(27, 122, 90, 0.18), rgba(27, 122, 90, 0.02)) !important;
-  width: 1.5px !important;
-  border-radius: 1px !important;
+  background: linear-gradient(to bottom, rgba(27, 122, 90, 0.15), rgba(27, 122, 90, 0.03)) !important;
 }
 
 .decant-tree-node__children > .decant-tree-node > .decant-tree-node__row::before {
-  background-color: rgba(27, 122, 90, 0.12) !important;
-  height: 1.5px !important;
-  border-radius: 1px !important;
+  background-color: rgba(27, 122, 90, 0.1) !important;
 }
 
-.decant-tree-node__children > .decant-tree-node > .decant-tree-node__row::after {
-  background-color: rgba(27, 122, 90, 0.2) !important;
-}
+/* ============================================================================
+   TABLE — White canvas with refined depth
+   ============================================================================ */
 
-/* Toggle chevrons — Slate refinement */
-.decant-tree-node__toggle:hover {
-  background-color: rgba(0, 0, 0, 0.06) !important;
-  color: #3d4453 !important;
-}
-
-/* Sidebar content — recessed depth */
-.decant-sidebar__content {
-  box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.025) !important;
-}
-
-/* --- Table --- */
 .decant-table {
   background: #ffffff;
 }
 
 .decant-table__title {
-  font-weight: 700 !important;
+  font-family: var(--decant-font-display) !important;
+  font-weight: var(--slate-wt-bold) !important;
   color: #181c24 !important;
-  font-size: 18px !important;
-  line-height: 1.2 !important;
-  letter-spacing: -0.3px !important;
+  font-size: var(--slate-text-xl) !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.25 !important;
 }
 
 .decant-table__title-bar {
@@ -309,7 +338,10 @@
   padding: 10px 16px !important;
 }
 
-/* Quick filters — compact, editorial */
+/* ============================================================================
+   QUICK FILTERS — Compact, editorial, tactile
+   ============================================================================ */
+
 .decant-quick-filters {
   background: #f7f8fa !important;
   border-bottom-color: #eceef4 !important;
@@ -318,12 +350,14 @@
 
 .decant-quick-filter {
   border-radius: 6px !important;
-  font-weight: 500 !important;
-  font-size: 12px !important;
+  font-weight: var(--slate-wt-medium) !important;
+  font-size: var(--slate-text-sm) !important;
   padding: 5px 12px !important;
   border: 1px solid #dfe2ea !important;
   background: #ffffff !important;
   color: #565d6c !important;
+  letter-spacing: 0.01em !important;
+  line-height: 1.35 !important;
   transition: all 0.15s ease !important;
 }
 
@@ -331,14 +365,22 @@
   background: #eceef4 !important;
   border-color: #c5c9d4 !important;
   color: #3d4453 !important;
+  box-shadow: var(--slate-shadow-xs) !important;
+}
+
+.decant-quick-filter:active {
+  background: #e4e7ee !important;
+  box-shadow: var(--slate-shadow-inset-sm) !important;
+  transform: translateY(0.5px) !important;
 }
 
 .decant-quick-filter--active {
   background: #1b7a5a !important;
   border-color: #1b7a5a !important;
   color: #ffffff !important;
-  font-weight: 600 !important;
-  box-shadow: 0 1px 3px rgba(27, 122, 90, 0.25) !important;
+  font-weight: var(--slate-wt-semibold) !important;
+  box-shadow: 0 1px 4px rgba(27, 122, 90, 0.2),
+              inset 0 1px 0 rgba(255,255,255,0.1) !important;
   transition: all 0.2s ease !important;
 }
 
@@ -347,34 +389,48 @@
   border-color: #166e50 !important;
 }
 
-/* Column headers — slate charcoal (not green) */
+/* ============================================================================
+   TABLE HEADER — Slate charcoal with structural bottom edge
+   ============================================================================ */
+
 .decant-table__header {
   background: linear-gradient(180deg, #2d3442 0%, #262d39 100%) !important;
-  border-bottom: 2px solid #1e2530 !important;
+  border-bottom: 2px solid #1a1f28 !important;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.14),
+              0 1px 3px rgba(0,0,0,0.08),
+              inset 0 1px 0 rgba(255,255,255,0.06) !important;
 }
 
 .decant-table__header-cell {
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.4px !important;
-  color: rgba(232, 234, 240, 0.8) !important;
+  font-family: var(--decant-font) !important;
+  font-size: var(--slate-text-xs) !important;
+  font-weight: var(--slate-wt-semibold) !important;
+  letter-spacing: 0.06em !important;
+  color: rgba(232, 234, 240, 0.88) !important;
   text-transform: uppercase !important;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.2) !important;
+  line-height: 1.3 !important;
   border-right-color: rgba(255,255,255,0.06) !important;
 }
 
-/* Filter row — cool */
+/* ============================================================================
+   FILTER ROW — Subtle with inset inputs
+   ============================================================================ */
+
 .decant-table__filter-row {
   background: #f6f7fa !important;
-  border-bottom: 1px solid #eceef4 !important;
+  border-bottom: var(--slate-border-hairline) !important;
 }
 
 .decant-table__filter-input {
   background: #ffffff !important;
   border: 1px solid #dfe2ea !important;
   border-radius: 5px !important;
-  font-size: 12px !important;
+  font-size: var(--slate-text-sm) !important;
   color: #3d4453 !important;
   height: 28px !important;
+  box-shadow: var(--slate-shadow-inset-sm) !important;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease !important;
 }
 
 .decant-table__filter-input:hover {
@@ -383,12 +439,17 @@
 
 .decant-table__filter-input:focus {
   border-color: #1b7a5a !important;
-  box-shadow: 0 0 0 2px rgba(27, 122, 90, 0.08) !important;
+  box-shadow: var(--slate-shadow-inset-sm),
+              0 0 0 2.5px rgba(27,122,90,0.1) !important;
 }
 
-/* Rows — maximum legibility */
+/* ============================================================================
+   TABLE ROWS — Maximum legibility with subtle depth cues
+   ============================================================================ */
+
 .decant-table__row {
   border-bottom: 1px solid #eceef4 !important;
+  transition: background-color 0.1s ease, box-shadow 0.1s ease !important;
 }
 
 .decant-table__row:nth-child(even) {
@@ -396,52 +457,139 @@
 }
 
 .decant-table__row:hover {
-  background-color: #f0f7f4 !important;
+  background-color: #f0f4f8 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04),
+              inset 3px 0 0 var(--row-segment-color, #1b7a5a) !important;
 }
 
 .decant-table__row--selected {
-  background-color: #e8f3ee !important;
-  border-left-color: #1b7a5a !important;
+  background-color: #eaf3f0 !important;
+  box-shadow: inset 3px 0 0 #1b7a5a,
+              inset 0 0 0 1px rgba(27,122,90,0.06),
+              0 0 8px rgba(27,122,90,0.04) !important;
+  border-left-color: transparent !important;
 }
 
-/* Cells — high contrast */
+/* ============================================================================
+   TABLE CELLS — High contrast with tabular numerals
+   ============================================================================ */
+
 .decant-table__cell {
-  font-size: 14px !important;
-  font-weight: 400 !important;
-  line-height: 1.45 !important;
-  font-variant-numeric: tabular-nums !important;
+  font-size: var(--slate-text-base) !important;
+  font-weight: var(--slate-wt-normal) !important;
   color: #3d4453 !important;
-  border-right-color: #eceef4 !important;
+  line-height: 1.45 !important;
+  letter-spacing: -0.006em !important;
+  font-feature-settings: 'tnum' 1, 'kern' 1 !important;
+  border-right: var(--slate-border-hairline) !important;
 }
 
 .decant-table__cell--title {
-  font-weight: 600 !important;
-  color: #181c24 !important;
+  font-weight: var(--slate-wt-semibold) !important;
+  font-size: var(--slate-text-md) !important;
+  color: #1e2530 !important;
+  letter-spacing: -0.012em !important;
+  font-feature-settings: 'kern' 1, 'liga' 1 !important;
 }
 
-/* Tags — sharp, tighter */
+/* ============================================================================
+   BADGES & TAGS — Refined with micro text-shadow
+   ============================================================================ */
+
 .decant-meta-tag {
-  border-radius: 3px !important;
-  font-weight: 600 !important;
-  font-size: 10px !important;
-  letter-spacing: 0.03em;
+  border-radius: 4px !important;
+  font-weight: var(--slate-wt-semibold) !important;
+  font-size: var(--slate-text-2xs) !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1.3 !important;
 }
 
 .decant-type-badge {
-  border-radius: 3px !important;
-  font-weight: 700 !important;
-  font-size: 10px !important;
-  letter-spacing: 0.05em;
-  padding: 2px 7px !important;
-  text-transform: uppercase;
+  border-radius: 4px !important;
+  font-weight: var(--slate-wt-semibold) !important;
+  font-size: var(--slate-text-2xs) !important;
+  letter-spacing: 0.04em !important;
+  padding: 2px 8px !important;
+  text-transform: uppercase !important;
+  line-height: 1.2 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5),
+              0 0.5px 1px rgba(0,0,0,0.04) !important;
 }
 
-/* Group headers — refined with left accent */
+/* Category Badges — frosted glass with micro depth */
+.decant-segment-badge {
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  border: 1px solid rgba(0,0,0,0.06) !important;
+  font-weight: var(--slate-wt-semibold) !important;
+  font-size: var(--slate-text-xs) !important;
+  letter-spacing: 0.015em !important;
+  padding: 3px 10px !important;
+  border-radius: 4px !important;
+  line-height: 1.3 !important;
+  text-shadow: 0 0.5px 0 rgba(0,0,0,0.05) !important;
+}
+
+.decant-segment-badge--pink {
+  background-color: rgba(236,72,153,0.1) !important;
+  color: #be185d !important;
+  border-color: rgba(236,72,153,0.2) !important;
+}
+
+.decant-segment-badge--blue {
+  background-color: rgba(59,130,246,0.1) !important;
+  color: #1d4ed8 !important;
+  border-color: rgba(59,130,246,0.2) !important;
+}
+
+.decant-segment-badge--green {
+  background-color: rgba(34,197,94,0.1) !important;
+  color: #15803d !important;
+  border-color: rgba(34,197,94,0.2) !important;
+}
+
+.decant-segment-badge--yellow {
+  background-color: rgba(234,179,8,0.1) !important;
+  color: #a16207 !important;
+  border-color: rgba(234,179,8,0.2) !important;
+}
+
+.decant-segment-badge--purple {
+  background-color: rgba(167,139,250,0.1) !important;
+  color: #6d28d9 !important;
+  border-color: rgba(167,139,250,0.2) !important;
+}
+
+.decant-segment-badge--orange {
+  background-color: rgba(249,115,22,0.1) !important;
+  color: #c2410c !important;
+  border-color: rgba(249,115,22,0.2) !important;
+}
+
+.decant-segment-badge--teal {
+  background-color: rgba(20,184,166,0.1) !important;
+  color: #0f766e !important;
+  border-color: rgba(20,184,166,0.2) !important;
+}
+
+.decant-segment-badge--red {
+  background-color: rgba(239,68,68,0.1) !important;
+  color: #b91c1c !important;
+  border-color: rgba(239,68,68,0.2) !important;
+}
+
+/* ============================================================================
+   GROUP HEADERS — Editorial uppercase with floating shadow
+   ============================================================================ */
+
 .decant-table__group-header {
   background: #f3f4f8 !important;
   border-bottom: 1px solid #dfe2ea !important;
-  border-top: 1px solid #dfe2ea !important;
+  border-top: var(--slate-border-hairline) !important;
   padding: 6px 16px !important;
+  box-shadow: 0 -1px 0 rgba(0,0,0,0.03),
+              0 1px 3px rgba(0,0,0,0.03) !important;
+  text-transform: uppercase !important;
 }
 
 .decant-table__group-header .decant-table__group-icon {
@@ -449,50 +597,68 @@
 }
 
 .decant-table__group-header .decant-table__group-label {
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.03em !important;
+  font-family: var(--decant-font) !important;
+  font-size: var(--slate-text-xs) !important;
+  font-weight: var(--slate-wt-semibold) !important;
+  letter-spacing: 0.05em !important;
   color: #3d4453 !important;
+  text-transform: uppercase !important;
 }
 
 .decant-table__group-header .decant-table__group-count {
-  font-size: 10px !important;
-  color: #747b8b !important;
+  font-size: var(--slate-text-2xs) !important;
+  font-weight: var(--slate-wt-medium) !important;
+  color: #636a78 !important;
   background: rgba(0,0,0,0.05) !important;
   padding: 1px 7px !important;
   border-radius: 8px !important;
+  font-feature-settings: 'tnum' 1 !important;
 }
 
-/* Status bar */
+/* ============================================================================
+   STATUS BAR — WCAG AA contrast fix
+   ============================================================================ */
+
 .decant-table__status {
-  color: #9ca2b0 !important;
-  font-size: 11px !important;
-  font-weight: 400 !important;
+  color: #6b7280 !important;
+  font-size: var(--slate-text-xs) !important;
+  font-weight: var(--slate-wt-normal) !important;
   letter-spacing: 0.01em !important;
   border-top: 1px solid #eceef4 !important;
   background: #f9fafb !important;
   padding: 8px 16px !important;
+  font-feature-settings: 'tnum' 1 !important;
 }
 
-/* View mode buttons — grouped pill */
+/* ============================================================================
+   VIEW MODE BUTTONS — Grouped pill with active inset
+   ============================================================================ */
+
 .decant-table__view-btn {
   border-color: #dfe2ea !important;
   color: #747b8b !important;
   border-radius: 4px !important;
+  transition: background-color 0.12s ease, box-shadow 0.12s ease !important;
 }
 
 .decant-table__view-btn:hover {
   background-color: #eceef4 !important;
   color: #3d4453 !important;
+  box-shadow: var(--slate-shadow-xs) !important;
 }
 
 .decant-table__view-btn--active {
   background-color: #282e3a !important;
   color: #f0f2f6 !important;
   border-color: #282e3a !important;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2),
+              0 1px 0 rgba(255,255,255,0.04) !important;
 }
 
-/* Zoom controls */
+/* ============================================================================
+   ZOOM CONTROLS
+   ============================================================================ */
+
 .decant-zoom-controls {
   border-left-color: #dfe2ea !important;
 }
@@ -510,24 +676,37 @@
 
 .decant-zoom-controls__label {
   color: #565d6c !important;
-  font-weight: 500 !important;
+  font-weight: var(--slate-wt-medium) !important;
+  font-feature-settings: 'tnum' 1 !important;
 }
 
-/* Scrollbar — slate */
-*:hover::-webkit-scrollbar-track {
-  background: #eceef4 !important;
+/* ============================================================================
+   SCROLLBAR — Thin, rounded, muted
+   ============================================================================ */
+
+::-webkit-scrollbar {
+  width: 7px !important;
+  height: 7px !important;
 }
 
 *:hover::-webkit-scrollbar-thumb {
-  background: #565d6c !important;
-  border-color: #eceef4 !important;
+  background: #9ca2b0 !important;
+  border-radius: 4px !important;
+  border: 1px solid transparent !important;
 }
 
 *:hover::-webkit-scrollbar-thumb:hover {
-  background: #3d4453 !important;
+  background: #747b8b !important;
 }
 
-/* Bottom shelf */
+*:hover::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+/* ============================================================================
+   BOTTOM BAR & SHELF
+   ============================================================================ */
+
 .decant-shelf {
   background: #f0f1f5 !important;
   border-top: 1px solid #dfe2ea !important;
@@ -552,16 +731,18 @@
 
 .bottom-bar-slot .collections-panel__bar-label,
 .bottom-bar-slot .utag-panel-header-label {
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.02em !important;
+  font-size: var(--slate-text-sm) !important;
+  font-weight: var(--slate-wt-semibold) !important;
+  letter-spacing: 0.015em !important;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.15) !important;
 }
 
 .bottom-bar-slot .collections-panel__bar-count,
 .bottom-bar-slot .utag-panel-header-count {
   background: rgba(27, 122, 90, 0.3) !important;
   color: #5cedb8 !important;
-  font-size: 10px !important;
+  font-size: var(--slate-text-2xs) !important;
+  font-feature-settings: 'tnum' 1 !important;
 }
 
 .bottom-bar-slot .collections-panel__bar-accent,
@@ -570,137 +751,35 @@
 }
 
 /* ============================================================================
-   POLISH PASS — 10 Texture & Depth Improvements
+   MODALS & FLOATING PANELS — Proper elevation stack
    ============================================================================ */
 
-/* --- 1. Category Badges: Frosted glass instead of solid loud colors --- */
-.decant-segment-badge {
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border: 1px solid rgba(0,0,0,0.08) !important;
-  font-weight: 600 !important;
-  font-size: 11px !important;
-  letter-spacing: 0.02em;
-}
-.decant-segment-badge--pink {
-  background-color: rgba(236,72,153,0.1) !important;
-  color: #be185d !important;
-  border-color: rgba(236,72,153,0.2) !important;
-}
-.decant-segment-badge--blue {
-  background-color: rgba(59,130,246,0.1) !important;
-  color: #1d4ed8 !important;
-  border-color: rgba(59,130,246,0.2) !important;
-}
-.decant-segment-badge--green {
-  background-color: rgba(34,197,94,0.1) !important;
-  color: #15803d !important;
-  border-color: rgba(34,197,94,0.2) !important;
-}
-.decant-segment-badge--yellow {
-  background-color: rgba(234,179,8,0.1) !important;
-  color: #a16207 !important;
-  border-color: rgba(234,179,8,0.2) !important;
-}
-.decant-segment-badge--purple {
-  background-color: rgba(167,139,250,0.1) !important;
-  color: #6d28d9 !important;
-  border-color: rgba(167,139,250,0.2) !important;
-}
-.decant-segment-badge--orange {
-  background-color: rgba(249,115,22,0.1) !important;
-  color: #c2410c !important;
-  border-color: rgba(249,115,22,0.2) !important;
-}
-.decant-segment-badge--teal {
-  background-color: rgba(20,184,166,0.1) !important;
-  color: #0f766e !important;
-  border-color: rgba(20,184,166,0.2) !important;
-}
-.decant-segment-badge--red {
-  background-color: rgba(239,68,68,0.1) !important;
-  color: #b91c1c !important;
-  border-color: rgba(239,68,68,0.2) !important;
-}
-
-/* --- 2. Column Headers: Depth with inner highlight + bottom shadow --- */
-.decant-table__header {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.06) !important;
-}
-
-/* --- 3. Sidebar: Subtle inner shadow for depth --- */
-.decant-spaces {
-  box-shadow: inset -6px 0 12px rgba(0,0,0,0.03) !important;
-}
-
-/* --- 4. Table Rows: Softer hover with subtle lift --- */
-.decant-table__row:hover {
-  background-color: #f0f4f8 !important;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06), inset 3px 0 0 var(--row-segment-color, #1b7a5a) !important;
-}
-
-/* --- 5. Selected Row: Stronger left accent + subtle glow --- */
-.decant-table__row--selected {
-  background-color: #eaf3f0 !important;
-  box-shadow: inset 3px 0 0 #1b7a5a, inset 6px 0 12px rgba(27,122,90,0.06) !important;
-  border-left-color: transparent !important;
-}
-
-/* --- 6. Group Headers: Editorial refinement with shadow --- */
-.decant-table__group-header {
-  box-shadow: 0 -1px 0 rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03) !important;
-  font-size: 11px !important;
-  letter-spacing: 0.5px !important;
-  text-transform: uppercase;
-}
-
-/* --- 7. Modals & Floating Panels: Proper elevation shadows --- */
 .quick-add-modal,
 .batch-import-modal,
 .settings-dialog,
 .decant-modal {
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.05), 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08) !important;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.04),
+              0 4px 12px rgba(0,0,0,0.08),
+              0 16px 40px rgba(0,0,0,0.12),
+              0 24px 64px rgba(0,0,0,0.06) !important;
   border-radius: 12px !important;
 }
 
 .collections-panel,
 .utag-panel {
-  box-shadow: 0 -4px 24px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05) !important;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.06),
+              0 -8px 24px rgba(0,0,0,0.08),
+              0 0 0 1px rgba(0,0,0,0.04) !important;
   border-radius: 10px 10px 0 0 !important;
 }
 
-/* --- 8. Filter Inputs: Subtle inset shadow --- */
-.decant-table__filter-input {
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.06) !important;
-  transition: box-shadow 0.15s ease, border-color 0.15s ease !important;
-}
+/* ============================================================================
+   DETAIL PANEL — Left-edge shadow for layered depth
+   ============================================================================ */
 
-.decant-table__filter-input:focus {
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.04), 0 0 0 2px rgba(27,122,90,0.1) !important;
-}
-
-/* --- 9. Detail Panel: Layered card with left-edge shadow --- */
 .decant-panel__wrapper {
-  box-shadow: -4px 0 16px rgba(0,0,0,0.06), -1px 0 0 rgba(0,0,0,0.08) !important;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.04),
+              -6px 0 20px rgba(0,0,0,0.06),
+              -1px 0 0 rgba(0,0,0,0.08) !important;
   background: #f9fafb !important;
-}
-
-/* --- 10. Scrollbar: Thinner, rounded, muted gray --- */
-::-webkit-scrollbar {
-  width: 7px !important;
-  height: 7px !important;
-}
-
-*:hover::-webkit-scrollbar-thumb {
-  background: #9ca2b0 !important;
-  border-radius: 4px !important;
-  border: 1px solid transparent !important;
-}
-
-*:hover::-webkit-scrollbar-thumb:hover {
-  background: #747b8b !important;
-}
-
-*:hover::-webkit-scrollbar-track {
-  background: transparent !important;
 }
