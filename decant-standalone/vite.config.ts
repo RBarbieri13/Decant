@@ -29,6 +29,12 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: './index.html',
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-icons': ['@tabler/icons-react'],
+        },
+      },
     },
   },
 });
