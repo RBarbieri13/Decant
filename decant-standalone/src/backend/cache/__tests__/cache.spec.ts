@@ -241,21 +241,84 @@ describe('Cache Module', () => {
     });
   });
 
+  describe('LRU Eviction', () => {
+    it('should cap entries at maxEntries (200)', () => {
+      for (let i = 0; i < 250; i++) {
+        cache.set(`key${i}`, `value${i}`);
+      }
+
+      const stats = cache.stats();
+      expect(stats.size).toBe(200);
+      expect(stats.maxEntries).toBe(200);
+    });
+
+    it('should evict oldest entries first', () => {
+      for (let i = 0; i < 250; i++) {
+        cache.set(`key${i}`, `value${i}`);
+      }
+
+      // First 50 entries (key0-key49) should be evicted
+      expect(cache.get('key0')).toBeNull();
+      expect(cache.get('key49')).toBeNull();
+
+      // Last 200 entries (key50-key249) should remain
+      expect(cache.get('key50')).toBe('value50');
+      expect(cache.get('key249')).toBe('value249');
+    });
+
+    it('should promote accessed entries (LRU touch)', () => {
+      // Fill to capacity
+      for (let i = 0; i < 200; i++) {
+        cache.set(`key${i}`, `value${i}`);
+      }
+
+      // Access key0 to promote it to most-recently-used
+      expect(cache.get('key0')).toBe('value0');
+
+      // Add 50 more entries to trigger eviction
+      for (let i = 200; i < 250; i++) {
+        cache.set(`key${i}`, `value${i}`);
+      }
+
+      // key0 was promoted, so it should survive eviction
+      expect(cache.get('key0')).toBe('value0');
+
+      // key1 through key50 should be evicted (they were oldest after key0 was promoted)
+      expect(cache.get('key1')).toBeNull();
+      expect(cache.get('key50')).toBeNull();
+
+      // key51 onward should remain
+      expect(cache.get('key51')).toBe('value51');
+    });
+
+    it('should handle re-setting an existing key without growing', () => {
+      for (let i = 0; i < 200; i++) {
+        cache.set(`key${i}`, `value${i}`);
+      }
+
+      // Re-set an existing key
+      cache.set('key0', 'updated');
+
+      expect(cache.stats().size).toBe(200);
+      expect(cache.get('key0')).toBe('updated');
+    });
+  });
+
   describe('Performance', () => {
-    it('should handle large number of entries', () => {
+    it('should handle large number of set operations', () => {
       const count = 10000;
 
-      // Set many entries
       for (let i = 0; i < count; i++) {
         cache.set(`key${i}`, `value${i}`);
       }
 
-      expect(cache.stats().size).toBe(count);
+      // Should be capped at maxEntries
+      expect(cache.stats().size).toBe(200);
 
-      // Get some entries
-      expect(cache.get('key0')).toBe('value0');
-      expect(cache.get('key5000')).toBe('value5000');
-      expect(cache.get('key9999')).toBe('value9999');
+      // Only the last 200 entries should remain
+      expect(cache.get(`key${count - 1}`)).toBe(`value${count - 1}`);
+      expect(cache.get(`key${count - 200}`)).toBe(`value${count - 200}`);
+      expect(cache.get(`key${count - 201}`)).toBeNull();
     });
 
     it('should handle complex object caching', () => {

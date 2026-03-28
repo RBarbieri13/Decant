@@ -40,7 +40,10 @@ export interface CodeMutation {
 // Default TTL: 10 minutes for hierarchy data (longer than general cache)
 const DEFAULT_TTL = 10 * 60 * 1000;
 
-// Cache storage organized by view type
+// Maximum entries per view cache (LRU eviction beyond this limit)
+const MAX_ENTRIES_PER_VIEW = 200;
+
+// Cache storage organized by view type (Map preserves insertion order for LRU)
 const functionCache = new Map<string, HierarchyCacheEntry>();
 const organizationCache = new Map<string, HierarchyCacheEntry>();
 
@@ -89,6 +92,23 @@ function getDescendantPattern(path: string): RegExp {
   return new RegExp(`^${escaped}\\.`);
 }
 
+/**
+ * Evict least-recently-used entries from a cache map if over capacity
+ */
+function evictLRU(cacheMap: Map<string, HierarchyCacheEntry>): void {
+  if (cacheMap.size <= MAX_ENTRIES_PER_VIEW) return;
+
+  const evictCount = cacheMap.size - MAX_ENTRIES_PER_VIEW;
+  const iter = cacheMap.keys();
+  for (let i = 0; i < evictCount; i++) {
+    const oldest = iter.next().value;
+    if (oldest !== undefined) {
+      cacheMap.delete(oldest);
+    }
+  }
+  log.debug('Hierarchy cache LRU eviction', { evicted: evictCount, module: 'hierarchy_cache' });
+}
+
 // ============================================================
 // Public API
 // ============================================================
@@ -116,6 +136,10 @@ export function getTree(view: 'function' | 'organization', path?: string): TreeN
     return null;
   }
 
+  // Promote to most-recently-used by re-inserting
+  cache.delete(key);
+  cache.set(key, entry);
+
   log.debug('Hierarchy cache hit', { view, path: path || 'root', module: 'hierarchy_cache' });
   return entry.data;
 }
@@ -137,11 +161,18 @@ export function setTree(
   const key = getCacheKey(path);
   const now = Date.now();
 
+  // If key exists, delete first so re-insert moves it to end (most-recent)
+  if (cache.has(key)) {
+    cache.delete(key);
+  }
+
   cache.set(key, {
     data: tree,
     expires: now + ttl,
     createdAt: now,
   });
+
+  evictLRU(cache);
 
   log.debug('Hierarchy cache set', { view, path: path || 'root', ttl, module: 'hierarchy_cache' });
 }
@@ -281,16 +312,18 @@ export function clearAll(): void {
  * Get cache statistics
  */
 export function getStats(): {
-  function: { size: number; keys: string[] };
-  organization: { size: number; keys: string[] };
+  function: { size: number; maxEntries: number; keys: string[] };
+  organization: { size: number; maxEntries: number; keys: string[] };
 } {
   return {
     function: {
       size: functionCache.size,
+      maxEntries: MAX_ENTRIES_PER_VIEW,
       keys: Array.from(functionCache.keys()),
     },
     organization: {
       size: organizationCache.size,
+      maxEntries: MAX_ENTRIES_PER_VIEW,
       keys: Array.from(organizationCache.keys()),
     },
   };
