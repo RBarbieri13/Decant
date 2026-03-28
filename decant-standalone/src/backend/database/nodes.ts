@@ -790,13 +790,24 @@ export function readNodes(ids: string[]): unknown[] {
   const nodeIds = nodes.map(n => n.id as string);
   const conceptsMap = batchLoadKeyConcepts(nodeIds);
 
-  // Step 3: Transform and return
-  return nodes.map(node => ({
-    ...node,
-    extracted_fields: JSON.parse((node.extracted_fields as string) || '{}'),
-    metadata_tags: JSON.parse((node.metadata_tags as string) || '[]'),
-    key_concepts: conceptsMap.get(node.id as string) || [],
-  }));
+  // Step 3: Build a lookup map so we can return nodes in input-ID order.
+  // SQL IN(...) does not guarantee any particular row order, but callers
+  // (e.g. getRelatedNodes) rely on index correspondence with the input IDs.
+  const nodeMap = new Map<string, Record<string, unknown>>();
+  for (const node of nodes) {
+    nodeMap.set(node.id as string, node);
+  }
+
+  // Step 4: Return in the same order as `ids`, skipping any missing nodes
+  return ids
+    .map(id => nodeMap.get(id))
+    .filter((node): node is Record<string, unknown> => node != null)
+    .map(node => ({
+      ...node,
+      extracted_fields: JSON.parse((node.extracted_fields as string) || '{}'),
+      metadata_tags: JSON.parse((node.metadata_tags as string) || '[]'),
+      key_concepts: conceptsMap.get(node.id as string) || [],
+    }));
 }
 
 export function getNodeById(id: string): unknown {
