@@ -5,6 +5,10 @@
 import Database from 'better-sqlite3';
 import { vi, beforeEach, afterEach, afterAll } from 'vitest';
 import { runPendingMigrations } from '../database/migrations/runner.js';
+import {
+  DROP_FTS_TRIGGERS_SQL,
+  CREATE_FTS_TRIGGERS_SQL,
+} from '../database/migrations/019_add_fts5_sync_triggers.js';
 
 // Store the test database instance
 let testDb: Database.Database | null = null;
@@ -37,6 +41,11 @@ export function closeTestDatabase(): void {
  */
 export function resetTestDatabase(): void {
   if (testDb) {
+    // Drop FTS sync triggers before bulk-deleting nodes.
+    // The triggers fire on every DELETE and can corrupt the FTS index
+    // when the content table is being cleared in bulk.
+    testDb.exec(DROP_FTS_TRIGGERS_SQL);
+
     testDb.exec(`
       DELETE FROM collection_nodes;
       DELETE FROM collections;
@@ -52,6 +61,16 @@ export function resetTestDatabase(): void {
       DELETE FROM organizations;
       DELETE FROM metadata_code_registry;
     `);
+
+    // Restore FTS sync triggers and rebuild (empty) index
+    const hasFts = testDb.prepare(
+      "SELECT COUNT(*) as c FROM sqlite_master WHERE type='table' AND name='nodes_fts'"
+    ).get() as { c: number };
+
+    if (hasFts.c > 0) {
+      testDb.exec(CREATE_FTS_TRIGGERS_SQL);
+      testDb.exec(`INSERT INTO nodes_fts(nodes_fts) VALUES('rebuild');`);
+    }
   }
 }
 

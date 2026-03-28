@@ -27,6 +27,7 @@ import migration015 from './015_add_user_tags.js';
 import migration016 from './016_add_user_tag_emblem.js';
 import migration017 from './017_add_node_summary.js';
 import migration018 from './018_add_dynamic_hierarchy.js';
+import migration019 from './019_add_fts5_sync_triggers.js';
 
 /**
  * All available migrations in order of execution
@@ -51,6 +52,7 @@ export const migrations: Migration[] = [
   migration016,
   migration017,
   migration018,
+  migration019,
 ];
 
 /**
