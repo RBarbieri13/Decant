@@ -55,6 +55,12 @@ export function getDatabase(): Database.Database {
   // Enable WAL mode for better concurrency
   db.pragma('journal_mode = WAL');
 
+  // Performance PRAGMAs
+  db.pragma('synchronous = NORMAL');    // Safe with WAL, faster than FULL
+  db.pragma('busy_timeout = 5000');     // Wait up to 5s on lock contention
+  db.pragma('temp_store = MEMORY');     // Keep temp tables in memory
+  db.pragma('mmap_size = 268435456');   // 256MB memory-mapped I/O
+
   return db;
 }
 
