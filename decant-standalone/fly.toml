@@ -8,6 +8,7 @@ primary_region = "ord"
   NODE_ENV = "production"
   PORT = "3000"
   DATABASE_PATH = "/data/decant.db"
+  CORS_ALLOWED_ORIGINS = "https://decant-app.fly.dev"
 
 [[mounts]]
   source = "decant_data"
