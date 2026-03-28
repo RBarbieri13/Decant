@@ -1494,6 +1494,8 @@ textarea:focus-visible {
   flex: 1;
   overflow-y: auto;
   padding: 16px 0;
+  position: relative;
+  box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.02);
 }
 
 /* Side-by-side bottom panels (Collections + User Tags) */
@@ -1556,6 +1558,12 @@ textarea:focus-visible {
 .decant-tree-node__children {
   position: relative;
   margin-left: 12px;
+  animation: treeChildrenFadeIn 0.2s ease;
+}
+
+@keyframes treeChildrenFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .decant-tree-node__children::before {
@@ -1564,8 +1572,9 @@ textarea:focus-visible {
   left: 18px;
   top: 0;
   bottom: 12px;
-  width: 1px;
-  background: linear-gradient(to bottom, rgba(45, 91, 71, 0.2), rgba(45, 91, 71, 0.05));
+  width: 1.5px;
+  border-radius: 1px;
+  background: linear-gradient(to bottom, rgba(45, 91, 71, 0.22), rgba(45, 91, 71, 0.03));
 }
 
 .decant-tree-node__row {
@@ -1581,15 +1590,28 @@ textarea:focus-visible {
   transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
 }
 
-/* Horizontal connector line */
+/* Horizontal connector line with dot terminal */
 .decant-tree-node__children > .decant-tree-node > .decant-tree-node__row::before {
   content: '';
   position: absolute;
   left: -12px;
   top: 50%;
   width: 12px;
-  height: 1px;
+  height: 1.5px;
+  border-radius: 1px;
   background-color: rgba(45, 91, 71, 0.15);
+}
+
+.decant-tree-node__children > .decant-tree-node > .decant-tree-node__row::after {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: rgba(45, 91, 71, 0.18);
 }
 
 .decant-tree-node__row:hover {
@@ -1607,31 +1629,34 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   padding: 0;
   border: none;
   background: transparent;
   color: #6b7280;
   cursor: pointer;
-  border-radius: 3px;
+  border-radius: 4px;
   flex-shrink: 0;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .decant-tree-node__toggle:hover {
-  background-color: #e5e7eb;
+  background-color: rgba(0, 0, 0, 0.06);
+  color: #374151;
+}
+
+.decant-tree-node__toggle svg {
+  display: block;
+  transition: transform 0.2s ease;
 }
 
 .decant-tree-node__toggle i {
   font-size: 14px;
 }
 
-.decant-tree-node__toggle svg {
-  display: block;
-}
-
 .decant-tree-node__toggle-spacer {
-  width: 18px;
+  width: 20px;
   flex-shrink: 0;
 }
 
@@ -1639,6 +1664,12 @@ textarea:focus-visible {
   flex-shrink: 0;
   color: var(--decant-forest-green);
   margin-right: 6px;
+  opacity: 0.85;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.decant-tree-node__row:hover .decant-tree-node__icon {
+  opacity: 1;
 }
 
 .decant-tree-node__label {
@@ -1669,9 +1700,27 @@ textarea:focus-visible {
   border-radius: 6px;
   margin: 4px 12px 6px 0;
   min-height: 32px;
-  border-bottom: 1px solid #d5cec3;
+  border-bottom: none;
   margin-bottom: 8px;
   padding-bottom: 10px;
+  position: relative;
+  background: linear-gradient(180deg, rgba(0,0,0,0.01) 0%, transparent 100%);
+  transition: background-color 0.15s ease;
+}
+
+/* Gradient fade divider below root row */
+.decant-tree-node__root-row::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.08) 20%, rgba(0,0,0,0.08) 80%, transparent 100%);
+}
+
+.decant-tree-node__root-row:hover .decant-tree-node__root-icon {
+  color: var(--decant-brand-primary, #2d5b47);
 }
 
 .decant-tree-node__root-row:hover {
@@ -4466,6 +4515,9 @@ textarea:focus-visible {
   padding-bottom: 8px;
   position: relative;
   border-radius: 8px;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
 .decant-tree-node__row--segment .decant-tree-node__label {
@@ -4482,14 +4534,16 @@ textarea:focus-visible {
   left: 0;
   top: 4px;
   bottom: 4px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  box-shadow: 2px 0 6px rgba(var(--accent-r, 0), var(--accent-g, 0), var(--accent-b, 0), 0.12);
 }
 
 /* Category-level rows */
 .decant-tree-node__row--category {
   padding-top: 4px;
   padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
 }
 
 .decant-tree-node__row--category .decant-tree-node__label {
@@ -4507,16 +4561,26 @@ textarea:focus-visible {
   color: #4b5563;
 }
 
-/* Child count badge */
+/* Child count badge — frosted pill */
 .decant-tree-node__count {
   margin-left: auto;
-  font-size: 11px;
-  font-weight: 400;
+  font-size: 10.5px;
+  font-weight: 500;
   color: var(--decant-gray-400, #9ca3af);
-  padding-right: 8px;
+  padding: 1px 8px;
   min-width: 20px;
   text-align: right;
   flex-shrink: 0;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.decant-tree-node__row:hover .decant-tree-node__count {
+  background: rgba(0, 0, 0, 0.07);
 }
 
 /* Indentation guide line */
@@ -4525,7 +4589,8 @@ textarea:focus-visible {
   left: 0;
   top: 0;
   bottom: 0;
-  width: 1px;
+  width: 1.5px;
+  border-radius: 1px;
   background-color: var(--decant-gray-200, #e5e7eb);
   pointer-events: none;
 }

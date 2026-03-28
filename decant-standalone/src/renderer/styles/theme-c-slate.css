@@ -121,16 +121,21 @@
   border-color: #c5c9d4 !important;
 }
 
-/* Tree nodes — Slate colors */
+/* Tree nodes — Slate colors with depth */
 .decant-tree-node__row:hover {
   background-color: #e4e7ee !important;
   transform: none !important;
-  box-shadow: none !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+.decant-tree-node__row--segment:hover {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), inset 0 0 12px rgba(0, 0, 0, 0.02) !important;
 }
 
 .decant-tree-node__row--selected {
   background-color: #dce8e2 !important;
   border-left-color: #1b7a5a !important;
+  box-shadow: inset 3px 0 0 #1b7a5a, 0 0 8px rgba(27, 122, 90, 0.06) !important;
 }
 
 .decant-tree-node__row--selected .decant-tree-node__label {
@@ -139,6 +144,7 @@
 
 .decant-tree-node__row--selected .decant-tree-node__icon {
   color: #1b7a5a !important;
+  opacity: 1 !important;
 }
 
 .decant-tree-node__label {
@@ -146,6 +152,7 @@
   font-weight: 500 !important;
   line-height: 1.4 !important;
   color: #3d4453 !important;
+  transition: color 0.15s ease !important;
 }
 
 .decant-tree-node__row--segment .decant-tree-node__label {
@@ -157,16 +164,25 @@
   font-size: 10px !important;
   font-variant-numeric: tabular-nums !important;
   color: #747b8b !important;
-  background: rgba(0,0,0,0.05) !important;
+  background: rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
 }
 
 .decant-tree-node__root-row:hover {
   background-color: #e4e7ee !important;
 }
 
+.decant-tree-node__root-row:hover .decant-tree-node__root-icon {
+  color: #1b7a5a !important;
+  stroke: #1b7a5a !important;
+}
+
 .decant-tree-node__root-row.decant-tree-node__row--selected {
   background-color: #dce8e2 !important;
   border-left-color: #1b7a5a !important;
+  box-shadow: inset 3px 0 0 #1b7a5a !important;
 }
 
 .decant-tree-node__root-label {
@@ -177,12 +193,55 @@
 }
 
 .decant-tree-node__root-count {
-  background: rgba(0,0,0,0.05) !important;
+  background: rgba(0, 0, 0, 0.04) !important;
   color: #747b8b !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  border-radius: 10px !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
 }
 
 .decant-tree-node__root-row {
-  border-bottom: 1px solid #dfe2ea !important;
+  border-bottom: none !important;
+}
+
+.decant-tree-node__root-row::after {
+  background: linear-gradient(90deg, transparent 0%, #dfe2ea 20%, #dfe2ea 80%, transparent 100%) !important;
+}
+
+/* Segment-specific selected state — colored glow */
+.decant-tree-node__row--selected.decant-tree-node__row--seg-A,
+.decant-tree-node__row--selected.decant-tree-node__row--seg-H,
+.decant-tree-node__row--selected.decant-tree-node__row--seg-C {
+  box-shadow: inset 3px 0 0 #ec4899, 0 0 8px rgba(236, 72, 153, 0.08) !important;
+}
+
+.decant-tree-node__row--selected.decant-tree-node__row--seg-T,
+.decant-tree-node__row--selected.decant-tree-node__row--seg-B,
+.decant-tree-node__row--selected.decant-tree-node__row--seg-X {
+  box-shadow: inset 3px 0 0 #3b82f6, 0 0 8px rgba(59, 130, 246, 0.08) !important;
+}
+
+.decant-tree-node__row--selected.decant-tree-node__row--seg-F,
+.decant-tree-node__row--selected.decant-tree-node__row--seg-L {
+  box-shadow: inset 3px 0 0 #22c55e, 0 0 8px rgba(34, 197, 94, 0.08) !important;
+}
+
+.decant-tree-node__row--selected.decant-tree-node__row--seg-S,
+.decant-tree-node__row--selected.decant-tree-node__row--seg-E {
+  box-shadow: inset 3px 0 0 #eab308, 0 0 8px rgba(234, 179, 8, 0.08) !important;
+}
+
+/* Segment row — frosted depth */
+.decant-tree-node__row--segment {
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.04) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
+}
+
+/* Category row — faint separator */
+.decant-tree-node__row--category {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.025) !important;
 }
 
 /* Sidebar resize handle — subtle but discoverable */
@@ -206,11 +265,30 @@
 
 /* Tree connector lines — Slate tones */
 .decant-tree-node__children::before {
-  background: linear-gradient(to bottom, rgba(27, 122, 90, 0.15), rgba(27, 122, 90, 0.03)) !important;
+  background: linear-gradient(to bottom, rgba(27, 122, 90, 0.18), rgba(27, 122, 90, 0.02)) !important;
+  width: 1.5px !important;
+  border-radius: 1px !important;
 }
 
 .decant-tree-node__children > .decant-tree-node > .decant-tree-node__row::before {
-  background-color: rgba(27, 122, 90, 0.1) !important;
+  background-color: rgba(27, 122, 90, 0.12) !important;
+  height: 1.5px !important;
+  border-radius: 1px !important;
+}
+
+.decant-tree-node__children > .decant-tree-node > .decant-tree-node__row::after {
+  background-color: rgba(27, 122, 90, 0.2) !important;
+}
+
+/* Toggle chevrons — Slate refinement */
+.decant-tree-node__toggle:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+  color: #3d4453 !important;
+}
+
+/* Sidebar content — recessed depth */
+.decant-sidebar__content {
+  box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.025) !important;
 }
 
 /* --- Table --- */
