@@ -147,6 +147,7 @@ function buildTreeFromHierarchyCodes(
     SELECT * FROM nodes
     WHERE is_deleted = 0 AND ${hierarchyCodeField} IS NOT NULL
     ORDER BY ${hierarchyCodeField} ASC
+    LIMIT 10000
   `).all() as any[];
 
   // Also get nodes without hierarchy codes (legacy data)
@@ -154,6 +155,7 @@ function buildTreeFromHierarchyCodes(
     SELECT * FROM nodes
     WHERE is_deleted = 0 AND ${hierarchyCodeField} IS NULL
     ORDER BY date_added DESC
+    LIMIT 10000
   `).all() as any[];
 
   // Combine and batch load key concepts
@@ -217,9 +219,9 @@ function buildTreeFromParentIds(
 ): any {
   const db = getDatabase();
 
-  // Step 1: Load ALL non-deleted nodes in ONE query
+  // Step 1: Load all non-deleted nodes in ONE query (capped for safety)
   const allNodes = db.prepare(`
-    SELECT * FROM nodes WHERE is_deleted = 0 ORDER BY date_added DESC
+    SELECT * FROM nodes WHERE is_deleted = 0 ORDER BY date_added DESC LIMIT 10000
   `).all() as any[];
 
   // Step 2: Batch load ALL key concepts in ONE query
@@ -308,6 +310,7 @@ export function getSubtree(view: 'function' | 'organization', path: string): any
     SELECT * FROM nodes
     WHERE ${hierarchyCodeField} LIKE ? AND is_deleted = 0
     ORDER BY ${hierarchyCodeField} ASC
+    LIMIT 5000
   `).all(`${path}.%`) as any[];
 
   // Also get the root node of the subtree
@@ -514,6 +517,7 @@ export function getTreeDepthStats(view: 'function' | 'organization'): Map<number
   const nodes = db.prepare(`
     SELECT ${hierarchyCodeField} as code FROM nodes
     WHERE ${hierarchyCodeField} IS NOT NULL AND is_deleted = 0
+    LIMIT 10000
   `).all() as { code: string }[];
 
   const depthCounts = new Map<number, number>();
