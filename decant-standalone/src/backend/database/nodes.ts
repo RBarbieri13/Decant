@@ -13,6 +13,61 @@ import {
 } from '../types/pagination.js';
 import * as cache from '../cache/index.js';
 
+// ============================================================
+// Cached Prepared Statements
+// ============================================================
+// Lazily initialized on first call. Safe because getDatabase()
+// returns a stable singleton and better-sqlite3 statements are
+// reentrant (no cursor state between calls).
+
+type Stmt = ReturnType<ReturnType<typeof getDatabase>['prepare']>;
+
+let _insertNodeStmt: Stmt | null = null;
+const insertNodeStmt = () => (_insertNodeStmt ??= getDatabase().prepare(`
+  INSERT INTO nodes (
+    id, title, url, source_domain, company, phrase_description,
+    short_description, logo_url, ai_summary, extracted_fields,
+    metadata_tags, function_parent_id, organization_parent_id,
+    segment_code, category_code, content_type_code, subcategory_label,
+    function_tags, extraction_quality, extraction_source, extraction_notes
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`));
+
+let _insertKeyConceptStmt: Stmt | null = null;
+const insertKeyConceptStmt = () => (_insertKeyConceptStmt ??= getDatabase().prepare(
+  `INSERT INTO key_concepts (id, node_id, concept) VALUES (?, ?, ?)`
+));
+
+let _deleteKeyConceptsStmt: Stmt | null = null;
+const deleteKeyConceptsStmt = () => (_deleteKeyConceptsStmt ??= getDatabase().prepare(
+  `DELETE FROM key_concepts WHERE node_id = ?`
+));
+
+let _findNodeByUrlStmt: Stmt | null = null;
+const findNodeByUrlStmt = () => (_findNodeByUrlStmt ??= getDatabase().prepare(
+  `SELECT * FROM nodes WHERE url = ? AND is_deleted = 0`
+));
+
+let _readNodeStmt: Stmt | null = null;
+const readNodeStmt = () => (_readNodeStmt ??= getDatabase().prepare(
+  `SELECT * FROM nodes WHERE id = ? AND is_deleted = 0`
+));
+
+let _selectKeyConceptsStmt: Stmt | null = null;
+const selectKeyConceptsStmt = () => (_selectKeyConceptsStmt ??= getDatabase().prepare(
+  `SELECT concept FROM key_concepts WHERE node_id = ?`
+));
+
+let _deleteNodeStmt: Stmt | null = null;
+const deleteNodeStmt = () => (_deleteNodeStmt ??= getDatabase().prepare(
+  `UPDATE nodes SET is_deleted = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+));
+
+let _countNodesStmt: Stmt | null = null;
+const countNodesStmt = () => (_countNodesStmt ??= getDatabase().prepare(
+  `SELECT COUNT(*) as count FROM nodes WHERE is_deleted = 0`
+));
+
 export interface CreateNodeInput {
   title: string;
   url: string;
@@ -121,23 +176,12 @@ export interface BatchUpdateResult {
 }
 
 export function createNode(data: CreateNodeInput): unknown {
-  const db = getDatabase();
   const id = uuidv4();
 
   // Wrap entire node creation in a transaction
   // If any insert fails, the entire operation rolls back
   const result = withTransaction(() => {
-    const stmt = db.prepare(`
-      INSERT INTO nodes (
-        id, title, url, source_domain, company, phrase_description,
-        short_description, logo_url, ai_summary, extracted_fields,
-        metadata_tags, function_parent_id, organization_parent_id,
-        segment_code, category_code, content_type_code, subcategory_label,
-        function_tags, extraction_quality, extraction_source, extraction_notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    stmt.run(
+    insertNodeStmt().run(
       id,
       data.title,
       data.url,
@@ -163,11 +207,8 @@ export function createNode(data: CreateNodeInput): unknown {
 
     // Insert key concepts (within same transaction)
     if (data.key_concepts && data.key_concepts.length > 0) {
-      const conceptStmt = db.prepare(`
-        INSERT INTO key_concepts (id, node_id, concept) VALUES (?, ?, ?)
-      `);
       for (const concept of data.key_concepts) {
-        conceptStmt.run(uuidv4(), id, concept);
+        insertKeyConceptStmt().run(uuidv4(), id, concept);
       }
     }
 
@@ -181,11 +222,7 @@ export function createNode(data: CreateNodeInput): unknown {
 }
 
 export function findNodeByUrl(url: string): Record<string, unknown> | null {
-  const db = getDatabase();
-
-  const node = db.prepare(`
-    SELECT * FROM nodes WHERE url = ? AND is_deleted = 0
-  `).get(url) as Record<string, unknown> | undefined;
+  const node = findNodeByUrlStmt().get(url) as Record<string, unknown> | undefined;
 
   if (!node) return null;
 
@@ -201,9 +238,7 @@ export function findNodeByNormalizedUrl(normalizedUrl: string): Record<string, u
   const db = getDatabase();
 
   // First try exact match on normalized form
-  const exact = db.prepare(`
-    SELECT * FROM nodes WHERE url = ? AND is_deleted = 0
-  `).get(normalizedUrl) as Record<string, unknown> | undefined;
+  const exact = findNodeByUrlStmt().get(normalizedUrl) as Record<string, unknown> | undefined;
 
   if (exact) return hydrateNode(exact);
 
@@ -239,11 +274,7 @@ export function findNodeByNormalizedUrl(normalizedUrl: string): Record<string, u
 
 /** Hydrate a raw node row with parsed JSON fields and key_concepts */
 function hydrateNode(node: Record<string, unknown>): Record<string, unknown> {
-  const db = getDatabase();
-
-  const concepts = db.prepare(`
-    SELECT concept FROM key_concepts WHERE node_id = ?
-  `).all(node.id as string) as Array<{ concept: string }>;
+  const concepts = selectKeyConceptsStmt().all(node.id as string) as Array<{ concept: string }>;
 
   const extractedFields = JSON.parse((node.extracted_fields as string) || '{}');
 
@@ -257,17 +288,11 @@ function hydrateNode(node: Record<string, unknown>): Record<string, unknown> {
 }
 
 export function readNode(id: string): Record<string, unknown> | null {
-  const db = getDatabase();
-
-  const node = db.prepare(`
-    SELECT * FROM nodes WHERE id = ? AND is_deleted = 0
-  `).get(id) as Record<string, unknown> | undefined;
+  const node = readNodeStmt().get(id) as Record<string, unknown> | undefined;
 
   if (!node) return null;
 
-  const concepts = db.prepare(`
-    SELECT concept FROM key_concepts WHERE node_id = ?
-  `).all(id) as Array<{ concept: string }>;
+  const concepts = selectKeyConceptsStmt().all(id) as Array<{ concept: string }>;
 
   const extractedFields = JSON.parse((node.extracted_fields as string) || '{}');
 
@@ -379,12 +404,9 @@ export function updateNode(id: string, data: UpdateNodeInput): unknown {
 
     // Update key concepts if provided (within same transaction)
     if (data.key_concepts !== undefined) {
-      db.prepare('DELETE FROM key_concepts WHERE node_id = ?').run(id);
-      const conceptStmt = db.prepare(`
-        INSERT INTO key_concepts (id, node_id, concept) VALUES (?, ?, ?)
-      `);
+      deleteKeyConceptsStmt().run(id);
       for (const concept of data.key_concepts) {
-        conceptStmt.run(uuidv4(), id, concept);
+        insertKeyConceptStmt().run(uuidv4(), id, concept);
       }
     }
 
@@ -511,15 +533,12 @@ export function updateNodePhase2(id: string, data: Phase2UpdateInput): unknown {
 
     // 6. Key Concepts - Array of lowercase tags (max 20)
     if (data.key_concepts !== undefined) {
-      db.prepare('DELETE FROM key_concepts WHERE node_id = ?').run(id);
-      const conceptStmt = db.prepare(`
-        INSERT INTO key_concepts (id, node_id, concept) VALUES (?, ?, ?)
-      `);
+      deleteKeyConceptsStmt().run(id);
       const concepts = data.key_concepts.slice(0, 20);
       for (const concept of concepts) {
         const normalizedConcept = concept.toLowerCase().trim();
         if (normalizedConcept.length > 0) {
-          conceptStmt.run(uuidv4(), id, normalizedConcept);
+          insertKeyConceptStmt().run(uuidv4(), id, normalizedConcept);
         }
       }
     }
@@ -531,8 +550,7 @@ export function updateNodePhase2(id: string, data: Phase2UpdateInput): unknown {
 }
 
 export function deleteNode(id: string): void {
-  const db = getDatabase();
-  db.prepare('UPDATE nodes SET is_deleted = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(id);
+  deleteNodeStmt().run(id);
 
   // Invalidate tree cache after deletion
   cache.invalidate('tree:*');
@@ -769,12 +787,11 @@ export function updateNodeWithSemanticProfile(
     );
 
     // Refresh key concepts
-    db.prepare('DELETE FROM key_concepts WHERE node_id = ?').run(nodeId);
-    const conceptStmt = db.prepare('INSERT INTO key_concepts (id, node_id, concept) VALUES (?, ?, ?)');
+    deleteKeyConceptsStmt().run(nodeId);
     for (const concept of (profile.keyConcepts || []).slice(0, 20)) {
       const normalized = concept.toLowerCase().trim();
       if (normalized.length > 0) {
-        conceptStmt.run(uuidv4(), nodeId, normalized);
+        insertKeyConceptStmt().run(uuidv4(), nodeId, normalized);
       }
     }
   });
@@ -831,10 +848,7 @@ export function getNodeById(id: string): unknown {
  * Count total number of non-deleted nodes
  */
 export function countNodes(): number {
-  const db = getDatabase();
-  const result = db.prepare(`
-    SELECT COUNT(*) as count FROM nodes WHERE is_deleted = 0
-  `).get() as { count: number };
+  const result = countNodesStmt().get() as { count: number };
   return result.count;
 }
 
@@ -952,9 +966,7 @@ export function mergeNodes(
     }
 
     // Soft-delete the secondary node
-    db.prepare(
-      'UPDATE nodes SET is_deleted = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
-    ).run(secondaryId);
+    deleteNodeStmt().run(secondaryId);
 
     // Invalidate tree cache after merge
     cache.invalidate('tree:*');

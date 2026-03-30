@@ -67,6 +67,71 @@ const JOB_RETRY_OPTIONS = {
   context: 'processing-queue-job',
 };
 
+// ============================================================
+// Cached Prepared Statements
+// ============================================================
+
+type Stmt = ReturnType<ReturnType<typeof getDatabase>['prepare']>;
+
+let _fetchPendingJobsStmt: Stmt | null = null;
+const fetchPendingJobsStmt = () => (_fetchPendingJobsStmt ??= getDatabase().prepare(`
+  SELECT * FROM processing_queue
+  WHERE status = 'pending'
+    AND attempts < max_attempts
+  ORDER BY priority DESC, created_at ASC
+  LIMIT ?
+`));
+
+let _markJobCompleteStmt: Stmt | null = null;
+const markJobCompleteStmt = () => (_markJobCompleteStmt ??= getDatabase().prepare(`
+  UPDATE processing_queue
+  SET status = 'complete',
+      processed_at = CURRENT_TIMESTAMP
+  WHERE id = ?
+`));
+
+let _markJobFailedStmt: Stmt | null = null;
+const markJobFailedStmt = () => (_markJobFailedStmt ??= getDatabase().prepare(`
+  UPDATE processing_queue
+  SET status = 'failed',
+      attempts = ?,
+      error_message = ?,
+      processed_at = CURRENT_TIMESTAMP
+  WHERE id = ?
+`));
+
+let _markJobRetryStmt: Stmt | null = null;
+const markJobRetryStmt = () => (_markJobRetryStmt ??= getDatabase().prepare(`
+  UPDATE processing_queue
+  SET status = 'pending',
+      attempts = ?,
+      error_message = ?
+  WHERE id = ?
+`));
+
+let _enqueueJobStmt: Stmt | null = null;
+const enqueueJobStmt = () => (_enqueueJobStmt ??= getDatabase().prepare(`
+  INSERT INTO processing_queue (id, node_id, phase, priority, max_attempts)
+  VALUES (?, ?, ?, ?, ?)
+`));
+
+let _getJobStmt: Stmt | null = null;
+const getJobStmt = () => (_getJobStmt ??= getDatabase().prepare(
+  `SELECT * FROM processing_queue WHERE id = ?`
+));
+
+let _getJobsForNodeStmt: Stmt | null = null;
+const getJobsForNodeStmt = () => (_getJobsForNodeStmt ??= getDatabase().prepare(
+  `SELECT * FROM processing_queue WHERE node_id = ? ORDER BY created_at DESC`
+));
+
+let _getQueueStatsStmt: Stmt | null = null;
+const getQueueStatsStmt = () => (_getQueueStatsStmt ??= getDatabase().prepare(`
+  SELECT status, COUNT(*) as count
+  FROM processing_queue
+  GROUP BY status
+`));
+
 /**
  * Processing Queue Manager
  * Handles background job processing with SQLite persistence
@@ -198,26 +263,11 @@ export class ProcessingQueue {
    * Fetch pending jobs that are ready for processing
    */
   private fetchPendingJobs(limit: number): ProcessingJob[] {
-    const db = getDatabase();
+    const jobs = fetchPendingJobsStmt().all(limit) as ProcessingJob[];
 
-    // Get jobs that are:
-    // - Status is 'pending'
-    // - Haven't exceeded max attempts
-    // - Order by priority (higher first), then created_at
-    const jobs = db
-      .prepare(
-        `
-      SELECT * FROM processing_queue
-      WHERE status = 'pending'
-        AND attempts < max_attempts
-      ORDER BY priority DESC, created_at ASC
-      LIMIT ?
-    `
-      )
-      .all(limit) as ProcessingJob[];
-
-    // Mark them as processing
+    // Mark them as processing (dynamic IN-clause — stays uncached)
     if (jobs.length > 0) {
+      const db = getDatabase();
       const ids = jobs.map((j) => j.id);
       const placeholders = ids.map(() => '?').join(', ');
       db.prepare(
@@ -340,20 +390,10 @@ export class ProcessingQueue {
     errorMessage: string
   ): Promise<void> {
     const attempts = job.attempts + 1;
-    const db = getDatabase();
 
     if (attempts >= job.max_attempts) {
       // Mark as permanently failed
-      db.prepare(
-        `
-        UPDATE processing_queue
-        SET status = 'failed',
-            attempts = ?,
-            error_message = ?,
-            processed_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `
-      ).run(attempts, errorMessage, job.id);
+      markJobFailedStmt().run(attempts, errorMessage, job.id);
 
       log.error(`Job ${job.id} failed permanently`, {
         nodeId: job.node_id,
@@ -370,15 +410,7 @@ export class ProcessingQueue {
         this.config.retryDelays[attempts - 1] ||
         this.config.retryDelays[this.config.retryDelays.length - 1];
 
-      db.prepare(
-        `
-        UPDATE processing_queue
-        SET status = 'pending',
-            attempts = ?,
-            error_message = ?
-        WHERE id = ?
-      `
-      ).run(attempts, errorMessage, job.id);
+      markJobRetryStmt().run(attempts, errorMessage, job.id);
 
       log.warn(`Job ${job.id} will retry in ${retryDelay}ms`, {
         nodeId: job.node_id,
@@ -397,15 +429,7 @@ export class ProcessingQueue {
    * Mark a job as complete
    */
   private markJobComplete(jobId: string): void {
-    const db = getDatabase();
-    db.prepare(
-      `
-      UPDATE processing_queue
-      SET status = 'complete',
-          processed_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `
-    ).run(jobId);
+    markJobCompleteStmt().run(jobId);
   }
 
   /**
@@ -419,15 +443,9 @@ export class ProcessingQueue {
       maxAttempts?: number;
     }
   ): string {
-    const db = getDatabase();
     const id = uuidv4();
 
-    db.prepare(
-      `
-      INSERT INTO processing_queue (id, node_id, phase, priority, max_attempts)
-      VALUES (?, ?, ?, ?, ?)
-    `
-    ).run(
+    enqueueJobStmt().run(
       id,
       nodeId,
       options?.phase || 'phase2',
@@ -456,18 +474,12 @@ export class ProcessingQueue {
       maxAttempts?: number;
     }
   ): string[] {
-    const db = getDatabase();
     const ids: string[] = [];
 
     withTransaction(() => {
-      const stmt = db.prepare(`
-        INSERT INTO processing_queue (id, node_id, phase, priority, max_attempts)
-        VALUES (?, ?, ?, ?, ?)
-      `);
-
       for (const nodeId of nodeIds) {
         const id = uuidv4();
-        stmt.run(
+        enqueueJobStmt().run(
           id,
           nodeId,
           options?.phase || 'phase2',
@@ -490,24 +502,14 @@ export class ProcessingQueue {
    * Get job by ID
    */
   getJob(jobId: string): ProcessingJob | null {
-    const db = getDatabase();
-    return (
-      (db
-        .prepare('SELECT * FROM processing_queue WHERE id = ?')
-        .get(jobId) as ProcessingJob) || null
-    );
+    return (getJobStmt().get(jobId) as ProcessingJob) || null;
   }
 
   /**
    * Get jobs for a node
    */
   getJobsForNode(nodeId: string): ProcessingJob[] {
-    const db = getDatabase();
-    return db
-      .prepare(
-        'SELECT * FROM processing_queue WHERE node_id = ? ORDER BY created_at DESC'
-      )
-      .all(nodeId) as ProcessingJob[];
+    return getJobsForNodeStmt().all(nodeId) as ProcessingJob[];
   }
 
   /**
@@ -520,18 +522,7 @@ export class ProcessingQueue {
     failed: number;
     total: number;
   } {
-    const db = getDatabase();
-    const stats = db
-      .prepare(
-        `
-      SELECT
-        status,
-        COUNT(*) as count
-      FROM processing_queue
-      GROUP BY status
-    `
-      )
-      .all() as { status: JobStatus; count: number }[];
+    const stats = getQueueStatsStmt().all() as { status: JobStatus; count: number }[];
 
     const result = {
       pending: 0,

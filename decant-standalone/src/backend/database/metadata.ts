@@ -108,6 +108,116 @@ export interface CodeStats {
 }
 
 // ============================================================
+// Cached Prepared Statements
+// ============================================================
+
+type Stmt = ReturnType<ReturnType<typeof getDatabase>['prepare']>;
+
+let _getRegistryEntryStmt: Stmt | null = null;
+const getRegistryEntryStmt = () => (_getRegistryEntryStmt ??= getDatabase().prepare(`
+  SELECT id, type, code, display_name, description, usage_count, created_at, updated_at
+  FROM metadata_code_registry
+  WHERE type = ? AND code = ?
+`));
+
+let _insertRegistryEntryStmt: Stmt | null = null;
+const insertRegistryEntryStmt = () => (_insertRegistryEntryStmt ??= getDatabase().prepare(`
+  INSERT INTO metadata_code_registry (id, type, code, display_name, description, usage_count)
+  VALUES (?, ?, ?, ?, ?, 0)
+`));
+
+let _getCodesByTypeStmt: Stmt | null = null;
+const getCodesByTypeStmt = () => (_getCodesByTypeStmt ??= getDatabase().prepare(`
+  SELECT id, type, code, display_name, description, usage_count, created_at, updated_at
+  FROM metadata_code_registry
+  WHERE type = ?
+  ORDER BY usage_count DESC, display_name ASC
+`));
+
+let _getAllRegistryEntriesStmt: Stmt | null = null;
+const getAllRegistryEntriesStmt = () => (_getAllRegistryEntriesStmt ??= getDatabase().prepare(`
+  SELECT id, type, code, display_name, description, usage_count, created_at, updated_at
+  FROM metadata_code_registry
+  ORDER BY type ASC, usage_count DESC, display_name ASC
+`));
+
+let _incrementCodeUsageStmt: Stmt | null = null;
+const incrementCodeUsageStmt = () => (_incrementCodeUsageStmt ??= getDatabase().prepare(`
+  UPDATE metadata_code_registry
+  SET usage_count = usage_count + 1, updated_at = CURRENT_TIMESTAMP
+  WHERE id = ?
+`));
+
+let _decrementCodeUsageStmt: Stmt | null = null;
+const decrementCodeUsageStmt = () => (_decrementCodeUsageStmt ??= getDatabase().prepare(`
+  UPDATE metadata_code_registry
+  SET usage_count = MAX(0, usage_count - 1), updated_at = CURRENT_TIMESTAMP
+  WHERE id = ?
+`));
+
+let _getNodeMetadataStmt: Stmt | null = null;
+const getNodeMetadataStmt = () => (_getNodeMetadataStmt ??= getDatabase().prepare(`
+  SELECT
+    nm.id, nm.node_id, nm.registry_id, nm.confidence, nm.source, nm.created_at,
+    r.type, r.code, r.display_name
+  FROM node_metadata nm
+  JOIN metadata_code_registry r ON nm.registry_id = r.id
+  WHERE nm.node_id = ?
+  ORDER BY r.type ASC, r.display_name ASC
+`));
+
+let _getNodeMetadataByTypeStmt: Stmt | null = null;
+const getNodeMetadataByTypeStmt = () => (_getNodeMetadataByTypeStmt ??= getDatabase().prepare(`
+  SELECT
+    nm.id, nm.node_id, nm.registry_id, nm.confidence, nm.source, nm.created_at,
+    r.type, r.code, r.display_name
+  FROM node_metadata nm
+  JOIN metadata_code_registry r ON nm.registry_id = r.id
+  WHERE nm.node_id = ? AND r.type = ?
+  ORDER BY r.display_name ASC
+`));
+
+let _checkNodeMetadataLinkStmt: Stmt | null = null;
+const checkNodeMetadataLinkStmt = () => (_checkNodeMetadataLinkStmt ??= getDatabase().prepare(
+  `SELECT id FROM node_metadata WHERE node_id = ? AND registry_id = ?`
+));
+
+let _insertNodeMetadataStmt: Stmt | null = null;
+const insertNodeMetadataStmt = () => (_insertNodeMetadataStmt ??= getDatabase().prepare(`
+  INSERT OR IGNORE INTO node_metadata (id, node_id, registry_id, confidence, source)
+  VALUES (?, ?, ?, ?, 'ai')
+`));
+
+let _insertNodeMetadataSetStmt: Stmt | null = null;
+const insertNodeMetadataSetStmt = () => (_insertNodeMetadataSetStmt ??= getDatabase().prepare(`
+  INSERT INTO node_metadata (id, node_id, registry_id, confidence, source)
+  VALUES (?, ?, ?, ?, 'ai')
+`));
+
+let _deleteNodeMetadataByIdStmt: Stmt | null = null;
+const deleteNodeMetadataByIdStmt = () => (_deleteNodeMetadataByIdStmt ??= getDatabase().prepare(
+  `DELETE FROM node_metadata WHERE id = ?`
+));
+
+let _selectNodeMetadataRegistryIdsStmt: Stmt | null = null;
+const selectNodeMetadataRegistryIdsStmt = () => (_selectNodeMetadataRegistryIdsStmt ??= getDatabase().prepare(
+  `SELECT registry_id FROM node_metadata WHERE node_id = ?`
+));
+
+let _deleteAllNodeMetadataStmt: Stmt | null = null;
+const deleteAllNodeMetadataStmt = () => (_deleteAllNodeMetadataStmt ??= getDatabase().prepare(
+  `DELETE FROM node_metadata WHERE node_id = ?`
+));
+
+let _getNodesByMetadataCodeStmt: Stmt | null = null;
+const getNodesByMetadataCodeStmt = () => (_getNodesByMetadataCodeStmt ??= getDatabase().prepare(`
+  SELECT nm.node_id
+  FROM node_metadata nm
+  JOIN metadata_code_registry r ON nm.registry_id = r.id
+  WHERE r.type = ? AND r.code = ?
+`));
+
+// ============================================================
 // Normalization Helpers
 // ============================================================
 
@@ -145,14 +255,9 @@ export function isValidMetadataType(type: string): type is MetadataCodeType {
  * Returns null if not found.
  */
 export function getRegistryEntry(type: MetadataCodeType, code: string): RegistryEntry | null {
-  const db = getDatabase();
   const normalizedCode = normalizeCode(code);
 
-  const row = db.prepare(`
-    SELECT id, type, code, display_name, description, usage_count, created_at, updated_at
-    FROM metadata_code_registry
-    WHERE type = ? AND code = ?
-  `).get(type, normalizedCode) as any;
+  const row = getRegistryEntryStmt().get(type, normalizedCode) as any;
 
   if (!row) return null;
 
@@ -199,10 +304,7 @@ export function getOrCreateRegistryEntry(
   // Create new entry
   const id = uuidv4();
 
-  db.prepare(`
-    INSERT INTO metadata_code_registry (id, type, code, display_name, description, usage_count)
-    VALUES (?, ?, ?, ?, ?, 0)
-  `).run(id, type, normalizedCode, normalizedDisplayName, description || null);
+  insertRegistryEntryStmt().run(id, type, normalizedCode, normalizedDisplayName, description || null);
 
   log.debug('Created new metadata registry entry', {
     type,
@@ -228,14 +330,7 @@ export function getOrCreateRegistryEntry(
  * Results are sorted by usage count (descending) then by display name.
  */
 export function getCodesByType(type: MetadataCodeType): RegistryEntry[] {
-  const db = getDatabase();
-
-  const rows = db.prepare(`
-    SELECT id, type, code, display_name, description, usage_count, created_at, updated_at
-    FROM metadata_code_registry
-    WHERE type = ?
-    ORDER BY usage_count DESC, display_name ASC
-  `).all(type) as any[];
+  const rows = getCodesByTypeStmt().all(type) as any[];
 
   return rows.map(row => ({
     id: row.id,
@@ -254,13 +349,7 @@ export function getCodesByType(type: MetadataCodeType): RegistryEntry[] {
  * Results are sorted by type, then by usage count (descending).
  */
 export function getAllRegistryEntries(): RegistryEntry[] {
-  const db = getDatabase();
-
-  const rows = db.prepare(`
-    SELECT id, type, code, display_name, description, usage_count, created_at, updated_at
-    FROM metadata_code_registry
-    ORDER BY type ASC, usage_count DESC, display_name ASC
-  `).all() as any[];
+  const rows = getAllRegistryEntriesStmt().all() as any[];
 
   return rows.map(row => ({
     id: row.id,
@@ -319,13 +408,7 @@ export function searchCodes(query: string, type?: MetadataCodeType): RegistryEnt
  * Called when a code is assigned to a node.
  */
 export function incrementCodeUsage(registryId: string): void {
-  const db = getDatabase();
-
-  db.prepare(`
-    UPDATE metadata_code_registry
-    SET usage_count = usage_count + 1, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).run(registryId);
+  incrementCodeUsageStmt().run(registryId);
 }
 
 /**
@@ -333,13 +416,7 @@ export function incrementCodeUsage(registryId: string): void {
  * Called when a code is removed from a node.
  */
 export function decrementCodeUsage(registryId: string): void {
-  const db = getDatabase();
-
-  db.prepare(`
-    UPDATE metadata_code_registry
-    SET usage_count = MAX(0, usage_count - 1), updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).run(registryId);
+  decrementCodeUsageStmt().run(registryId);
 }
 
 /**
@@ -435,17 +512,12 @@ export function setNodeMetadata(
     }
 
     // Insert new metadata
-    const insertStmt = db.prepare(`
-      INSERT INTO node_metadata (id, node_id, registry_id, confidence, source)
-      VALUES (?, ?, ?, ?, 'ai')
-    `);
-
     for (const input of codes) {
       // Get or create registry entry
       const entry = getOrCreateRegistryEntry(input.type, input.code);
 
       // Insert node metadata link
-      insertStmt.run(
+      insertNodeMetadataSetStmt().run(
         uuidv4(),
         nodeId,
         entry.id,
@@ -476,26 +548,17 @@ export function addNodeMetadata(
   nodeId: string,
   codes: MetadataInput[]
 ): void {
-  const db = getDatabase();
-
   withTransaction(() => {
-    const insertStmt = db.prepare(`
-      INSERT OR IGNORE INTO node_metadata (id, node_id, registry_id, confidence, source)
-      VALUES (?, ?, ?, ?, 'ai')
-    `);
-
     for (const input of codes) {
       // Get or create registry entry
       const entry = getOrCreateRegistryEntry(input.type, input.code);
 
       // Check if already linked
-      const existing = db.prepare(`
-        SELECT id FROM node_metadata WHERE node_id = ? AND registry_id = ?
-      `).get(nodeId, entry.id);
+      const existing = checkNodeMetadataLinkStmt().get(nodeId, entry.id);
 
       if (!existing) {
         // Insert node metadata link
-        insertStmt.run(
+        insertNodeMetadataStmt().run(
           uuidv4(),
           nodeId,
           entry.id,
@@ -520,24 +583,7 @@ export function addNodeMetadata(
  * Returns metadata entries with registry details.
  */
 export function getNodeMetadata(nodeId: string): NodeMetadataEntry[] {
-  const db = getDatabase();
-
-  const rows = db.prepare(`
-    SELECT
-      nm.id,
-      nm.node_id,
-      nm.registry_id,
-      nm.confidence,
-      nm.source,
-      nm.created_at,
-      r.type,
-      r.code,
-      r.display_name
-    FROM node_metadata nm
-    JOIN metadata_code_registry r ON nm.registry_id = r.id
-    WHERE nm.node_id = ?
-    ORDER BY r.type ASC, r.display_name ASC
-  `).all(nodeId) as any[];
+  const rows = getNodeMetadataStmt().all(nodeId) as any[];
 
   return rows.map(row => ({
     id: row.id,
@@ -559,24 +605,7 @@ export function getNodeMetadataByType(
   nodeId: string,
   type: MetadataCodeType
 ): NodeMetadataEntry[] {
-  const db = getDatabase();
-
-  const rows = db.prepare(`
-    SELECT
-      nm.id,
-      nm.node_id,
-      nm.registry_id,
-      nm.confidence,
-      nm.source,
-      nm.created_at,
-      r.type,
-      r.code,
-      r.display_name
-    FROM node_metadata nm
-    JOIN metadata_code_registry r ON nm.registry_id = r.id
-    WHERE nm.node_id = ? AND r.type = ?
-    ORDER BY r.display_name ASC
-  `).all(nodeId, type) as any[];
+  const rows = getNodeMetadataByTypeStmt().all(nodeId, type) as any[];
 
   return rows.map(row => ({
     id: row.id,
@@ -599,15 +628,9 @@ export function getNodeMetadataByType(
  * @returns Array of node IDs
  */
 export function getNodesByMetadataCode(type: MetadataCodeType, code: string): string[] {
-  const db = getDatabase();
   const normalizedCode = normalizeCode(code);
 
-  const rows = db.prepare(`
-    SELECT nm.node_id
-    FROM node_metadata nm
-    JOIN metadata_code_registry r ON nm.registry_id = r.id
-    WHERE r.type = ? AND r.code = ?
-  `).all(type, normalizedCode) as { node_id: string }[];
+  const rows = getNodesByMetadataCodeStmt().all(type, normalizedCode) as { node_id: string }[];
 
   return rows.map(row => row.node_id);
 }
@@ -624,7 +647,6 @@ export function removeNodeMetadata(
   type: MetadataCodeType,
   code: string
 ): void {
-  const db = getDatabase();
   const normalizedCode = normalizeCode(code);
 
   withTransaction(() => {
@@ -633,15 +655,11 @@ export function removeNodeMetadata(
     if (!entry) return;
 
     // Check if the link exists
-    const existing = db.prepare(`
-      SELECT id FROM node_metadata WHERE node_id = ? AND registry_id = ?
-    `).get(nodeId, entry.id) as { id: string } | undefined;
+    const existing = checkNodeMetadataLinkStmt().get(nodeId, entry.id) as { id: string } | undefined;
 
     if (existing) {
       // Delete the link
-      db.prepare(`
-        DELETE FROM node_metadata WHERE id = ?
-      `).run(existing.id);
+      deleteNodeMetadataByIdStmt().run(existing.id);
 
       // Decrement usage count
       decrementCodeUsage(entry.id);
@@ -662,13 +680,9 @@ export function removeNodeMetadata(
  * @param nodeId - The node ID
  */
 export function clearNodeMetadata(nodeId: string): void {
-  const db = getDatabase();
-
   withTransaction(() => {
     // Get all registry IDs for this node
-    const existing = db.prepare(`
-      SELECT registry_id FROM node_metadata WHERE node_id = ?
-    `).all(nodeId) as { registry_id: string }[];
+    const existing = selectNodeMetadataRegistryIdsStmt().all(nodeId) as { registry_id: string }[];
 
     // Decrement usage counts
     for (const row of existing) {
@@ -676,9 +690,7 @@ export function clearNodeMetadata(nodeId: string): void {
     }
 
     // Delete all metadata links
-    db.prepare(`
-      DELETE FROM node_metadata WHERE node_id = ?
-    `).run(nodeId);
+    deleteAllNodeMetadataStmt().run(nodeId);
 
     log.debug('Cleared all node metadata', {
       nodeId,

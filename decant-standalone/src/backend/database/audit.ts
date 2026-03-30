@@ -48,6 +48,99 @@ export interface GetNodeHistoryOptions {
 }
 
 // ============================================================
+// Cached Prepared Statements
+// ============================================================
+// Only used when no custom `db` parameter is passed (i.e., the
+// default singleton database). When a custom db is provided,
+// we fall back to fresh prepare() calls.
+
+type Stmt = ReturnType<ReturnType<typeof getDatabase>['prepare']>;
+
+let _logCodeChangeStmt: Stmt | null = null;
+const logCodeChangeStmt = () => (_logCodeChangeStmt ??= getDatabase().prepare(`
+  INSERT INTO hierarchy_code_changes (
+    id, node_id, hierarchy_type, old_code, new_code,
+    change_type, reason, triggered_by, related_node_ids, metadata
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`));
+
+let _getRecentChangesStmt: Stmt | null = null;
+const getRecentChangesStmt = () => (_getRecentChangesStmt ??= getDatabase().prepare(`
+  SELECT
+    id, node_id as nodeId, hierarchy_type as hierarchyType,
+    old_code as oldCode, new_code as newCode,
+    change_type as changeType, reason, triggered_by as triggeredBy,
+    related_node_ids as relatedNodeIds, changed_at as changedAt, metadata
+  FROM hierarchy_code_changes
+  ORDER BY changed_at DESC
+  LIMIT ?
+`));
+
+let _getChangesByTypeStmt: Stmt | null = null;
+const getChangesByTypeStmt = () => (_getChangesByTypeStmt ??= getDatabase().prepare(`
+  SELECT
+    id, node_id as nodeId, hierarchy_type as hierarchyType,
+    old_code as oldCode, new_code as newCode,
+    change_type as changeType, reason, triggered_by as triggeredBy,
+    related_node_ids as relatedNodeIds, changed_at as changedAt, metadata
+  FROM hierarchy_code_changes
+  WHERE change_type = ?
+  ORDER BY changed_at DESC
+  LIMIT ?
+`));
+
+let _getChangesByTriggerStmt: Stmt | null = null;
+const getChangesByTriggerStmt = () => (_getChangesByTriggerStmt ??= getDatabase().prepare(`
+  SELECT
+    id, node_id as nodeId, hierarchy_type as hierarchyType,
+    old_code as oldCode, new_code as newCode,
+    change_type as changeType, reason, triggered_by as triggeredBy,
+    related_node_ids as relatedNodeIds, changed_at as changedAt, metadata
+  FROM hierarchy_code_changes
+  WHERE triggered_by = ?
+  ORDER BY changed_at DESC
+  LIMIT ?
+`));
+
+let _getBatchChangesStmt: Stmt | null = null;
+const getBatchChangesStmt = () => (_getBatchChangesStmt ??= getDatabase().prepare(`
+  SELECT
+    id, node_id as nodeId, hierarchy_type as hierarchyType,
+    old_code as oldCode, new_code as newCode,
+    change_type as changeType, reason, triggered_by as triggeredBy,
+    related_node_ids as relatedNodeIds, changed_at as changedAt, metadata
+  FROM hierarchy_code_changes
+  WHERE metadata LIKE ?
+  ORDER BY changed_at ASC
+`));
+
+let _totalChangesStmt: Stmt | null = null;
+const totalChangesStmt = () => (_totalChangesStmt ??= getDatabase().prepare(
+  `SELECT COUNT(*) as count FROM hierarchy_code_changes`
+));
+
+let _changesByChangeTypeStmt: Stmt | null = null;
+const changesByChangeTypeStmt = () => (_changesByChangeTypeStmt ??= getDatabase().prepare(`
+  SELECT change_type, COUNT(*) as count
+  FROM hierarchy_code_changes
+  GROUP BY change_type
+`));
+
+let _changesByTriggerStmt: Stmt | null = null;
+const changesByTriggerStmt = () => (_changesByTriggerStmt ??= getDatabase().prepare(`
+  SELECT triggered_by, COUNT(*) as count
+  FROM hierarchy_code_changes
+  GROUP BY triggered_by
+`));
+
+let _changesByHierarchyStmt: Stmt | null = null;
+const changesByHierarchyStmt = () => (_changesByHierarchyStmt ??= getDatabase().prepare(`
+  SELECT hierarchy_type, COUNT(*) as count
+  FROM hierarchy_code_changes
+  GROUP BY hierarchy_type
+`));
+
+// ============================================================
 // Core Functions
 // ============================================================
 
@@ -72,23 +165,14 @@ export interface GetNodeHistoryOptions {
  * ```
  */
 export function logCodeChange(params: LogCodeChangeParams, db?: Database.Database): string {
-  const database = db || getDatabase();
   const id = uuidv4();
 
-  const stmt = database.prepare(`
+  const stmt = db ? db.prepare(`
     INSERT INTO hierarchy_code_changes (
-      id,
-      node_id,
-      hierarchy_type,
-      old_code,
-      new_code,
-      change_type,
-      reason,
-      triggered_by,
-      related_node_ids,
-      metadata
+      id, node_id, hierarchy_type, old_code, new_code,
+      change_type, reason, triggered_by, related_node_ids, metadata
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
+  `) : logCodeChangeStmt();
 
   stmt.run(
     id,
@@ -191,25 +275,16 @@ export function getNodeHistory(
  * ```
  */
 export function getRecentChanges(limit = 50, db?: Database.Database): CodeChangeRecord[] {
-  const database = db || getDatabase();
-
-  const stmt = database.prepare(`
+  const stmt = db ? db.prepare(`
     SELECT
-      id,
-      node_id as nodeId,
-      hierarchy_type as hierarchyType,
-      old_code as oldCode,
-      new_code as newCode,
-      change_type as changeType,
-      reason,
-      triggered_by as triggeredBy,
-      related_node_ids as relatedNodeIds,
-      changed_at as changedAt,
-      metadata
+      id, node_id as nodeId, hierarchy_type as hierarchyType,
+      old_code as oldCode, new_code as newCode,
+      change_type as changeType, reason, triggered_by as triggeredBy,
+      related_node_ids as relatedNodeIds, changed_at as changedAt, metadata
     FROM hierarchy_code_changes
     ORDER BY changed_at DESC
     LIMIT ?
-  `);
+  `) : getRecentChangesStmt();
 
   const rows = stmt.all(limit) as any[];
 
@@ -242,26 +317,17 @@ export function getChangesByType(
   limit = 50,
   db?: Database.Database
 ): CodeChangeRecord[] {
-  const database = db || getDatabase();
-
-  const stmt = database.prepare(`
+  const stmt = db ? db.prepare(`
     SELECT
-      id,
-      node_id as nodeId,
-      hierarchy_type as hierarchyType,
-      old_code as oldCode,
-      new_code as newCode,
-      change_type as changeType,
-      reason,
-      triggered_by as triggeredBy,
-      related_node_ids as relatedNodeIds,
-      changed_at as changedAt,
-      metadata
+      id, node_id as nodeId, hierarchy_type as hierarchyType,
+      old_code as oldCode, new_code as newCode,
+      change_type as changeType, reason, triggered_by as triggeredBy,
+      related_node_ids as relatedNodeIds, changed_at as changedAt, metadata
     FROM hierarchy_code_changes
     WHERE change_type = ?
     ORDER BY changed_at DESC
     LIMIT ?
-  `);
+  `) : getChangesByTypeStmt();
 
   const rows = stmt.all(changeType, limit) as any[];
 
@@ -287,27 +353,16 @@ export function getChangesByType(
  * ```
  */
 export function getBatchChanges(batchId: string, db?: Database.Database): CodeChangeRecord[] {
-  const database = db || getDatabase();
-
-  // SQLite doesn't have native JSON query support in all versions,
-  // so we'll use LIKE pattern matching on the metadata JSON
-  const stmt = database.prepare(`
+  const stmt = db ? db.prepare(`
     SELECT
-      id,
-      node_id as nodeId,
-      hierarchy_type as hierarchyType,
-      old_code as oldCode,
-      new_code as newCode,
-      change_type as changeType,
-      reason,
-      triggered_by as triggeredBy,
-      related_node_ids as relatedNodeIds,
-      changed_at as changedAt,
-      metadata
+      id, node_id as nodeId, hierarchy_type as hierarchyType,
+      old_code as oldCode, new_code as newCode,
+      change_type as changeType, reason, triggered_by as triggeredBy,
+      related_node_ids as relatedNodeIds, changed_at as changedAt, metadata
     FROM hierarchy_code_changes
     WHERE metadata LIKE ?
     ORDER BY changed_at ASC
-  `);
+  `) : getBatchChangesStmt();
 
   // Use pattern matching for batchId in JSON
   const pattern = `%"batchId":"${batchId}"%`;
@@ -342,26 +397,17 @@ export function getChangesByTrigger(
   limit = 50,
   db?: Database.Database
 ): CodeChangeRecord[] {
-  const database = db || getDatabase();
-
-  const stmt = database.prepare(`
+  const stmt = db ? db.prepare(`
     SELECT
-      id,
-      node_id as nodeId,
-      hierarchy_type as hierarchyType,
-      old_code as oldCode,
-      new_code as newCode,
-      change_type as changeType,
-      reason,
-      triggered_by as triggeredBy,
-      related_node_ids as relatedNodeIds,
-      changed_at as changedAt,
-      metadata
+      id, node_id as nodeId, hierarchy_type as hierarchyType,
+      old_code as oldCode, new_code as newCode,
+      change_type as changeType, reason, triggered_by as triggeredBy,
+      related_node_ids as relatedNodeIds, changed_at as changedAt, metadata
     FROM hierarchy_code_changes
     WHERE triggered_by = ?
     ORDER BY changed_at DESC
     LIMIT ?
-  `);
+  `) : getChangesByTriggerStmt();
 
   const rows = stmt.all(triggeredBy, limit) as any[];
 
@@ -391,43 +437,44 @@ export function getChangeStatistics(db?: Database.Database): {
   byTrigger: Record<TriggeredBy, number>;
   byHierarchy: Record<HierarchyType, number>;
 } {
-  const database = db || getDatabase();
+  if (db) {
+    // Custom db — use fresh prepare calls
+    const totalResult = db.prepare('SELECT COUNT(*) as count FROM hierarchy_code_changes').get() as { count: number };
+    const typeResults = db.prepare('SELECT change_type, COUNT(*) as count FROM hierarchy_code_changes GROUP BY change_type').all() as { change_type: ChangeType; count: number }[];
+    const triggerResults = db.prepare('SELECT triggered_by, COUNT(*) as count FROM hierarchy_code_changes GROUP BY triggered_by').all() as { triggered_by: TriggeredBy; count: number }[];
+    const hierarchyResults = db.prepare('SELECT hierarchy_type, COUNT(*) as count FROM hierarchy_code_changes GROUP BY hierarchy_type').all() as { hierarchy_type: HierarchyType; count: number }[];
 
-  // Total changes
-  const totalStmt = database.prepare('SELECT COUNT(*) as count FROM hierarchy_code_changes');
-  const totalResult = totalStmt.get() as { count: number };
+    const byType: Record<string, number> = {};
+    typeResults.forEach(row => { byType[row.change_type] = row.count; });
+    const byTrigger: Record<string, number> = {};
+    triggerResults.forEach(row => { byTrigger[row.triggered_by] = row.count; });
+    const byHierarchy: Record<string, number> = {};
+    hierarchyResults.forEach(row => { byHierarchy[row.hierarchy_type] = row.count; });
 
-  // By change type
-  const typeStmt = database.prepare(`
-    SELECT change_type, COUNT(*) as count
-    FROM hierarchy_code_changes
-    GROUP BY change_type
-  `);
-  const typeResults = typeStmt.all() as { change_type: ChangeType; count: number }[];
+    return {
+      totalChanges: totalResult.count,
+      byType: byType as Record<ChangeType, number>,
+      byTrigger: byTrigger as Record<TriggeredBy, number>,
+      byHierarchy: byHierarchy as Record<HierarchyType, number>,
+    };
+  }
+
+  // Default db — use cached statements
+  const totalResult = totalChangesStmt().get() as { count: number };
+
+  const typeResults = changesByChangeTypeStmt().all() as { change_type: ChangeType; count: number }[];
   const byType: Record<string, number> = {};
   typeResults.forEach(row => {
     byType[row.change_type] = row.count;
   });
 
-  // By trigger
-  const triggerStmt = database.prepare(`
-    SELECT triggered_by, COUNT(*) as count
-    FROM hierarchy_code_changes
-    GROUP BY triggered_by
-  `);
-  const triggerResults = triggerStmt.all() as { triggered_by: TriggeredBy; count: number }[];
+  const triggerResults = changesByTriggerStmt().all() as { triggered_by: TriggeredBy; count: number }[];
   const byTrigger: Record<string, number> = {};
   triggerResults.forEach(row => {
     byTrigger[row.triggered_by] = row.count;
   });
 
-  // By hierarchy type
-  const hierarchyStmt = database.prepare(`
-    SELECT hierarchy_type, COUNT(*) as count
-    FROM hierarchy_code_changes
-    GROUP BY hierarchy_type
-  `);
-  const hierarchyResults = hierarchyStmt.all() as { hierarchy_type: HierarchyType; count: number }[];
+  const hierarchyResults = changesByHierarchyStmt().all() as { hierarchy_type: HierarchyType; count: number }[];
   const byHierarchy: Record<string, number> = {};
   hierarchyResults.forEach(row => {
     byHierarchy[row.hierarchy_type] = row.count;

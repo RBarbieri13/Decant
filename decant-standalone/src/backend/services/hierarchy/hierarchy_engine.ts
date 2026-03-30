@@ -65,6 +65,180 @@ export interface FullBuildResult {
 }
 
 // ============================================================
+// Cached Prepared Statements
+// ============================================================
+
+type Stmt = ReturnType<ReturnType<typeof getDatabase>['prepare']>;
+
+let _insertPlacementStmt: Stmt | null = null;
+const insertPlacementStmt = () => (_insertPlacementStmt ??= getDatabase().prepare(`
+  INSERT OR REPLACE INTO node_branch_placements
+    (node_id, branch_id, is_primary, placement_confidence, placement_source, placed_at)
+  VALUES (?, ?, 1, ?, ?, datetime('now'))
+`));
+
+let _markBranchDirtyStmt: Stmt | null = null;
+const markBranchDirtyStmt = () => (_markBranchDirtyStmt ??= getDatabase().prepare(`
+  WITH RECURSIVE ancestors(id) AS (
+    SELECT id FROM hierarchy_branches WHERE id = ?
+    UNION ALL
+    SELECT hb.parent_id FROM hierarchy_branches hb
+    JOIN ancestors a ON hb.id = a.id
+    WHERE hb.parent_id IS NOT NULL
+  )
+  UPDATE hierarchy_branches
+  SET is_dirty = 1, updated_at = datetime('now')
+  WHERE id IN (SELECT id FROM ancestors)
+`));
+
+let _incrementNodeCountsStmt: Stmt | null = null;
+const incrementNodeCountsStmt = () => (_incrementNodeCountsStmt ??= getDatabase().prepare(`
+  WITH RECURSIVE ancestors(id) AS (
+    SELECT id FROM hierarchy_branches WHERE id = ?
+    UNION ALL
+    SELECT hb.parent_id FROM hierarchy_branches hb
+    JOIN ancestors a ON hb.id = a.id
+    WHERE hb.parent_id IS NOT NULL
+  )
+  UPDATE hierarchy_branches
+  SET node_count = node_count + 1
+  WHERE id IN (SELECT id FROM ancestors)
+`));
+
+let _retireBranchStmt: Stmt | null = null;
+const retireBranchStmt = () => (_retireBranchStmt ??= getDatabase().prepare(
+  `UPDATE hierarchy_branches SET is_active = 0, updated_at = datetime('now') WHERE id = ?`
+));
+
+let _selectRootBranchesStmt: Stmt | null = null;
+const selectRootBranchesStmt = () => (_selectRootBranchesStmt ??= getDatabase().prepare(`
+  SELECT id, label, depth, discriminator_dimension, discriminator_value
+  FROM hierarchy_branches
+  WHERE parent_id IS NULL AND is_active = 1
+  ORDER BY sort_order ASC
+`));
+
+let _selectChildBranchesStmt: Stmt | null = null;
+const selectChildBranchesStmt = () => (_selectChildBranchesStmt ??= getDatabase().prepare(`
+  SELECT id, label, depth, discriminator_dimension, discriminator_value
+  FROM hierarchy_branches
+  WHERE parent_id = ? AND is_active = 1
+  ORDER BY sort_order ASC
+`));
+
+let _selectBranchDiscriminatorStmt: Stmt | null = null;
+const selectBranchDiscriminatorStmt = () => (_selectBranchDiscriminatorStmt ??= getDatabase().prepare(`
+  SELECT discriminator_dimension, discriminator_value
+  FROM hierarchy_branches WHERE id = ?
+`));
+
+let _getBranchPathStmt: Stmt | null = null;
+const getBranchPathStmt = () => (_getBranchPathStmt ??= getDatabase().prepare(`
+  WITH RECURSIVE ancestors(id, parent_id, label, lvl) AS (
+    SELECT id, parent_id, label, 0 FROM hierarchy_branches WHERE id = ?
+    UNION ALL
+    SELECT hb.id, hb.parent_id, hb.label, a.lvl + 1
+    FROM hierarchy_branches hb
+    JOIN ancestors a ON hb.id = a.parent_id
+  )
+  SELECT label FROM ancestors ORDER BY lvl DESC
+`));
+
+let _getBranchDepthStmt: Stmt | null = null;
+const getBranchDepthStmt = () => (_getBranchDepthStmt ??= getDatabase().prepare(
+  `SELECT depth FROM hierarchy_branches WHERE id = ?`
+));
+
+let _insertChildBranchStmt: Stmt | null = null;
+const insertChildBranchStmt = () => (_insertChildBranchStmt ??= getDatabase().prepare(`
+  INSERT INTO hierarchy_branches
+    (id, parent_id, label, depth, discriminator_dimension, discriminator_value,
+     confidence, description, sort_order, is_active, node_count, cohesion_score, is_dirty)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 0)
+`));
+
+let _deletePlacementStmt: Stmt | null = null;
+const deletePlacementStmt = () => (_deletePlacementStmt ??= getDatabase().prepare(
+  `DELETE FROM node_branch_placements WHERE node_id = ? AND branch_id = ?`
+));
+
+let _updateBranchCohesionStmt: Stmt | null = null;
+const updateBranchCohesionStmt = () => (_updateBranchCohesionStmt ??= getDatabase().prepare(`
+  UPDATE hierarchy_branches
+  SET cohesion_score = ?, is_dirty = 0, last_refined_at = datetime('now'), updated_at = datetime('now')
+  WHERE id = ?
+`));
+
+let _selectActiveBranchChildrenStmt: Stmt | null = null;
+const selectActiveBranchChildrenStmt = () => (_selectActiveBranchChildrenStmt ??= getDatabase().prepare(
+  `SELECT id FROM hierarchy_branches WHERE parent_id = ? AND is_active = 1`
+));
+
+let _countActiveBranchChildrenStmt: Stmt | null = null;
+const countActiveBranchChildrenStmt = () => (_countActiveBranchChildrenStmt ??= getDatabase().prepare(
+  `SELECT COUNT(*) as cnt FROM hierarchy_branches WHERE parent_id = ? AND is_active = 1`
+));
+
+let _totalBranchesStmt: Stmt | null = null;
+const totalBranchesStmt = () => (_totalBranchesStmt ??= getDatabase().prepare(
+  `SELECT COUNT(*) as cnt FROM hierarchy_branches`
+));
+
+let _activeBranchesStmt: Stmt | null = null;
+const activeBranchesStmt = () => (_activeBranchesStmt ??= getDatabase().prepare(
+  `SELECT COUNT(*) as cnt FROM hierarchy_branches WHERE is_active = 1`
+));
+
+let _maxDepthStmt: Stmt | null = null;
+const maxDepthStmt = () => (_maxDepthStmt ??= getDatabase().prepare(
+  `SELECT MAX(depth) as d FROM hierarchy_branches WHERE is_active = 1`
+));
+
+let _dirtyBranchesStmt: Stmt | null = null;
+const dirtyBranchesStmt = () => (_dirtyBranchesStmt ??= getDatabase().prepare(
+  `SELECT COUNT(*) as cnt FROM hierarchy_branches WHERE is_dirty = 1 AND is_active = 1`
+));
+
+let _totalPlacementsStmt: Stmt | null = null;
+const totalPlacementsStmt = () => (_totalPlacementsStmt ??= getDatabase().prepare(
+  `SELECT COUNT(*) as cnt FROM node_branch_placements WHERE is_primary = 1`
+));
+
+let _depthDistributionStmt: Stmt | null = null;
+const depthDistributionStmt = () => (_depthDistributionStmt ??= getDatabase().prepare(
+  `SELECT depth, COUNT(*) as cnt FROM hierarchy_branches WHERE is_active = 1 GROUP BY depth ORDER BY depth`
+));
+
+let _selectBranchByIdStmt: Stmt | null = null;
+const selectBranchByIdStmt = () => (_selectBranchByIdStmt ??= getDatabase().prepare(
+  `SELECT id FROM hierarchy_branches WHERE id = ? AND is_active = 1`
+));
+
+let _selectPrimaryPlacementStmt: Stmt | null = null;
+const selectPrimaryPlacementStmt = () => (_selectPrimaryPlacementStmt ??= getDatabase().prepare(
+  `SELECT branch_id FROM node_branch_placements WHERE node_id = ? AND is_primary = 1`
+));
+
+let _deletePrimaryPlacementStmt: Stmt | null = null;
+const deletePrimaryPlacementStmt = () => (_deletePrimaryPlacementStmt ??= getDatabase().prepare(
+  `DELETE FROM node_branch_placements WHERE node_id = ? AND is_primary = 1`
+));
+
+let _insertManualPlacementStmt: Stmt | null = null;
+const insertManualPlacementStmt = () => (_insertManualPlacementStmt ??= getDatabase().prepare(`
+  INSERT INTO node_branch_placements (node_id, branch_id, is_primary, placement_confidence, placement_source, placed_at)
+  VALUES (?, ?, 1, 1.0, 'manual', datetime('now'))
+`));
+
+let _logRefinementStmt: Stmt | null = null;
+const logRefinementStmt = () => (_logRefinementStmt ??= getDatabase().prepare(`
+  INSERT INTO hierarchy_refinement_log
+    (id, trigger, scope, branches_evaluated, branches_modified, nodes_moved,
+     llm_calls, token_usage, duration_ms, started_at, completed_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-' || ? || ' seconds'), datetime('now'))
+`));
+
+// ============================================================
 // HierarchyEngine
 // ============================================================
 
@@ -147,7 +321,7 @@ export class HierarchyEngine {
     // Update node counts for all branches
     this.refreshNodeCounts();
 
-    const branchCount = (db.prepare('SELECT COUNT(*) as cnt FROM hierarchy_branches WHERE is_active = 1').get() as { cnt: number }).cnt;
+    const branchCount = (activeBranchesStmt().get() as { cnt: number }).cnt;
 
     log.info('Full hierarchy build complete', {
       module: 'hierarchy-engine',
@@ -312,9 +486,7 @@ export class HierarchyEngine {
     // Step 7: Refresh node counts (propagates counts up the tree)
     this.refreshNodeCounts();
 
-    const branchCount = (db.prepare(
-      'SELECT COUNT(*) as cnt FROM hierarchy_branches WHERE is_active = 1'
-    ).get() as { cnt: number }).cnt;
+    const branchCount = (activeBranchesStmt().get() as { cnt: number }).cnt;
 
     const durationMs = Date.now() - startTime;
 
@@ -349,12 +521,7 @@ export class HierarchyEngine {
     const db = getDatabase();
 
     // Start at root (depth 0, no parent)
-    const roots = db.prepare(`
-      SELECT id, label, depth, discriminator_dimension, discriminator_value
-      FROM hierarchy_branches
-      WHERE parent_id IS NULL AND is_active = 1
-      ORDER BY sort_order ASC
-    `).all() as Array<{
+    const roots = selectRootBranchesStmt().all() as Array<{
       id: string; label: string; depth: number;
       discriminator_dimension: string | null; discriminator_value: string | null;
     }>;
@@ -379,12 +546,7 @@ export class HierarchyEngine {
 
     // Descend through the tree
     while (true) {
-      const children = db.prepare(`
-        SELECT id, label, depth, discriminator_dimension, discriminator_value
-        FROM hierarchy_branches
-        WHERE parent_id = ? AND is_active = 1
-        ORDER BY sort_order ASC
-      `).all(currentBranchId) as Array<{
+      const children = selectChildBranchesStmt().all(currentBranchId) as Array<{
         id: string; label: string; depth: number;
         discriminator_dimension: string | null; discriminator_value: string | null;
       }>;
@@ -462,9 +624,7 @@ export class HierarchyEngine {
       const context = this.discriminator.buildContextFromDb(branch.id);
       if (!context || context.nodes.length === 0) {
         // Check if branch has active children before retiring
-        const hasChildren = (db.prepare(
-          'SELECT COUNT(*) as cnt FROM hierarchy_branches WHERE parent_id = ? AND is_active = 1'
-        ).get(branch.id) as { cnt: number }).cnt > 0;
+        const hasChildren = (countActiveBranchChildrenStmt().get(branch.id) as { cnt: number }).cnt > 0;
 
         if (!hasChildren) {
           this.retireBranch(branch.id);
@@ -490,11 +650,7 @@ export class HierarchyEngine {
       }
 
       // Update branch metadata
-      db.prepare(`
-        UPDATE hierarchy_branches
-        SET cohesion_score = ?, is_dirty = 0, last_refined_at = datetime('now'), updated_at = datetime('now')
-        WHERE id = ?
-      `).run(evalResult.evaluation.branchCohesion, branch.id);
+      updateBranchCohesionStmt().run(evalResult.evaluation.branchCohesion, branch.id);
     }
 
     // Top-down cleanup: retire empty branches, merge tiny branches
@@ -548,11 +704,7 @@ export class HierarchyEngine {
 
     if (!evalResult.evaluation.shouldSplit || evalResult.evaluation.proposedChildren.length < 2) {
       // Update cohesion score
-      const db = getDatabase();
-      db.prepare(`
-        UPDATE hierarchy_branches SET cohesion_score = ?, is_dirty = 0, last_refined_at = datetime('now')
-        WHERE id = ?
-      `).run(evalResult.evaluation.branchCohesion, branchId);
+      updateBranchCohesionStmt().run(evalResult.evaluation.branchCohesion, branchId);
       return { llmCalls, tokenUsage: totalTokens };
     }
 
@@ -560,10 +712,7 @@ export class HierarchyEngine {
     this.applySplit(branchId, evalResult.evaluation);
 
     // Recurse into each new child branch
-    const db = getDatabase();
-    const children = db.prepare(`
-      SELECT id FROM hierarchy_branches WHERE parent_id = ? AND is_active = 1
-    `).all(branchId) as Array<{ id: string }>;
+    const children = selectActiveBranchChildrenStmt().all(branchId) as Array<{ id: string }>;
 
     for (const child of children) {
       const childResult = await this.recursiveSplit(child.id);
@@ -579,12 +728,9 @@ export class HierarchyEngine {
    * Returns the number of nodes moved.
    */
   private applySplit(branchId: string, evaluation: import('./branch_discriminator.js').BranchEvaluation): number {
-    const db = getDatabase();
     let nodesMoved = 0;
 
-    const parentBranch = db.prepare(`
-      SELECT depth FROM hierarchy_branches WHERE id = ?
-    `).get(branchId) as { depth: number } | undefined;
+    const parentBranch = getBranchDepthStmt().get(branchId) as { depth: number } | undefined;
 
     if (!parentBranch) return 0;
 
@@ -596,12 +742,7 @@ export class HierarchyEngine {
         const childId = uuidv4();
 
         // Create child branch
-        db.prepare(`
-          INSERT INTO hierarchy_branches
-            (id, parent_id, label, depth, discriminator_dimension, discriminator_value,
-             confidence, description, sort_order, is_active, node_count, cohesion_score, is_dirty)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 0)
-        `).run(
+        insertChildBranchStmt().run(
           childId,
           branchId,
           child.label,
@@ -618,28 +759,17 @@ export class HierarchyEngine {
         // Move node placements from parent to child
         for (const nodeId of child.nodeIds) {
           // Delete old placement at parent
-          db.prepare(`
-            DELETE FROM node_branch_placements
-            WHERE node_id = ? AND branch_id = ?
-          `).run(nodeId, branchId);
+          deletePlacementStmt().run(nodeId, branchId);
 
           // Insert new placement at child
-          db.prepare(`
-            INSERT OR REPLACE INTO node_branch_placements
-              (node_id, branch_id, is_primary, placement_confidence, placement_source, placed_at)
-            VALUES (?, ?, 1, ?, 'refinement', datetime('now'))
-          `).run(nodeId, childId, evaluation.confidence);
+          insertPlacementStmt().run(nodeId, childId, evaluation.confidence, 'refinement');
 
           nodesMoved++;
         }
       }
 
       // Update parent branch metadata
-      db.prepare(`
-        UPDATE hierarchy_branches
-        SET cohesion_score = ?, is_dirty = 0, last_refined_at = datetime('now'), updated_at = datetime('now')
-        WHERE id = ?
-      `).run(evaluation.branchCohesion, branchId);
+      updateBranchCohesionStmt().run(evaluation.branchCohesion, branchId);
     });
 
     return nodesMoved;
@@ -730,11 +860,7 @@ export class HierarchyEngine {
   }
 
   private computePlacementConfidence(profile: SemanticProfile, branchId: string): number {
-    const db = getDatabase();
-    const branch = db.prepare(`
-      SELECT discriminator_dimension, discriminator_value
-      FROM hierarchy_branches WHERE id = ?
-    `).get(branchId) as { discriminator_dimension: string | null; discriminator_value: string | null } | undefined;
+    const branch = selectBranchDiscriminatorStmt().get(branchId) as { discriminator_dimension: string | null; discriminator_value: string | null } | undefined;
 
     if (!branch || !branch.discriminator_dimension) return 0.5;
 
@@ -745,12 +871,7 @@ export class HierarchyEngine {
   }
 
   private insertPlacement(nodeId: string, branchId: string, confidence: number, source: string): void {
-    const db = getDatabase();
-    db.prepare(`
-      INSERT OR REPLACE INTO node_branch_placements
-        (node_id, branch_id, is_primary, placement_confidence, placement_source, placed_at)
-      VALUES (?, ?, 1, ?, ?, datetime('now'))
-    `).run(nodeId, branchId, confidence, source);
+    insertPlacementStmt().run(nodeId, branchId, confidence, source);
   }
 
   // ============================================================
@@ -758,44 +879,15 @@ export class HierarchyEngine {
   // ============================================================
 
   private markBranchDirty(branchId: string): void {
-    const db = getDatabase();
-    // Mark this branch and all ancestors as dirty in a single query
-    db.prepare(`
-      WITH RECURSIVE ancestors(id) AS (
-        SELECT id FROM hierarchy_branches WHERE id = ?
-        UNION ALL
-        SELECT hb.parent_id FROM hierarchy_branches hb
-        JOIN ancestors a ON hb.id = a.id
-        WHERE hb.parent_id IS NOT NULL
-      )
-      UPDATE hierarchy_branches
-      SET is_dirty = 1, updated_at = datetime('now')
-      WHERE id IN (SELECT id FROM ancestors)
-    `).run(branchId);
+    markBranchDirtyStmt().run(branchId);
   }
 
   private incrementNodeCounts(branchId: string): void {
-    const db = getDatabase();
-    // Increment node_count for this branch and all ancestors in a single query
-    db.prepare(`
-      WITH RECURSIVE ancestors(id) AS (
-        SELECT id FROM hierarchy_branches WHERE id = ?
-        UNION ALL
-        SELECT hb.parent_id FROM hierarchy_branches hb
-        JOIN ancestors a ON hb.id = a.id
-        WHERE hb.parent_id IS NOT NULL
-      )
-      UPDATE hierarchy_branches
-      SET node_count = node_count + 1
-      WHERE id IN (SELECT id FROM ancestors)
-    `).run(branchId);
+    incrementNodeCountsStmt().run(branchId);
   }
 
   private retireBranch(branchId: string): void {
-    const db = getDatabase();
-    db.prepare(`
-      UPDATE hierarchy_branches SET is_active = 0, updated_at = datetime('now') WHERE id = ?
-    `).run(branchId);
+    retireBranchStmt().run(branchId);
   }
 
   /**
@@ -823,7 +915,7 @@ export class HierarchyEngine {
     }
 
     // Propagate counts up the tree (bottom-up by depth)
-    const maxDepth = (db.prepare('SELECT MAX(depth) as d FROM hierarchy_branches WHERE is_active = 1').get() as { d: number | null })?.d ?? 0;
+    const maxDepth = (maxDepthStmt().get() as { d: number | null })?.d ?? 0;
 
     for (let depth = maxDepth; depth >= 0; depth--) {
       db.prepare(`
@@ -876,14 +968,8 @@ export class HierarchyEngine {
     evaluated: number, modified: number, moved: number,
     llmCalls: number, tokens: number, durationMs: number,
   ): void {
-    const db = getDatabase();
     try {
-      db.prepare(`
-        INSERT INTO hierarchy_refinement_log
-          (id, trigger, scope, branches_evaluated, branches_modified, nodes_moved,
-           llm_calls, token_usage, duration_ms, started_at, completed_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-' || ? || ' seconds'), datetime('now'))
-      `).run(
+      logRefinementStmt().run(
         uuidv4(), trigger, scope, evaluated, modified, moved,
         llmCalls, tokens, durationMs, Math.round(durationMs / 1000),
       );
@@ -900,26 +986,19 @@ export class HierarchyEngine {
    * Manually move a node to a different branch.
    */
   moveNode(nodeId: string, targetBranchId: string): void {
-    const db = getDatabase();
-
     // Verify target branch exists
-    const target = db.prepare('SELECT id FROM hierarchy_branches WHERE id = ? AND is_active = 1').get(targetBranchId);
+    const target = selectBranchByIdStmt().get(targetBranchId);
     if (!target) throw new Error(`Target branch not found: ${targetBranchId}`);
 
     // Get the node's current branch (to mark it dirty)
-    const currentPlacement = db.prepare(`
-      SELECT branch_id FROM node_branch_placements WHERE node_id = ? AND is_primary = 1
-    `).get(nodeId) as { branch_id: string } | undefined;
+    const currentPlacement = selectPrimaryPlacementStmt().get(nodeId) as { branch_id: string } | undefined;
 
     withTransaction(() => {
       // Remove old primary placement
-      db.prepare('DELETE FROM node_branch_placements WHERE node_id = ? AND is_primary = 1').run(nodeId);
+      deletePrimaryPlacementStmt().run(nodeId);
 
       // Insert new placement
-      db.prepare(`
-        INSERT INTO node_branch_placements (node_id, branch_id, is_primary, placement_confidence, placement_source, placed_at)
-        VALUES (?, ?, 1, 1.0, 'manual', datetime('now'))
-      `).run(nodeId, targetBranchId);
+      insertManualPlacementStmt().run(nodeId, targetBranchId);
     });
 
     // Mark both old and new branches as dirty
@@ -934,18 +1013,7 @@ export class HierarchyEngine {
    * Get the full path (labels) from root to a specific branch.
    */
   getBranchPath(branchId: string): string[] {
-    const db = getDatabase();
-    // Collect all ancestor labels in a single recursive CTE, ordered root-first
-    const rows = db.prepare(`
-      WITH RECURSIVE ancestors(id, parent_id, label, lvl) AS (
-        SELECT id, parent_id, label, 0 FROM hierarchy_branches WHERE id = ?
-        UNION ALL
-        SELECT hb.id, hb.parent_id, hb.label, a.lvl + 1
-        FROM hierarchy_branches hb
-        JOIN ancestors a ON hb.id = a.parent_id
-      )
-      SELECT label FROM ancestors ORDER BY lvl DESC
-    `).all(branchId) as { label: string }[];
+    const rows = getBranchPathStmt().all(branchId) as { label: string }[];
 
     return rows.map(r => r.label);
   }
@@ -961,17 +1029,13 @@ export class HierarchyEngine {
     totalPlacements: number;
     depthDistribution: Record<number, number>;
   } {
-    const db = getDatabase();
+    const total = (totalBranchesStmt().get() as { cnt: number }).cnt;
+    const active = (activeBranchesStmt().get() as { cnt: number }).cnt;
+    const maxDepth = (maxDepthStmt().get() as { d: number | null })?.d ?? 0;
+    const dirty = (dirtyBranchesStmt().get() as { cnt: number }).cnt;
+    const placements = (totalPlacementsStmt().get() as { cnt: number }).cnt;
 
-    const total = (db.prepare('SELECT COUNT(*) as cnt FROM hierarchy_branches').get() as { cnt: number }).cnt;
-    const active = (db.prepare('SELECT COUNT(*) as cnt FROM hierarchy_branches WHERE is_active = 1').get() as { cnt: number }).cnt;
-    const maxDepth = (db.prepare('SELECT MAX(depth) as d FROM hierarchy_branches WHERE is_active = 1').get() as { d: number | null })?.d ?? 0;
-    const dirty = (db.prepare('SELECT COUNT(*) as cnt FROM hierarchy_branches WHERE is_dirty = 1 AND is_active = 1').get() as { cnt: number }).cnt;
-    const placements = (db.prepare('SELECT COUNT(*) as cnt FROM node_branch_placements WHERE is_primary = 1').get() as { cnt: number }).cnt;
-
-    const depthRows = db.prepare(`
-      SELECT depth, COUNT(*) as cnt FROM hierarchy_branches WHERE is_active = 1 GROUP BY depth ORDER BY depth
-    `).all() as Array<{ depth: number; cnt: number }>;
+    const depthRows = depthDistributionStmt().all() as Array<{ depth: number; cnt: number }>;
 
     const depthDistribution: Record<number, number> = {};
     for (const row of depthRows) {
