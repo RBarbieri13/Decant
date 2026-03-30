@@ -18,11 +18,10 @@ import * as userTagRoutes from './user-tags.js';
 import * as imessageRoutes from './imessage.js';
 import * as summaryRoutes from './summary.js';
 import * as dynamicHierarchyRoutes from './dynamic-hierarchy.js';
+import * as rescrapeRoutes from './rescrape.js';
 import { getSegmentLabels, getCategoryLabels } from '../database/taxonomy_ops.js';
 import { importLimiter, settingsLimiter } from '../middleware/rateLimit.js';
 // NOTE: processing_queue.js removed — admin routes now use hierarchy engine
-import { getDatabase } from '../database/connection.js';
-import { importUrl as orchestratorImportUrl } from '../services/import/orchestrator.js';
 import { getNotificationService, type NotificationEvent } from '../services/notifications/index.js';
 import { log } from '../logger/index.js';
 import { metricsEndpoint } from '../services/metrics/index.js';
@@ -316,50 +315,10 @@ export function registerAPIRoutes(app: Express): void {
   });
 
   // POST /api/admin/rescrape-poor-quality - Re-import nodes with minimal extraction quality
-  app.post('/api/admin/rescrape-poor-quality', async (_req: Request, res: Response) => {
-    try {
-      const db = getDatabase();
-      const rows = db.prepare(
-        `SELECT id, url FROM nodes WHERE (extraction_quality = 'minimal' OR extraction_quality IS NULL) AND is_deleted = 0`
-      ).all() as { id: string; url: string }[];
+  app.post('/api/admin/rescrape-poor-quality', rescrapeRoutes.rescrapePoorQuality);
 
-      if (rows.length === 0) {
-        res.json({ count: 0, message: 'No nodes with minimal extraction quality found' });
-        return;
-      }
-
-      // Re-queue each node for import with forceRefresh
-      let queued = 0;
-      const errors: string[] = [];
-
-      for (const row of rows) {
-        try {
-          await orchestratorImportUrl(row.url, { forceRefresh: true });
-          queued++;
-        } catch (error) {
-          const msg = error instanceof Error ? error.message : String(error);
-          errors.push(`${row.id}: ${msg}`);
-        }
-      }
-
-      log.info('Rescrape poor quality completed', {
-        queued,
-        total: rows.length,
-        errors: errors.length,
-        module: 'admin',
-      });
-
-      res.json({
-        count: queued,
-        message: `Queued ${queued} nodes for re-scraping`,
-        ...(errors.length > 0 && { errors }),
-      });
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      log.error('Rescrape poor quality failed', { error: msg, module: 'admin' });
-      res.status(500).json({ error: msg });
-    }
-  });
+  // GET /api/admin/rescrape-poor-quality/progress - Poll rescrape progress
+  app.get('/api/admin/rescrape-poor-quality/progress', rescrapeRoutes.getRescrapeProgress);
 
   // ============================================================
   // Collection routes

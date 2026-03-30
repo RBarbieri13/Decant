@@ -582,6 +582,30 @@ export const adminAPI = {
     if (!res.ok) throw new Error(`Re-enrich all failed: ${res.statusText}`);
     return res.json();
   },
+
+  async rescrapePoorQuality(): Promise<{ message: string; total: number }> {
+    const res = await fetchWithAuth(`${API_BASE}/admin/rescrape-poor-quality`, {
+      method: 'POST',
+    });
+    if (!res.ok) throw new Error(`Rescrape failed: ${res.statusText}`);
+    return res.json();
+  },
+
+  async getRescrapeProgress(): Promise<{
+    isRunning: boolean;
+    total: number;
+    completed: number;
+    failed: number;
+    phase: string;
+    startedAt: string | null;
+    completedAt: string | null;
+    lastError: string | null;
+    errorCount: number;
+  }> {
+    const res = await fetchWithAuth(`${API_BASE}/admin/rescrape-poor-quality/progress`);
+    if (!res.ok) throw new Error('Failed to get rescrape progress');
+    return res.json();
+  },
 };
 
 export interface ReclassifyResult {
