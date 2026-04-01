@@ -12,8 +12,7 @@
   padding: 16px;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06),
-    0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--slate-shadow-lg, 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04));
   border-left: 4px solid;
   animation: toast-slide-in 0.3s ease-out;
   transition: all 0.3s ease;
@@ -185,7 +184,7 @@
 }
 
 .decant-toast--success .decant-toast__progress-bar {
-  background-color: var(--decant-green, #22c55e);
+  background-color: var(--decant-brand-accent, #2bae82);
 }
 
 .decant-toast--error .decant-toast__progress-bar {

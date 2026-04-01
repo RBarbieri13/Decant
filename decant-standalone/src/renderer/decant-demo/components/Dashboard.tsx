@@ -70,7 +70,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   }, [data]);
 
   const segmentColors: Record<string, string> = {
-    A: '#ec4899', H: '#ec4899', C: '#ec4899',
+    A: '#2bae82', H: '#2bae82', C: '#2bae82',
     T: '#3b82f6', B: '#3b82f6', X: '#3b82f6',
     F: '#22c55e', L: '#22c55e',
     S: '#eab308', E: '#eab308',

@@ -41,12 +41,12 @@ export function formatRelativeDate(dateStr: string): { display: string; full: st
 }
 
 export const SEGMENT_COLOR_HEX: Record<string, string> = {
-  pink: '#ec4899', blue: '#3b82f6', green: '#22c55e', yellow: '#eab308',
+  pink: '#2bae82', blue: '#3b82f6', green: '#22c55e', yellow: '#eab308',
   purple: '#a78bfa', orange: '#f97316', teal: '#14b8a6', red: '#ef4444',
 };
 
 export const SEGMENT_HEX_MAP: Record<string, string> = {
-  A: '#ec4899',  // AI — pink
+  A: '#2bae82',  // AI — teal accent
   T: '#3b82f6',  // Technology — blue
   F: '#22c55e',  // Finance — green
   S: '#eab308',  // Sports — yellow
@@ -58,7 +58,7 @@ export const SEGMENT_HEX_MAP: Record<string, string> = {
   C: '#a78bfa',  // Creative — purple
 };
 
-/** Get the hex color for a segment code character (e.g. 'A' → '#ec4899') */
+/** Get the hex color for a segment code character (e.g. 'A' → '#2bae82') */
 export function getSegmentHex(segCode: string): string {
   const char = (segCode || '').charAt(0).toUpperCase();
   return SEGMENT_HEX_MAP[char] || '#6b7280';
