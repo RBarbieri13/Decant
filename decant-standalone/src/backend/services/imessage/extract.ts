@@ -22,7 +22,7 @@ const DEFAULT_COUNT = 20;
 const MAX_MESSAGES_SCAN = 1000;
 
 /** Regex to extract URLs from message text and binary blobs */
-const URL_PATTERN = /https?:\/\/[^\s<>"{|}\\^\x60\[\]\x00-\x1f]+/g;
+const URL_PATTERN = /https?:\/\/[^\s<>"{|}\\^\x60\[\]\x00-\x1f\x7f-\xff]+/g;
 
 /** Trailing artifacts to strip from extracted URLs */
 const TRAILING_JUNK = /[.,;:!?)]+$/;
@@ -111,7 +111,9 @@ function extractUrlsFromMessage(text: string | null, blob: Buffer | null): strin
   // Extract from binary attributedBody blob
   if (blob) {
     try {
-      const blobText = blob.toString('utf-8');
+      // Convert to latin1 (1:1 byte mapping) then strip non-ASCII to avoid
+      // multi-byte UTF-8 replacement chars leaking into URL matches.
+      const blobText = blob.toString('latin1').replace(/[^\x20-\x7e]/g, ' ');
       const matches = blobText.match(URL_PATTERN);
       if (matches) {
         for (const url of matches) urls.add(url);

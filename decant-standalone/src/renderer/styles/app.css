@@ -1605,12 +1605,12 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 12px;
+  padding: 6px 12px;
   cursor: pointer;
   border-radius: 6px;
-  margin: 1px 12px 1px 0;
+  margin: 2px 12px 2px 0;
   position: relative;
-  min-height: 30px;
+  min-height: 34px;
   transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
 }
 
@@ -1697,13 +1697,14 @@ textarea:focus-visible {
 }
 
 .decant-tree-node__label {
-  font-size: 15px;
-  font-weight: 600;
-  color: #000000;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #2d3340;
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.01em;
 }
 
 .decant-tree-node__row--selected .decant-tree-node__icon {
@@ -1718,12 +1719,12 @@ textarea:focus-visible {
 .decant-tree-node__root-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: 8px;
+  padding: 7px 12px;
   cursor: pointer;
   border-radius: 6px;
   margin: 4px 12px 6px 0;
-  min-height: 32px;
+  min-height: 36px;
   border-bottom: none;
   margin-bottom: 8px;
   padding-bottom: 10px;
@@ -4588,11 +4589,11 @@ textarea:focus-visible {
 /* Child count badge — frosted pill */
 .decant-tree-node__count {
   margin-left: auto;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 500;
-  color: var(--decant-gray-400, #9ca3af);
-  padding: 1px 8px;
-  min-width: 20px;
+  color: var(--decant-gray-500, #747b8b);
+  padding: 2px 8px;
+  min-width: 22px;
   text-align: right;
   flex-shrink: 0;
   border-radius: 10px;

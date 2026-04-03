@@ -245,23 +245,23 @@ body {
 }
 
 .decant-tree-node__label {
-  font-size: var(--slate-text-base) !important;
+  font-size: var(--slate-text-md) !important;
   font-weight: var(--slate-wt-medium) !important;
-  color: #3d4453 !important;
+  color: #2d3340 !important;
   line-height: 1.4 !important;
-  letter-spacing: -0.008em !important;
+  letter-spacing: -0.01em !important;
 }
 
 .decant-tree-node__row--segment .decant-tree-node__label {
   font-weight: var(--slate-wt-semibold) !important;
-  color: #282e3a !important;
-  letter-spacing: -0.01em !important;
+  color: #1e2530 !important;
+  letter-spacing: -0.012em !important;
 }
 
 .decant-tree-node__count {
-  font-size: var(--slate-text-2xs) !important;
+  font-size: var(--slate-text-xs) !important;
   font-weight: var(--slate-wt-medium) !important;
-  color: #636a78 !important;
+  color: #565d6c !important;
   background: rgba(0,0,0,0.05) !important;
   font-feature-settings: 'tnum' 1 !important;
 }
@@ -276,15 +276,16 @@ body {
 }
 
 .decant-tree-node__root-label {
-  font-size: var(--slate-text-base) !important;
+  font-size: var(--slate-text-md) !important;
   font-weight: var(--slate-wt-semibold) !important;
-  color: #282e3a !important;
-  letter-spacing: -0.01em !important;
+  color: #1e2530 !important;
+  letter-spacing: -0.012em !important;
 }
 
 .decant-tree-node__root-count {
+  font-size: var(--slate-text-xs) !important;
   background: rgba(0,0,0,0.05) !important;
-  color: #636a78 !important;
+  color: #565d6c !important;
   font-feature-settings: 'tnum' 1 !important;
 }
 

@@ -38,7 +38,7 @@ const TreeNode: React.FC<TreeNodeProps> = React.memo(({
 
   // Dynamic hierarchy: use node's own color or derive from level
   const iconColor = node.iconColor || SEGMENT_HEX_MAP[node.id.charAt(0)?.toUpperCase()] || '#6b7280';
-  const iconProps = getIconProps({ size: 16, stroke: 1.5, color: iconColor });
+  const iconProps = getIconProps({ size: 18, stroke: 1.5, color: iconColor });
 
   // For dynamic hierarchy, branches are identified by having children, not by ID prefix
   const isSegment = node.id.startsWith('seg-') || (level === 0 && hasChildren);
@@ -224,7 +224,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           tabIndex={0}
         >
           <span className="decant-tree-node__toggle-spacer" />
-          <svg className="decant-tree-node__root-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="decant-tree-node__root-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="7" height="7" rx="1"/>
             <rect x="14" y="3" width="7" height="7" rx="1"/>
             <rect x="3" y="14" width="7" height="7" rx="1"/>
