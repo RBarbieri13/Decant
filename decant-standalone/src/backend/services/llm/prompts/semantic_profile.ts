@@ -38,6 +38,15 @@ export const SemanticProfileSchema = z.object({
   // Quality
   confidence: z.number().min(0).max(1).describe('How confident you are in this profile. 0.9+ for clear content, 0.5-0.8 for ambiguous, <0.5 for very uncertain.'),
   logoUrl: z.string().url().nullable().optional().describe('Direct URL to the logo or icon image if found in the page metadata. null if not found.'),
+
+  // Future-you blurb: editable in UI, grays out until the user overrides.
+  whySaved: z.string().max(200).describe('A one-line blurb in the user\'s future-self voice explaining WHY this is worth saving. 12-20 words. Speak TO the user, not ABOUT the resource. Examples: "Bookmark this if you ever need to spin up a local LLM eval harness.", "Come back here next time you want to compare vector databases.", "Good reference for when you\'re debugging Playwright flakiness.". Do not start with "This is" or "A tool for".'),
+
+  // Classification rationale: populates the explain-on-hover tooltip (#14).
+  classificationReasoning: z.object({
+    primaryDomainReason: z.string().max(300).describe('One sentence explaining why you chose this primaryDomain. Reference the specific content signals.'),
+    resourceTypeReason: z.string().max(300).describe('One sentence explaining why you chose this resourceType. Reference the specific content signals.'),
+  }).describe('Natural language justification for the primary classification. Shown in UI tooltips.'),
 });
 
 export type SemanticProfile = z.infer<typeof SemanticProfileSchema>;
@@ -113,6 +122,10 @@ CRITICAL RULES:
    The \`resourceType\` should be "news" or "article" for most posts.
    TITLE FOR SOCIAL POSTS — THIS IS CRITICAL: You will receive the raw tweet/post text as the "Title" input. DO NOT echo it back. DO NOT truncate it. DO NOT quote it. Instead, read the full content and write a NEW descriptive headline (5-12 words) that a librarian would use to catalog the topic. The title should be third-person and objective, never first-person. If the post discusses a specific tool, framework, or event, name it in the title.
    NEVER set primaryDomain="social media" or primaryFunction="social media engagement" unless the resource is LITERALLY about social media marketing strategy as its subject matter.
+
+9. WHY_SAVED: Write a single one-line blurb (12-20 words, max 200 chars) in the reader's FUTURE-SELF voice explaining why they will want to come back to this. Speak TO them, not ABOUT the resource. "Bookmark this if you ever need to..." / "Come back here when you're..." / "Good reference for when you're...". Never start with "This is" or "A tool for". The tone is a helpful note-to-self, not marketing copy.
+
+10. CLASSIFICATION_REASONING: Produce two one-sentence justifications — one for primaryDomain, one for resourceType. Reference specific signals from the content (e.g., "The post is about debugging Playwright flakiness, which is a web testing topic."). These are shown to the user as tooltips explaining why the system classified the resource the way it did.
 
 Respond with valid JSON matching the required schema. Do not include any text outside the JSON object.`;
 
@@ -215,5 +228,10 @@ export function createFallbackProfile(input: SemanticProfileInput): SemanticProf
     functionTags: '',
     confidence: 0.1,
     logoUrl: input.favicon || null,
+    whySaved: '',
+    classificationReasoning: {
+      primaryDomainReason: '',
+      resourceTypeReason: '',
+    },
   };
 }

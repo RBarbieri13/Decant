@@ -68,6 +68,50 @@ const countNodesStmt = () => (_countNodesStmt ??= getDatabase().prepare(
   `SELECT COUNT(*) as count FROM nodes WHERE is_deleted = 0`
 ));
 
+let _updateWhySavedStmt: Stmt | null = null;
+const updateWhySavedStmt = () => (_updateWhySavedStmt ??= getDatabase().prepare(
+  `UPDATE nodes
+   SET why_saved_text = ?, why_saved_is_auto = ?, why_saved_generated_at = ?, updated_at = CURRENT_TIMESTAMP
+   WHERE id = ?`
+));
+
+let _updateClassificationReasoningStmt: Stmt | null = null;
+const updateClassificationReasoningStmt = () => (_updateClassificationReasoningStmt ??= getDatabase().prepare(
+  `UPDATE nodes
+   SET classification_reasoning = ?, updated_at = CURRENT_TIMESTAMP
+   WHERE id = ?`
+));
+
+let _updateSurfaceModeStmt: Stmt | null = null;
+const updateSurfaceModeStmt = () => (_updateSurfaceModeStmt ??= getDatabase().prepare(
+  `UPDATE nodes
+   SET surface_mode = ?, updated_at = CURRENT_TIMESTAMP
+   WHERE id = ?`
+));
+
+let _updateSavedFromContextStmt: Stmt | null = null;
+const updateSavedFromContextStmt = () => (_updateSavedFromContextStmt ??= getDatabase().prepare(
+  `UPDATE nodes
+   SET saved_from_context = ?, updated_at = CURRENT_TIMESTAMP
+   WHERE id = ?`
+));
+
+let _updateTitleOnlyStmt: Stmt | null = null;
+const updateTitleOnlyStmt = () => (_updateTitleOnlyStmt ??= getDatabase().prepare(
+  `UPDATE nodes
+   SET title = ?, updated_at = CURRENT_TIMESTAMP
+   WHERE id = ?`
+));
+
+let _findUntitledStmt: Stmt | null = null;
+const findUntitledStmt = () => (_findUntitledStmt ??= getDatabase().prepare(
+  `SELECT id, title, url, source_domain
+   FROM nodes
+   WHERE is_deleted = 0
+     AND (title IS NULL OR title = '' OR title = 'Untitled' OR classification_reasoning IS NULL)
+   ORDER BY date_added DESC`
+));
+
 export interface CreateNodeInput {
   title: string;
   url: string;
@@ -303,6 +347,62 @@ export function readNode(id: string): Record<string, unknown> | null {
     key_concepts: concepts.map(c => c.concept),
     metadataCodes: extractedFields.metadataCodes || null,
   };
+}
+
+/**
+ * Update the "why saved" blurb. `isAuto=true` means the text was
+ * machine-generated; the UI renders it italic/muted until the user edits.
+ */
+export function updateWhySaved(
+  nodeId: string,
+  text: string,
+  isAuto: boolean,
+  generatedAt: string | null,
+): void {
+  updateWhySavedStmt().run(text, isAuto ? 1 : 0, generatedAt, nodeId);
+  cache.invalidate('tree:*');
+}
+
+/** Persist the LLM's classification rationale for the explain-on-hover UI. */
+export function updateClassificationReasoning(
+  nodeId: string,
+  reasoning: { primaryDomainReason: string; resourceTypeReason: string; confidence?: number },
+): void {
+  updateClassificationReasoningStmt().run(JSON.stringify(reasoning), nodeId);
+}
+
+/** Flip a node between read_later and reference surfacing modes. */
+export function updateSurfaceMode(
+  nodeId: string,
+  mode: 'read_later' | 'reference',
+): void {
+  updateSurfaceModeStmt().run(mode, nodeId);
+  cache.invalidate('tree:*');
+}
+
+/** Attach sender/context metadata captured at import time. */
+export function updateSavedFromContext(
+  nodeId: string,
+  context: { source: 'imessage' | 'browser' | 'manual' | 'batch'; surrounding_messages?: string[]; timestamp?: string },
+): void {
+  updateSavedFromContextStmt().run(JSON.stringify(context), nodeId);
+}
+
+/**
+ * Update only the title. Used by the regenerate-title endpoint which
+ * preserves hierarchy placement and all other fields.
+ */
+export function updateTitleOnly(nodeId: string, title: string): void {
+  updateTitleOnlyStmt().run(title, nodeId);
+  cache.invalidate('tree:*');
+}
+
+/**
+ * Return nodes missing a real title or classification reasoning.
+ * Drives the admin backfill pass.
+ */
+export function findUntitledNodes(): Array<{ id: string; title: string; url: string; source_domain: string }> {
+  return findUntitledStmt().all() as Array<{ id: string; title: string; url: string; source_domain: string }>;
 }
 
 export function updateNode(id: string, data: UpdateNodeInput): unknown {

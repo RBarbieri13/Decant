@@ -20,6 +20,7 @@ import {
 import { getHierarchyEngine, hasHierarchyEngine, type PlacementResult } from '../hierarchy/hierarchy_engine.js';
 import {
   createNode, readNode, findNodeByUrl, findNodeByNormalizedUrl, updateNode,
+  updateWhySaved, updateClassificationReasoning,
   type CreateNodeInput,
 } from '../../database/nodes.js';
 import { registerMetadataCodesFromProfile } from '../../database/metadata.js';
@@ -204,6 +205,10 @@ export class ImportOrchestrator {
       log.debug('Creating node...', { url: normalizedUrl, ...ctx });
       const node = this.createNodeFromImport(validatedUrl, scraped, profile, profileResult.descriptorString);
 
+      // Step 6b: Persist why-saved blurb and classification reasoning
+      // (new in the 18-feature UX push — features #3 and #14)
+      this.persistSemanticExtras(node.id as string, profile);
+
       // Step 7: Register faceted metadata codes
       try {
         registerMetadataCodesFromProfile(node.id as string, profile);
@@ -387,6 +392,25 @@ export class ImportOrchestrator {
     };
 
     return this.profiler.profile(input);
+  }
+
+  private persistSemanticExtras(nodeId: string, profile: SemanticProfile): void {
+    try {
+      if (profile.whySaved) {
+        updateWhySaved(nodeId, profile.whySaved, true, new Date().toISOString());
+      }
+      if (profile.classificationReasoning) {
+        updateClassificationReasoning(nodeId, {
+          primaryDomainReason: profile.classificationReasoning.primaryDomainReason || '',
+          resourceTypeReason: profile.classificationReasoning.resourceTypeReason || '',
+          confidence: profile.confidence,
+        });
+      }
+    } catch (err) {
+      log.warn('persistSemanticExtras failed', {
+        nodeId, error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
 
   private createNodeFromImport(
