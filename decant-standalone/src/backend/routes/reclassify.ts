@@ -5,7 +5,10 @@
 // and the semantic profiler for single-node reclassification.
 
 import { Request, Response } from 'express';
-import { readNode, getAllNodes, updateNodeWithSemanticProfile, applyDynamicAssignments } from '../database/nodes.js';
+import {
+  readNode, getAllNodes, updateNodeWithSemanticProfile, applyDynamicAssignments,
+  updateWhySaved, updateClassificationReasoning, updateTitleOnly,
+} from '../database/nodes.js';
 import { getHierarchyEngine, hasHierarchyEngine } from '../services/hierarchy/hierarchy_engine.js';
 import { DynamicClassifier, type CondensedNode } from '../services/dynamic_classifier.js';
 import { SemanticProfiler, type SemanticProfileInput } from '../services/semantic_profiler.js';
@@ -217,6 +220,18 @@ export async function reclassifyNode(req: Request, res: Response): Promise<void>
     // Persist profile data to the nodes table
     updateNodeWithSemanticProfile(id, profile);
 
+    // Also persist whySaved + classification reasoning (features #3, #14)
+    if (profile.whySaved) {
+      updateWhySaved(id, profile.whySaved, true, new Date().toISOString());
+    }
+    if (profile.classificationReasoning) {
+      updateClassificationReasoning(id, {
+        primaryDomainReason: profile.classificationReasoning.primaryDomainReason || '',
+        resourceTypeReason: profile.classificationReasoning.resourceTypeReason || '',
+        confidence: profile.confidence,
+      });
+    }
+
     // Update faceted metadata
     registerMetadataCodesFromProfile(id, profile);
 
@@ -250,3 +265,64 @@ export async function reclassifyNode(req: Request, res: Response): Promise<void>
     res.status(500).json({ error: (error as Error).message });
   }
 }
+
+/**
+ * POST /api/nodes/:id/regenerate-title
+ *
+ * Title-only regeneration. Re-runs the semantic profiler but only
+ * persists the new title and classification reasoning — hierarchy
+ * placement, category, function tags, and everything else stay put.
+ * Used by the refresh button next to the title in PropertiesPanel
+ * (feature #4).
+ */
+export async function regenerateNodeTitle(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const node = readNode(id);
+    if (!node) {
+      res.status(404).json({ error: 'Node not found' });
+      return;
+    }
+
+    const apiKey = await keystore.getApiKey('openai');
+    if (!apiKey) {
+      res.status(400).json({ error: 'OpenAI API key not configured' });
+      return;
+    }
+
+    const profiler = new SemanticProfiler(apiKey, { model: 'gpt-4o' });
+    const input: SemanticProfileInput = {
+      url: (node.url as string) || '',
+      title: (node.title as string) || '',
+      domain: (node.source_domain as string) || undefined,
+      description: (node.short_description as string) || (node.phrase_description as string) || undefined,
+      content: (node.ai_summary as string) || undefined,
+    };
+
+    const result = await profiler.profile(input);
+    const profile = result.profile;
+    const oldTitle = (node.title as string) || '';
+
+    updateTitleOnly(id, profile.title.slice(0, 500));
+    if (profile.classificationReasoning) {
+      updateClassificationReasoning(id, {
+        primaryDomainReason: profile.classificationReasoning.primaryDomainReason || '',
+        resourceTypeReason: profile.classificationReasoning.resourceTypeReason || '',
+        confidence: profile.confidence,
+      });
+    }
+
+    cache.invalidate('tree:*');
+
+    res.json({
+      nodeId: id,
+      oldTitle,
+      newTitle: profile.title,
+      reasoning: profile.classificationReasoning ?? null,
+    });
+  } catch (error) {
+    log.error('regenerateNodeTitle failed', { error: (error as Error).message });
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+

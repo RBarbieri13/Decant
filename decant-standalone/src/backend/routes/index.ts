@@ -19,6 +19,7 @@ import * as imessageRoutes from './imessage.js';
 import * as summaryRoutes from './summary.js';
 import * as dynamicHierarchyRoutes from './dynamic-hierarchy.js';
 import * as rescrapeRoutes from './rescrape.js';
+import * as backfillRoutes from './backfill.js';
 import { getSegmentLabels, getCategoryLabels } from '../database/taxonomy_ops.js';
 import { importLimiter, settingsLimiter } from '../middleware/rateLimit.js';
 // NOTE: processing_queue.js removed — admin routes now use hierarchy engine
@@ -125,6 +126,9 @@ export function registerAPIRoutes(app: Express): void {
 
   // POST /api/nodes/:id/reclassify - Reclassify a single node using AI
   app.post('/api/nodes/:id/reclassify', validateParams(UuidParamSchema), reclassifyRoutes.reclassifyNode);
+
+  // POST /api/nodes/:id/regenerate-title - Title-only variant (feature #4)
+  app.post('/api/nodes/:id/regenerate-title', validateParams(UuidParamSchema), reclassifyRoutes.regenerateNodeTitle);
 
   // GET /api/nodes/:id/history - Get node audit history
   app.get('/api/nodes/:id/history', validateParams(UuidParamSchema), auditRoutes.getNodeAuditHistory);
@@ -322,6 +326,12 @@ export function registerAPIRoutes(app: Express): void {
 
   // GET /api/admin/rescrape-poor-quality/progress - Poll rescrape progress
   app.get('/api/admin/rescrape-poor-quality/progress', rescrapeRoutes.getRescrapeProgress);
+
+  // POST /api/admin/backfill-titles - Fill in missing titles + reasoning (feature #1)
+  app.post('/api/admin/backfill-titles', backfillRoutes.backfillTitles);
+
+  // GET /api/admin/backfill-titles/progress - Poll backfill progress
+  app.get('/api/admin/backfill-titles/progress', backfillRoutes.getBackfillTitlesProgress);
 
   // ============================================================
   // Collection routes
