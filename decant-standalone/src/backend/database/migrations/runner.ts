@@ -28,6 +28,11 @@ import migration016 from './016_add_user_tag_emblem.js';
 import migration017 from './017_add_node_summary.js';
 import migration018 from './018_add_dynamic_hierarchy.js';
 import migration019 from './019_add_fts5_sync_triggers.js';
+import migration020 from './020_add_why_saved.js';
+import migration021 from './021_add_saved_from_context.js';
+import migration022 from './022_add_surface_mode.js';
+import migration023 from './023_add_smart_collections.js';
+import migration024 from './024_add_classification_reasoning.js';
 
 /**
  * All available migrations in order of execution
@@ -53,6 +58,11 @@ export const migrations: Migration[] = [
   migration017,
   migration018,
   migration019,
+  migration020,
+  migration021,
+  migration022,
+  migration023,
+  migration024,
 ];
 
 /**

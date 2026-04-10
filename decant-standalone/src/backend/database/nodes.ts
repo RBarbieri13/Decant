@@ -569,6 +569,8 @@ const NODE_LIST_COLUMNS = [
   'segment_code', 'category_code', 'content_type_code', 'subcategory_label',
   'function_tags', 'extraction_quality', 'extraction_source', 'extraction_notes',
   'function_hierarchy_code', 'organization_hierarchy_code',
+  'why_saved_text', 'why_saved_is_auto',
+  'surface_mode',
 ].join(', ');
 
 export function getAllNodes(): unknown[] {
