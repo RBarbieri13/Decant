@@ -7,12 +7,12 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import '../styles/app.css';
-import '../styles/theme-c-slate.css';
+import '../styles/theme-d-brutalism.css';
 import { BatchImportModal } from '../components/import/BatchImportModal';
 import { QuickAddModal } from '../components/import/QuickAddModal';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
 import { useApp } from '../context/AppContext';
-import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI, userTagsAPI } from '../services/api';
+import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI, userTagsAPI, imessageAPI } from '../services/api';
 import type { UserTag } from '../services/api';
 import { ImessageLinkPicker } from '../components/import/ImessageLinkPicker';
 import { createIntegratedSSEClient, getEnrichmentTracker } from '../services/realtimeService';
@@ -40,6 +40,7 @@ import { Dashboard } from './components/Dashboard';
 import { CollectionsPanel } from '../components/collections/CollectionsPanel';
 import { UserTagsPanel } from '../components/user-tags/UserTagsPanel';
 import { BottomBarSlot } from '../components/BottomBarSlot';
+import { StatusBar } from './components/StatusBar';
 
 // ============================================================================
 // HOOKS
@@ -176,6 +177,7 @@ export default function DecantDemo() {
   const [isBatchImportOpen, setIsBatchImportOpen] = useState(false);
   const [imessageInitialUrls, setImessageInitialUrls] = useState('');
   const [isImessagePickerOpen, setIsImessagePickerOpen] = useState(false);
+  const [imessageAvailable, setImessageAvailable] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
@@ -318,6 +320,11 @@ export default function DecantDemo() {
       console.error('Failed to load hierarchy tree from API:', error);
     }
   }, [hierarchyView]);
+
+  // Check iMessage availability on mount
+  useEffect(() => {
+    imessageAPI.checkAvailable().then(setImessageAvailable);
+  }, []);
 
   // Initial load: fetch taxonomy labels then nodes
   useEffect(() => {
@@ -841,6 +848,7 @@ export default function DecantDemo() {
         onViewModeChange={setViewMode}
         onBatchImportClick={() => setIsBatchImportOpen(true)}
         onImessageImportClick={handleImessageImport}
+        showImessageButton={imessageAvailable}
         onQuickAddClick={() => setIsQuickAddOpen(true)}
         onRefreshAllClick={handleRefreshAll}
         onReclassifyClick={handleReclassifyAll}
@@ -910,6 +918,12 @@ export default function DecantDemo() {
           isVisible={rightPanelVisible}
         />
       </div>
+
+      <StatusBar
+        nodeCount={tableData.length}
+        filteredCount={filteredTableData.length}
+        pendingCount={pendingEnrichmentIds.size}
+      />
 
       {/* Full-width bottom bar — each panel is an independently slidable tab */}
       <div className="decant-app__bottom-bar">

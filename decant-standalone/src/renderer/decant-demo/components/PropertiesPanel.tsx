@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { TableRow, PanelTab, TagColor } from '../types';
 import { summaryAPI, type NodeSummaryData, type NodeSummaryStat, type NodeSummaryEntity, type NodeSummaryTimelineItem } from '../../services/api';
+import { shortId, getClassBadge, getContextBadge } from '../helpers';
 
 const Tag: React.FC<{ label: string; color: TagColor }> = ({ label, color }) => (
   <span className={`decant-tag decant-tag--${color}`}>{label}</span>
@@ -510,6 +511,81 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = React.memo(({ ite
                   </div>
                 )}
               </div>
+            )}
+
+            {/* Brutalism detail sections */}
+            {activeTab === 'properties' && item && (
+              <>
+                {/* Node Classification Grid */}
+                <div className="brut-section">
+                  <div className="brut-section__title">Node Classification</div>
+                  <div className="brut-grid">
+                    <div className="brut-grid__item">
+                      <div className="brut-grid__label">Segment</div>
+                      <div className="brut-grid__value">{getContextBadge(item.segmentCode).label}</div>
+                    </div>
+                    <div className="brut-grid__item">
+                      <div className="brut-grid__label">Company / Origin</div>
+                      <div className="brut-grid__value">{item.company || '—'}</div>
+                    </div>
+                    <div className="brut-grid__item">
+                      <div className="brut-grid__label">Category</div>
+                      <div className="brut-grid__value">{item.category || '—'}</div>
+                    </div>
+                    <div className="brut-grid__item">
+                      <div className="brut-grid__label">Updated</div>
+                      <div className="brut-grid__value">{item.date || '—'}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Technical Properties */}
+                {(item.functionTags || item.shortDescription) && (
+                  <div className="brut-section">
+                    <div className="brut-section__title">Technical Properties</div>
+                    <div className="brut-code">
+                      {item.functionTags && `function_tags: ${item.functionTags}\n`}
+                      {item.keyConcepts && item.keyConcepts.length > 0 && `key_concepts: [${item.keyConcepts.join(', ')}]\n`}
+                      {item.sourceDomain && `source_domain: ${item.sourceDomain}`}
+                    </div>
+                  </div>
+                )}
+
+                {/* System Metadata */}
+                <div className="brut-section">
+                  <div className="brut-section__title">System Metadata</div>
+                  <div className="brut-kv">
+                    <div className="brut-kv__row">
+                      <span className="brut-kv__key">Process ID</span>
+                      <span className="brut-kv__value">{shortId(item.id)}</span>
+                    </div>
+                    <div className="brut-kv__row">
+                      <span className="brut-kv__key">Class</span>
+                      <span className="brut-kv__value">{getClassBadge(item.type?.charAt(0) || 'W').label}</span>
+                    </div>
+                    <div className="brut-kv__row">
+                      <span className="brut-kv__key">Context</span>
+                      <span className="brut-kv__value">{getContextBadge(item.segmentCode).label}</span>
+                    </div>
+                    <div className="brut-kv__row">
+                      <span className="brut-kv__key">Source</span>
+                      <span className="brut-kv__value">{item.sourceDomain || '—'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Developer Log */}
+                {item.aiSummary && (
+                  <div className="brut-section">
+                    <div className="brut-section__title">Developer Log</div>
+                    <textarea
+                      className="brut-textarea"
+                      defaultValue={item.aiSummary}
+                      readOnly
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             {activeTab === 'related' && (

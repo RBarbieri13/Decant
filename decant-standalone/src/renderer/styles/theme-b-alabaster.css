@@ -1,0 +1,258 @@
+/* ============================================================================
+   THEME B: "ALABASTER"
+   Warm-bright. Snow white surfaces with warm sand accents.
+   Refined cream sidebar, luminous table, golden-amber header accent.
+   Feels like Airtable meets a luxury stationery brand.
+   ============================================================================ */
+
+:root {
+  /* Warm-bright palette */
+  --decant-off-white: #fdfcfa;
+  --decant-gray-50: #f9f7f4;
+  --decant-gray-100: #f3f0eb;
+  --decant-gray-200: #e9e5de;
+  --decant-gray-300: #d6d1c8;
+  --decant-gray-400: #b5ae9f;
+  --decant-gray-500: #918a7c;
+  --decant-gray-600: #6d675c;
+  --decant-gray-700: #504b42;
+  --decant-gray-800: #353129;
+  --decant-gray-900: #211f1a;
+
+  /* Warmer forest — olive-tinted */
+  --decant-brand-dark: #293d2d;
+  --decant-brand-primary: #3d6b4a;
+  --decant-brand-light: #4f8a5e;
+  --decant-brand-accent: #5ea36d;
+
+  /* Borders — warm */
+  --decant-border: #e5e0d7;
+  --decant-border-dark: #cfc9bd;
+
+  /* Typography — distinctive, warm */
+  --decant-font: 'Avenir Next', 'Avenir', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* --- Header: warm dark with amber accent line --- */
+.decant-header {
+  background: #2a3e30 !important;
+  border-bottom: 2px solid #c8956c !important;
+  box-shadow: 0 1px 4px rgba(40, 35, 25, 0.1);
+}
+
+.decant-header__logo {
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  font-size: 23px;
+  color: #faf7f2 !important;
+}
+
+/* Search — warm glass */
+.decant-header__search {
+  background: rgba(250, 247, 242, 0.1) !important;
+  border: 1px solid rgba(250, 247, 242, 0.18) !important;
+  border-radius: 10px !important;
+}
+
+.decant-header__search:focus-within {
+  background: rgba(250, 247, 242, 0.15) !important;
+  border-color: rgba(200, 149, 108, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(200, 149, 108, 0.15);
+}
+
+.decant-header__search input {
+  color: #faf7f2 !important;
+}
+
+.decant-header__search input::placeholder {
+  color: rgba(250, 247, 242, 0.45) !important;
+}
+
+/* Header buttons — warm rounded */
+.decant-header__btn {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  border-width: 1.5px !important;
+}
+
+/* --- Sidebar: luminous cream --- */
+.decant-spaces {
+  background-color: #f5f1ea !important;
+  border-right: 1px solid #dfd8cd !important;
+}
+
+.decant-sidebar__search {
+  background: #fdfcfa !important;
+  border: 1px solid #e5e0d7 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 1px 3px rgba(40, 35, 25, 0.04);
+}
+
+.decant-sidebar__search:focus-within {
+  border-color: #3d6b4a !important;
+  box-shadow: 0 0 0 2px rgba(61, 107, 74, 0.08);
+}
+
+/* Tree items — soft selection */
+.decant-tree-item {
+  border-radius: 8px !important;
+}
+
+.decant-tree-item:hover {
+  background-color: rgba(61, 107, 74, 0.06) !important;
+}
+
+.decant-tree-item--selected {
+  background-color: rgba(61, 107, 74, 0.09) !important;
+}
+
+/* --- Table --- */
+.decant-table {
+  background: #ffffff;
+}
+
+.decant-table__title {
+  font-weight: 700 !important;
+  color: #211f1a !important;
+  font-size: 21px !important;
+  letter-spacing: -0.4px;
+}
+
+/* Quick filters — warm pills */
+.decant-quick-filter {
+  border-radius: 20px !important;
+  font-weight: 530 !important;
+  font-size: 12.5px !important;
+  padding: 5px 16px !important;
+  border: 1px solid #e5e0d7 !important;
+  background: #fdfcfa !important;
+  color: #6d675c !important;
+}
+
+.decant-quick-filter:hover {
+  background: #f5f1ea !important;
+  border-color: #cfc9bd !important;
+  color: #504b42 !important;
+}
+
+.decant-quick-filter--active {
+  background: #3d6b4a !important;
+  border-color: #3d6b4a !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 4px rgba(61, 107, 74, 0.25);
+}
+
+/* Column headers — warm green gradient */
+.decant-table__header {
+  background: linear-gradient(180deg, #3d6b4a 0%, #345c40 100%) !important;
+  border-bottom: 2px solid #2a4e35 !important;
+}
+
+.decant-table__header-cell {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  color: rgba(250, 247, 242, 0.88) !important;
+  border-right-color: rgba(250, 247, 242, 0.1) !important;
+}
+
+/* Filter row */
+.decant-table__filter-row {
+  background: #faf8f4 !important;
+  border-bottom: 1px solid #ece7de !important;
+}
+
+.decant-table__filter-input {
+  background: #ffffff !important;
+  border: 1px solid #e5e0d7 !important;
+  border-radius: 6px !important;
+  font-size: 11.5px !important;
+  color: #504b42 !important;
+}
+
+.decant-table__filter-input:focus {
+  border-color: #3d6b4a !important;
+  box-shadow: 0 0 0 2px rgba(61, 107, 74, 0.08) !important;
+}
+
+/* Rows — luminous whites */
+.decant-table__row {
+  border-bottom: 1px solid #f0ece5 !important;
+}
+
+.decant-table__row:nth-child(even) {
+  background-color: #fdfcfa !important;
+}
+
+.decant-table__row:hover {
+  background-color: #f5f9f6 !important;
+}
+
+.decant-table__row--selected {
+  background-color: #eef6f0 !important;
+  border-left-color: #3d6b4a !important;
+}
+
+/* Cells — warm tonality */
+.decant-table__cell {
+  font-size: 13px !important;
+  font-weight: 430 !important;
+  color: #504b42 !important;
+  border-right-color: #f0ece5 !important;
+}
+
+.decant-table__cell--title {
+  font-weight: 560 !important;
+  color: #211f1a !important;
+}
+
+/* Tags — softer, warmer */
+.decant-meta-tag {
+  border-radius: 5px !important;
+  font-weight: 550 !important;
+  font-size: 11px !important;
+}
+
+.decant-type-badge {
+  border-radius: 5px !important;
+  font-weight: 600 !important;
+  font-size: 10.5px !important;
+  padding: 2px 8px !important;
+}
+
+/* Group headers — warm banding */
+.decant-table__group-header {
+  background: linear-gradient(to right, #f5f1ea, #faf8f4) !important;
+  border-bottom: 1px solid #e5e0d7 !important;
+  border-top: 1px solid #e5e0d7 !important;
+}
+
+/* Status bar */
+.decant-table__status {
+  color: #918a7c !important;
+  font-size: 11.5px !important;
+  border-top: 1px solid #f0ece5;
+}
+
+/* Zoom controls */
+.decant-zoom-controls__btn {
+  border-color: #e5e0d7 !important;
+  border-radius: 6px !important;
+}
+
+/* Scrollbar — warm tones */
+*:hover::-webkit-scrollbar-track {
+  background: #f0ece5 !important;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background: #3d6b4a !important;
+  border-color: #f0ece5 !important;
+}
+
+/* Bottom shelf */
+.decant-shelf {
+  background: #f5f1ea !important;
+  border-top: 1px solid #e5e0d7 !important;
+}

@@ -247,6 +247,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
           />
         ))}
       </div>
+      {/* System Tags section (brutalism) */}
+      {!isCollapsed && (
+        <div className="decant-system-tags">
+          <div className="decant-system-tags__title">System Tags</div>
+          <div className="decant-system-tags__list">
+            {Object.entries(SEGMENT_HEX_MAP).map(([code]) => (
+              <button
+                key={code}
+                className={`decant-system-tags__chip ${selectedId === `seg-${code}` ? 'decant-system-tags__chip--active' : ''}`}
+                onClick={() => onSelect(`seg-${code}`, { id: `seg-${code}`, name: code } as TreeNodeData)}
+              >
+                {code}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <button className="decant-sidebar__toggle" onClick={onToggleCollapse}>
         <i className={`bx ${isCollapsed ? 'bx-chevron-right' : 'bx-chevron-left'}`} />
       </button>

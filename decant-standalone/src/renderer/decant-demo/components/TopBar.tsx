@@ -12,6 +12,7 @@ interface TopBarProps {
   onViewModeChange: (mode: ViewMode) => void;
   onBatchImportClick?: () => void;
   onImessageImportClick?: () => void;
+  showImessageButton?: boolean;
   onQuickAddClick?: () => void;
   onRefreshAllClick?: () => void;
   onReclassifyClick?: () => void;
@@ -32,6 +33,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
   onClearFilter,
   onBatchImportClick,
   onImessageImportClick,
+  showImessageButton = true,
   onQuickAddClick,
   onRefreshAllClick,
   onReclassifyClick,
@@ -124,14 +126,16 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
           Batch
         </button>
 
-        <button
-          className="decant-topbar__batch-btn"
-          onClick={onImessageImportClick}
-          title="Browse iMessage links"
-        >
-          <i className="bx bx-message-square-dots" />
-          iMessage
-        </button>
+        {showImessageButton && (
+          <button
+            className="decant-topbar__batch-btn"
+            onClick={onImessageImportClick}
+            title="Browse iMessage links"
+          >
+            <i className="bx bx-message-square-dots" />
+            iMessage
+          </button>
+        )}
 
         <div className="decant-topbar__separator" />
 

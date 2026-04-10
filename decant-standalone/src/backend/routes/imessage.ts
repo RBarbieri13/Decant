@@ -95,6 +95,14 @@ export async function extractUrls(req: Request, res: Response): Promise<void> {
  * Body: { urls: string[] }
  * Returns: { duplicates: Record<string, { nodeId: string; title: string }> }
  */
+/**
+ * Check if iMessage extraction is available on this platform
+ * GET /api/imessage/available
+ */
+export function checkAvailability(_req: Request, res: Response): void {
+  res.json({ available: process.platform === 'darwin' });
+}
+
 export async function checkDuplicates(req: Request, res: Response): Promise<void> {
   try {
     const { urls } = req.body ?? {};

@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Deployment & Repo (Official)
+
+- **Live URL:** https://decant-app.fly.dev/
+- **GitHub:** https://github.com/RBarbieri13/Decant
+- **Primary app:** `decant-standalone/` — the only meaningful directory; all development happens here
+- **Deploy target:** Fly.io app `decant-app`
+
 ## Overview
 
 Trilium Notes is a hierarchical note-taking application with advanced features like synchronization, scripting, and rich text editing. It's built as a TypeScript monorepo using pnpm, with multiple applications and shared packages.

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { TableRow, TagColor } from '../types';
 import type { UserTag } from '../../services/api';
-import { getTypeBadgeClass, formatRelativeDate, getSegmentHex, getSegmentStyle, getSegmentGlyphBg } from '../helpers';
+import { getTypeBadgeClass, formatRelativeDate, getSegmentHex, getSegmentStyle, getSegmentGlyphBg, getClassBadge, getContextBadge, shortId } from '../helpers';
 import { getSegmentColor, getMetadataCodeColor, formatMetadataCodesForDisplay, parseRawTag } from '../../utils/metadataCodeColors';
 import { getCategoryIcon } from '../../utils/hierarchyIcons';
 
@@ -175,6 +175,16 @@ export const DataTableRow: React.FC<DataTableRowProps> = React.memo(({
             <i className="bx bx-chevron-right" />
           </button>
         </div>
+        {/* ID (brutalism) */}
+        {isColVisible('id') && (
+          <div
+            className="decant-table__cell decant-id-cell"
+            style={{ order: getColOrder('id') }}
+            title={data.id}
+          >
+            {shortId(data.id)}
+          </div>
+        )}
         {/* Title — favicon now inline */}
         {isColVisible('title') && <div
           className="decant-table__cell decant-table__cell--title"
@@ -216,28 +226,41 @@ export const DataTableRow: React.FC<DataTableRowProps> = React.memo(({
             {data.segment}
           </span>
         </div>}
-        {/* Type badge (not editable) */}
-        {isColVisible('type') && <div className="decant-table__cell decant-table__cell--center" style={{ order: getColOrder('type') }}>
-          <span className={`decant-type-badge decant-type-badge--${getTypeBadgeClass(data.type)}`}>
-            {data.type}
-          </span>
-        </div>}
-        {/* Category (not editable — use reclassify) */}
-        {isColVisible('category') && <div
-          className="decant-table__cell decant-table__cell--category decant-table__cell--category-clickable"
-          style={{ order: getColOrder('category') }}
-          onClick={(e) => { e.stopPropagation(); onCategoryClick?.(data.segmentCode, data.categoryCode); }}
-          title={`Filter by ${data.category}`}
-        >
-          {data.category ? (
-            <span
-              className="decant-category-pill"
-              style={getSegmentStyle(data.segmentCode || '')}
+        {/* Type badge (not editable) — brutalism CLASS badge */}
+        {isColVisible('type') && (() => {
+          const cls = getClassBadge(data.type?.charAt(0) || 'W');
+          return (
+            <div className="decant-table__cell decant-table__cell--center" style={{ order: getColOrder('type') }}>
+              <span
+                className="decant-class-badge"
+                style={{ backgroundColor: cls.bg, color: cls.text }}
+              >
+                {cls.label}
+              </span>
+            </div>
+          );
+        })()}
+        {/* Category (not editable — use reclassify) — brutalism CONTEXT badge */}
+        {isColVisible('category') && (() => {
+          const ctx = getContextBadge(data.segmentCode);
+          return (
+            <div
+              className="decant-table__cell decant-table__cell--category decant-table__cell--category-clickable"
+              style={{ order: getColOrder('category') }}
+              onClick={(e) => { e.stopPropagation(); onCategoryClick?.(data.segmentCode, data.categoryCode); }}
+              title={`Filter by ${data.category}`}
             >
-              {data.category}
-            </span>
-          ) : <span className="decant-table__cell--secondary">—</span>}
-        </div>}
+              {data.category ? (
+                <span
+                  className="decant-context-badge"
+                  style={{ backgroundColor: ctx.bg, color: ctx.text }}
+                >
+                  {ctx.label}
+                </span>
+              ) : <span className="decant-table__cell--secondary">—</span>}
+            </div>
+          );
+        })()}
         {/* Subcategory */}
         {isColVisible('subcategory') && <div
           className="decant-table__cell decant-table__cell--secondary"

@@ -53,6 +53,7 @@ interface DataTableProps {
 
 /** Columns that the user can toggle on/off */
 export const TOGGLEABLE_COLUMNS = [
+  { key: 'id',           label: 'ID' },
   { key: 'title',        label: 'Title' },
   { key: 'segment',      label: 'Segment' },
   { key: 'type',         label: 'Type' },
@@ -67,13 +68,13 @@ export const TOGGLEABLE_COLUMNS = [
   { key: 'userTags',     label: 'User Tags' },
 ] as const;
 
-export const DEFAULT_VISIBLE_COLUMNS = new Set(['title', 'type', 'category', 'quickPhrase', 'functionTags', 'tags', 'date', 'userTags']);
+export const DEFAULT_VISIBLE_COLUMNS = new Set(['id', 'title', 'type', 'category', 'quickPhrase', 'functionTags', 'tags', 'date', 'userTags']);
 export const COLUMN_VISIBILITY_KEY = 'decant-column-visibility-v6';
 export const COLUMN_ORDER_KEY = 'decant-column-order-v6';
 export const DEFAULT_COLUMN_ORDER = TOGGLEABLE_COLUMNS.map(c => c.key);
 
 export const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
-  checkbox: 24, expand: 28, logo: 32, title: 280,
+  checkbox: 24, expand: 28, logo: 32, id: 60, title: 280,
   segment: 90, type: 70, category: 120, subcategory: 130, quickPhrase: 300,
   description: 220, functionTags: 200,
   tags: 140, date: 130, company: 100, userTags: 160,
@@ -356,22 +357,17 @@ export const DataTable: React.FC<DataTableProps> = ({
 
   return (
     <div className="decant-table">
+      {/* Tabbed view switcher (brutalism) */}
+      <div className="decant-tab-bar">
+        <button className="decant-tab-bar__tab decant-tab-bar__tab--active">Table</button>
+        <button className="decant-tab-bar__tab decant-tab-bar__tab--disabled">Board</button>
+        <button className="decant-tab-bar__tab decant-tab-bar__tab--disabled">Analytics</button>
+        <button className="decant-tab-bar__tab decant-tab-bar__tab--disabled">Calendar</button>
+      </div>
       {/* Title bar with view toggles */}
       <div className="decant-table__title-bar">
         <h2 className="decant-table__title">{categoryName}</h2>
         <div className="decant-table__title-actions">
-          <button className="decant-table__view-btn decant-table__view-btn--active" title="Table view">
-            <i className="bx bx-table" />
-          </button>
-          <button className="decant-table__view-btn" title="Grid view">
-            <i className="bx bx-grid-alt" />
-          </button>
-          <button className="decant-table__view-btn" title="Compact view">
-            <i className="bx bxs-grid" />
-          </button>
-          <button className="decant-table__view-btn" title="List view">
-            <i className="bx bx-list-ul" />
-          </button>
           <div className="decant-column-toggle" ref={columnMenuRef}>
             <button
               className={`decant-table__view-btn ${showColumnMenu ? 'decant-table__view-btn--active' : ''}`}

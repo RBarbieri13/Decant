@@ -1,0 +1,1499 @@
+/* ============================================================================
+   THEME D: "BRUTALISM" — Cyber-Tech Industrial
+   Dark blue header, hard black borders, zero border-radius, dense 9-11px
+   Inter font, uppercase labels, industrial color-coded badges.
+
+   Typography: Inter with normalized weight scale.
+   Borders: Single-tier — 1-2px solid black everywhere.
+   Shadows: None. Depth communicated through border weight only.
+   Contrast: High-contrast dark-on-light, white-on-dark header.
+   ============================================================================ */
+
+:root {
+  /* -----------------------------------------------------------------------
+     PALETTE — Slate scale + navy brand
+     ----------------------------------------------------------------------- */
+  --decant-off-white: #f1f5f9;
+  --decant-gray-50: #f8fafc;
+  --decant-gray-100: #f1f5f9;
+  --decant-gray-200: #e2e8f0;
+  --decant-gray-300: #cbd5e1;
+  --decant-gray-400: #94a3b8;
+  --decant-gray-500: #64748b;
+  --decant-gray-600: #475569;
+  --decant-gray-700: #334155;
+  --decant-gray-800: #1e293b;
+  --decant-gray-900: #0f172a;
+
+  /* Navy + neon brand */
+  --decant-brand-dark: #1e3a8a;
+  --decant-brand-primary: #22c55e;
+  --decant-brand-light: #4ade80;
+  --decant-brand-accent: #9333ea;
+
+  /* Hard borders */
+  --decant-border: #000000;
+  --decant-border-dark: #000000;
+
+  /* -----------------------------------------------------------------------
+     TYPOGRAPHY — Inter, dense
+     ----------------------------------------------------------------------- */
+  --decant-font: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --decant-font-display: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --decant-font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code',
+                      'Fira Code', Consolas, monospace;
+
+  /* Typographic scale — dense */
+  --slate-text-2xs: 8px;
+  --slate-text-xs: 9px;
+  --slate-text-sm: 10px;
+  --slate-text-base: 11px;
+  --slate-text-md: 12px;
+  --slate-text-lg: 13px;
+  --slate-text-xl: 14px;
+  --slate-text-2xl: 16px;
+
+  /* Weight scale */
+  --slate-wt-normal: 400;
+  --slate-wt-medium: 500;
+  --slate-wt-semibold: 600;
+  --slate-wt-bold: 700;
+  --slate-wt-heavy: 800;
+
+  /* -----------------------------------------------------------------------
+     BORDER TIERS — all hard black
+     ----------------------------------------------------------------------- */
+  --slate-border-hairline: 1px solid #000;
+  --slate-border-standard: 1px solid #000;
+  --slate-border-structural: 2px solid #000;
+
+  /* -----------------------------------------------------------------------
+     SHADOW SYSTEM — none
+     ----------------------------------------------------------------------- */
+  --slate-shadow-xs: none;
+  --slate-shadow-sm: none;
+  --slate-shadow-md: none;
+  --slate-shadow-lg: none;
+  --slate-shadow-xl: none;
+  --slate-shadow-inset: none;
+  --slate-shadow-inset-sm: none;
+}
+
+/* ============================================================================
+   GLOBAL TEXT RENDERING
+   ============================================================================ */
+
+body {
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1, 'tnum' 1 !important;
+  font-family: var(--decant-font) !important;
+  font-size: var(--slate-text-base) !important;
+  line-height: 1.4 !important;
+}
+
+/* ============================================================================
+   HEADER — Dark navy, 40px, 2px black bottom border
+   ============================================================================ */
+
+.decant-topbar {
+  background: #1e3a8a !important;
+  border-bottom: 2px solid #000 !important;
+  box-shadow: none !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+}
+
+.decant-topbar__brand-name {
+  font-family: var(--decant-font-display) !important;
+  font-weight: var(--slate-wt-heavy) !important;
+  letter-spacing: 0.08em !important;
+  font-size: 14px !important;
+  color: #ffffff !important;
+  text-transform: uppercase !important;
+  text-shadow: none !important;
+}
+
+.decant-topbar__logo {
+  filter: brightness(0) invert(1) !important;
+}
+
+/* Search — flat, black border */
+.decant-topbar__search {
+  background: rgba(255,255,255,0.1) !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
+  border-radius: 0 !important;
+}
+
+.decant-topbar__search:focus-within {
+  background: rgba(255,255,255,0.15) !important;
+  border-color: #22c55e !important;
+  box-shadow: none !important;
+}
+
+.decant-topbar__search-input {
+  color: #ffffff !important;
+  font-size: var(--slate-text-sm) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+}
+
+.decant-topbar__search-input::placeholder {
+  color: rgba(255,255,255,0.5) !important;
+  text-transform: uppercase !important;
+}
+
+/* Header buttons — flat, no radius */
+.decant-topbar__add-btn,
+.decant-topbar__batch-btn {
+  border-radius: 0 !important;
+  font-weight: var(--slate-wt-bold) !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  font-size: 9px !important;
+  border: 1px solid rgba(255,255,255,0.3) !important;
+}
+
+.decant-topbar__add-btn:hover,
+.decant-topbar__batch-btn:hover {
+  box-shadow: none !important;
+  background: rgba(255,255,255,0.15) !important;
+}
+
+.decant-topbar__add-btn:active,
+.decant-topbar__batch-btn:active {
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.decant-topbar__icon-btn {
+  border-radius: 0 !important;
+  color: rgba(255,255,255,0.8) !important;
+}
+
+.decant-topbar__icon-btn:hover {
+  color: #ffffff !important;
+  background: rgba(255,255,255,0.1) !important;
+}
+
+.decant-topbar__reclassify-btn {
+  border-radius: 0 !important;
+  text-transform: uppercase !important;
+  font-size: 9px !important;
+  letter-spacing: 0.05em !important;
+  font-weight: var(--slate-wt-bold) !important;
+}
+
+.decant-topbar__separator {
+  background: rgba(255,255,255,0.2) !important;
+}
+
+.decant-topbar__user-avatar {
+  border-radius: 0 !important;
+}
+
+/* Breadcrumbs */
+.decant-filter-breadcrumb__crumb {
+  border-radius: 0 !important;
+  text-transform: uppercase !important;
+  font-size: 9px !important;
+  letter-spacing: 0.04em !important;
+  font-weight: var(--slate-wt-bold) !important;
+}
+
+.decant-filter-breadcrumb__crumb--active {
+  color: #22c55e !important;
+}
+
+/* ============================================================================
+   SIDEBAR — Light slate panel, black borders
+   ============================================================================ */
+
+.decant-spaces {
+  background-color: #f1f5f9 !important;
+  border-right: 2px solid #000 !important;
+  box-shadow: none !important;
+}
+
+.decant-sidebar {
+  background-color: #f1f5f9 !important;
+  border-right: 2px solid #000 !important;
+}
+
+.decant-sidebar__search {
+  background: #e2e8f0 !important;
+  border: none !important;
+  border-bottom: 1px solid #000 !important;
+  border-radius: 0 !important;
+  padding: 8px 12px !important;
+}
+
+.decant-sidebar__search input {
+  color: #0f172a !important;
+  font-size: var(--slate-text-sm) !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase !important;
+}
+
+.decant-sidebar__search input::placeholder {
+  color: #64748b !important;
+  text-transform: uppercase !important;
+}
+
+.decant-sidebar__search i {
+  color: #64748b !important;
+}
+
+.decant-sidebar__expand-all {
+  border-color: #000 !important;
+  background: #ffffff !important;
+  color: #475569 !important;
+  border-radius: 0 !important;
+}
+
+.decant-sidebar__expand-all:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+  border-color: #000 !important;
+  box-shadow: none !important;
+}
+
+/* ============================================================================
+   SIDEBAR TREE NODES — Dense, uppercase, hard borders
+   ============================================================================ */
+
+.decant-tree-node__row {
+  transition: background-color 0.08s ease !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.decant-tree-node__row:hover {
+  background-color: #e2e8f0 !important;
+  box-shadow: none !important;
+}
+
+.decant-tree-node__row:active {
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.decant-tree-node__row--selected {
+  background-color: #dbeafe !important;
+  border-left: 3px solid #1e3a8a !important;
+}
+
+.decant-tree-node__row--selected .decant-tree-node__label {
+  color: #1e40af !important;
+  font-weight: var(--slate-wt-heavy) !important;
+}
+
+.decant-tree-node__row--selected .decant-tree-node__icon {
+  color: #1e40af !important;
+}
+
+.decant-tree-node__label {
+  font-size: 12px !important;
+  font-weight: var(--slate-wt-bold) !important;
+  color: #0f172a !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
+}
+
+.decant-tree-node__row--segment .decant-tree-node__label {
+  font-size: 13px !important;
+  font-weight: var(--slate-wt-heavy) !important;
+  color: #1e3a8a !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase !important;
+}
+
+.decant-tree-node__row--category .decant-tree-node__label {
+  font-size: 11.5px !important;
+  font-weight: var(--slate-wt-bold) !important;
+  color: #1e293b !important;
+}
+
+.decant-tree-node__count {
+  font-size: 10px !important;
+  font-weight: var(--slate-wt-bold) !important;
+  color: #1e3a8a !important;
+  background: #dbeafe !important;
+  border: 1px solid #1e3a8a !important;
+  border-radius: 0 !important;
+  padding: 0px 5px !important;
+  font-feature-settings: 'tnum' 1 !important;
+}
+
+.decant-tree-node__root-row:hover {
+  background-color: #e2e8f0 !important;
+}
+
+.decant-tree-node__root-row.decant-tree-node__row--selected {
+  background-color: #dbeafe !important;
+  border-left: 3px solid #1e3a8a !important;
+}
+
+.decant-tree-node__root-label {
+  font-size: 13px !important;
+  font-weight: var(--slate-wt-heavy) !important;
+  color: #0f172a !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+.decant-tree-node__root-count {
+  font-size: 10px !important;
+  background: #1e3a8a !important;
+  color: #ffffff !important;
+  border: 1px solid #000 !important;
+  border-radius: 0 !important;
+  padding: 1px 6px !important;
+  font-weight: var(--slate-wt-bold) !important;
+  font-feature-settings: 'tnum' 1 !important;
+}
+
+.decant-tree-node__root-row {
+  border-bottom: 1px solid #000 !important;
+}
+
+/* Sidebar resize handle */
+.decant-sidebar__resize-handle:hover,
+.decant-sidebar__resize-handle:active {
+  background-color: #1e3a8a !important;
+  opacity: 0.5 !important;
+}
+
+/* Sidebar toggle button */
+.decant-sidebar__toggle {
+  border-color: #000 !important;
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border-radius: 0 !important;
+}
+
+.decant-sidebar__toggle:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Tree connector lines */
+.decant-tree-node__children::before {
+  background: rgba(30, 58, 138, 0.15) !important;
+}
+
+.decant-tree-node__children > .decant-tree-node > .decant-tree-node__row::before {
+  background-color: rgba(30, 58, 138, 0.1) !important;
+}
+
+/* ============================================================================
+   TABLE — White canvas, hard borders
+   ============================================================================ */
+
+.decant-table {
+  background: #ffffff;
+}
+
+.decant-table__title {
+  font-family: var(--decant-font-display) !important;
+  font-weight: var(--slate-wt-heavy) !important;
+  color: #0f172a !important;
+  font-size: var(--slate-text-lg) !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase !important;
+}
+
+.decant-table__title-bar {
+  border-bottom: 2px solid #000 !important;
+  padding: 6px 12px !important;
+}
+
+/* ============================================================================
+   QUICK FILTERS — Flat, bordered, uppercase
+   ============================================================================ */
+
+.decant-quick-filters {
+  background: #f8fafc !important;
+  border-bottom-color: #000 !important;
+  border-bottom: 1px solid #000 !important;
+  padding: 4px 12px !important;
+}
+
+.decant-quick-filter {
+  border-radius: 0 !important;
+  font-weight: var(--slate-wt-bold) !important;
+  font-size: 9px !important;
+  padding: 3px 10px !important;
+  border: 1px solid #000 !important;
+  background: #ffffff !important;
+  color: #475569 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  line-height: 1.3 !important;
+  transition: all 0.08s ease !important;
+}
+
+.decant-quick-filter:hover {
+  background: #e2e8f0 !important;
+  border-color: #000 !important;
+  color: #0f172a !important;
+  box-shadow: none !important;
+}
+
+.decant-quick-filter:active {
+  background: #cbd5e1 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.decant-quick-filter--active {
+  background: #0f172a !important;
+  border-color: #000 !important;
+  color: #ffffff !important;
+  font-weight: var(--slate-wt-heavy) !important;
+  box-shadow: none !important;
+}
+
+.decant-quick-filter--active:hover {
+  background: #1e293b !important;
+  border-color: #000 !important;
+}
+
+/* ============================================================================
+   TABLE HEADER — Dark slate, uppercase 9px bold
+   ============================================================================ */
+
+.decant-table__header {
+  background: #1e293b !important;
+  border-bottom: 2px solid #000 !important;
+  box-shadow: none !important;
+}
+
+.decant-table__header-cell {
+  font-family: var(--decant-font) !important;
+  font-size: 9px !important;
+  font-weight: var(--slate-wt-heavy) !important;
+  letter-spacing: 0.08em !important;
+  color: #f1f5f9 !important;
+  text-transform: uppercase !important;
+  text-shadow: none !important;
+  line-height: 1.2 !important;
+  border-right: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+/* ============================================================================
+   FILTER ROW — Hard border inputs
+   ============================================================================ */
+
+.decant-table__filter-row {
+  background: #f1f5f9 !important;
+  border-bottom: 1px solid #000 !important;
+}
+
+.decant-table__filter-input {
+  background: #ffffff !important;
+  border: 1px solid #000 !important;
+  border-radius: 0 !important;
+  font-size: 9px !important;
+  color: #0f172a !important;
+  height: 24px !important;
+  box-shadow: none !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.02em !important;
+}
+
+.decant-table__filter-input:hover {
+  border-color: #000 !important;
+}
+
+.decant-table__filter-input:focus {
+  border-color: #1e3a8a !important;
+  box-shadow: none !important;
+  outline: 2px solid rgba(30,58,138,0.3) !important;
+  outline-offset: -2px !important;
+}
+
+/* ============================================================================
+   TABLE ROWS — 32px height, 1px black dividers
+   ============================================================================ */
+
+.decant-table__row {
+  border-bottom: 1px solid #000 !important;
+  transition: background-color 0.06s ease !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+}
+
+.decant-table__row:nth-child(even) {
+  background-color: #f8fafc !important;
+}
+
+.decant-table__row:hover {
+  background-color: #e2e8f0 !important;
+  box-shadow: inset 3px 0 0 var(--row-segment-color, #1e3a8a) !important;
+}
+
+.decant-table__row--selected {
+  background-color: #dbeafe !important;
+  box-shadow: inset 3px 0 0 #1e3a8a !important;
+  border-left-color: transparent !important;
+}
+
+/* ============================================================================
+   TABLE CELLS — Dense text, tabular numerals
+   ============================================================================ */
+
+.decant-table__cell {
+  font-size: var(--slate-text-base) !important;
+  font-weight: var(--slate-wt-normal) !important;
+  color: #1e293b !important;
+  line-height: 1.3 !important;
+  letter-spacing: 0 !important;
+  font-feature-settings: 'tnum' 1, 'kern' 1 !important;
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+.decant-table__cell--title {
+  font-weight: var(--slate-wt-semibold) !important;
+  font-size: var(--slate-text-md) !important;
+  color: #0f172a !important;
+  letter-spacing: 0 !important;
+}
+
+/* Secondary/URL cells */
+.decant-table__cell--secondary,
+.decant-table__cell--company {
+  font-size: var(--slate-text-sm) !important;
+  font-weight: var(--slate-wt-normal) !important;
+  color: #64748b !important;
+}
+
+/* Metadata cells */
+.decant-table__cell--quick-phrase,
+.decant-table__cell--description,
+.decant-table__cell--category {
+  font-size: var(--slate-text-base) !important;
+  font-weight: var(--slate-wt-normal) !important;
+  color: #475569 !important;
+}
+
+/* Numeric columns */
+.decant-table__cell--date,
+.decant-table__cell--count {
+  font-feature-settings: 'tnum' 1 !important;
+  font-family: var(--decant-font-mono) !important;
+  font-size: 9px !important;
+}
+
+/* ============================================================================
+   BADGES & TAGS — No radius, black border, saturated
+   ============================================================================ */
+
+.decant-meta-tag {
+  border-radius: 0 !important;
+  font-weight: var(--slate-wt-bold) !important;
+  font-size: 8px !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  border: 1px solid #000 !important;
+}
+
+.decant-type-badge {
+  border-radius: 0 !important;
+  font-weight: var(--slate-wt-bold) !important;
+  font-size: 8px !important;
+  letter-spacing: 0.08em !important;
+  padding: 2px 6px !important;
+  text-transform: uppercase !important;
+  line-height: 1.1 !important;
+  border: 1px solid #000 !important;
+  box-shadow: none !important;
+}
+
+/* Segment badges — flat, black bordered */
+.decant-segment-badge {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid #000 !important;
+  font-weight: var(--slate-wt-bold) !important;
+  font-size: 8px !important;
+  letter-spacing: 0.06em !important;
+  padding: 2px 6px !important;
+  border-radius: 0 !important;
+  line-height: 1.1 !important;
+  text-shadow: none !important;
+  text-transform: uppercase !important;
+}
+
+.decant-segment-badge--pink {
+  background-color: rgba(34,197,94,0.15) !important;
+  color: #15803d !important;
+}
+
+.decant-segment-badge--blue {
+  background-color: rgba(59,130,246,0.15) !important;
+  color: #1d4ed8 !important;
+}
+
+.decant-segment-badge--green {
+  background-color: rgba(34,197,94,0.15) !important;
+  color: #15803d !important;
+}
+
+.decant-segment-badge--yellow {
+  background-color: rgba(234,179,8,0.15) !important;
+  color: #a16207 !important;
+}
+
+.decant-segment-badge--purple {
+  background-color: rgba(147,51,234,0.15) !important;
+  color: #7e22ce !important;
+}
+
+.decant-segment-badge--orange {
+  background-color: rgba(249,115,22,0.15) !important;
+  color: #c2410c !important;
+}
+
+.decant-segment-badge--teal {
+  background-color: rgba(20,184,166,0.15) !important;
+  color: #0f766e !important;
+}
+
+.decant-segment-badge--red {
+  background-color: rgba(239,68,68,0.15) !important;
+  color: #b91c1c !important;
+}
+
+/* Category pill — flat */
+.decant-category-pill {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+  font-size: 9px !important;
+  font-weight: var(--slate-wt-bold) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* Tags — flat */
+.decant-tag {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+  font-size: 8px !important;
+  font-weight: var(--slate-wt-bold) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+}
+
+.decant-user-tag {
+  border-radius: 0 !important;
+}
+
+.decant-user-tag--vibrant {
+  border-radius: 0 !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
+/* ============================================================================
+   GROUP HEADERS — Industrial uppercase, hard black border
+   ============================================================================ */
+
+.decant-table__group-header {
+  background: #e2e8f0 !important;
+  border-bottom: 2px solid #000 !important;
+  border-top: 1px solid #000 !important;
+  padding: 4px 12px !important;
+  box-shadow: none !important;
+  text-transform: uppercase !important;
+}
+
+.decant-table__group-header .decant-table__group-icon {
+  color: #475569 !important;
+}
+
+.decant-table__group-header .decant-table__group-label {
+  font-family: var(--decant-font) !important;
+  font-size: 9px !important;
+  font-weight: var(--slate-wt-heavy) !important;
+  letter-spacing: 0.08em !important;
+  color: #0f172a !important;
+  text-transform: uppercase !important;
+}
+
+.decant-table__group-header .decant-table__group-count {
+  font-size: 8px !important;
+  font-weight: var(--slate-wt-bold) !important;
+  color: #475569 !important;
+  background: #cbd5e1 !important;
+  padding: 1px 5px !important;
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+  font-feature-settings: 'tnum' 1 !important;
+}
+
+/* ============================================================================
+   STATUS BAR
+   ============================================================================ */
+
+.decant-table__status {
+  color: #64748b !important;
+  font-size: 9px !important;
+  font-weight: var(--slate-wt-medium) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  border-top: 1px solid #000 !important;
+  background: #f1f5f9 !important;
+  padding: 4px 12px !important;
+  font-feature-settings: 'tnum' 1 !important;
+}
+
+/* ============================================================================
+   VIEW MODE BUTTONS — Flat, square
+   ============================================================================ */
+
+.decant-table__view-btn {
+  border-color: #000 !important;
+  color: #64748b !important;
+  border-radius: 0 !important;
+}
+
+.decant-table__view-btn:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: none !important;
+}
+
+.decant-table__view-btn--active {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
+  border-color: #000 !important;
+  box-shadow: none !important;
+}
+
+/* ============================================================================
+   ZOOM CONTROLS
+   ============================================================================ */
+
+.decant-zoom-controls {
+  border-left-color: #000 !important;
+}
+
+.decant-zoom-controls__btn {
+  border-color: #000 !important;
+  border-radius: 0 !important;
+  color: #64748b !important;
+}
+
+.decant-zoom-controls__btn:hover:not(:disabled) {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.decant-zoom-controls__label {
+  color: #475569 !important;
+  font-weight: var(--slate-wt-bold) !important;
+  font-feature-settings: 'tnum' 1 !important;
+  font-size: 9px !important;
+}
+
+/* ============================================================================
+   SCROLLBAR — Thin, dark, no radius
+   ============================================================================ */
+
+::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background: #64748b !important;
+  border-radius: 0 !important;
+  border: none !important;
+}
+
+*:hover::-webkit-scrollbar-thumb:hover {
+  background: #475569 !important;
+}
+
+*:hover::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+/* ============================================================================
+   BOTTOM BAR & SHELF
+   ============================================================================ */
+
+.decant-shelf {
+  background: #f1f5f9 !important;
+  border-top: 1px solid #000 !important;
+}
+
+.decant-app__bottom-bar {
+  background: #e2e8f0 !important;
+  border-top: 2px solid #000 !important;
+}
+
+.bottom-bar-slot .collections-panel__bar,
+.bottom-bar-slot .utag-panel-header {
+  background: #1e293b !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border: 1px solid #000 !important;
+}
+
+.bottom-bar-slot .collections-panel__bar:hover,
+.bottom-bar-slot .utag-panel-header:hover {
+  background: #334155 !important;
+}
+
+.bottom-bar-slot .collections-panel__bar-label,
+.bottom-bar-slot .utag-panel-header-label {
+  font-size: 9px !important;
+  font-weight: var(--slate-wt-heavy) !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  text-shadow: none !important;
+}
+
+.bottom-bar-slot .collections-panel__bar-count,
+.bottom-bar-slot .utag-panel-header-count {
+  background: rgba(34, 197, 94, 0.3) !important;
+  color: #4ade80 !important;
+  font-size: 8px !important;
+  font-feature-settings: 'tnum' 1 !important;
+  border-radius: 0 !important;
+}
+
+.bottom-bar-slot .collections-panel__bar-accent,
+.bottom-bar-slot .utag-panel-accent {
+  background: #22c55e !important;
+}
+
+/* ============================================================================
+   MODALS & FLOATING PANELS — No radius, hard borders
+   ============================================================================ */
+
+@keyframes modal-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.quick-add-modal,
+.batch-import-modal,
+.settings-dialog,
+.decant-modal {
+  box-shadow: 4px 4px 0 #000 !important;
+  border: 2px solid #000 !important;
+  border-radius: 0 !important;
+  animation: modal-enter 0.15s ease-out !important;
+}
+
+.decant-modal-backdrop,
+.command-palette-backdrop {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(0,0,0,0.5) !important;
+}
+
+.collections-panel,
+.utag-panel {
+  box-shadow: 0 -2px 0 #000 !important;
+  border: 2px solid #000 !important;
+  border-radius: 0 !important;
+}
+
+/* ============================================================================
+   DETAIL PANEL — Flat, hard left border
+   ============================================================================ */
+
+.decant-panel__wrapper {
+  box-shadow: none !important;
+  background: #f8fafc !important;
+  border-left: 2px solid #000 !important;
+  border-top: none !important;
+}
+
+.decant-panel__toggle {
+  border-radius: 0 !important;
+  border-color: #000 !important;
+}
+
+.decant-panel__tab {
+  border-radius: 0 !important;
+  text-transform: uppercase !important;
+  font-size: 9px !important;
+  font-weight: var(--slate-wt-heavy) !important;
+  letter-spacing: 0.06em !important;
+}
+
+.decant-panel__tab--active {
+  border-bottom-color: #1e3a8a !important;
+  color: #1e3a8a !important;
+}
+
+.decant-panel__action-btn {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+  text-transform: uppercase !important;
+  font-size: 9px !important;
+  font-weight: var(--slate-wt-bold) !important;
+  letter-spacing: 0.06em !important;
+}
+
+.decant-panel__action-btn--primary {
+  background: #1e3a8a !important;
+  color: #ffffff !important;
+  border-color: #000 !important;
+}
+
+/* Properties panel sub-styles */
+.pp-hero__logo {
+  border-radius: 0 !important;
+}
+
+.pp-hero__type-badge {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+  text-transform: uppercase !important;
+  font-size: 9px !important;
+}
+
+.pp-pill {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+  font-size: 9px !important;
+  text-transform: uppercase !important;
+}
+
+.ns-category-pill {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+  text-transform: uppercase !important;
+}
+
+.ns-outline {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+}
+
+.ns-stats__card {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+}
+
+.ns-entity__avatar {
+  border-radius: 0 !important;
+}
+
+.ns-rel-box {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+}
+
+.ns-tag {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+  text-transform: uppercase !important;
+  font-size: 9px !important;
+  letter-spacing: 0.04em !important;
+}
+
+.ns-source-link {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+}
+
+.ns-empty__icon {
+  border-radius: 0 !important;
+}
+
+.ns-empty__btn {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+}
+
+.ns-error__icon {
+  border-radius: 0 !important;
+}
+
+.ns-error__retry {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+}
+
+/* ============================================================================
+   BATCH BAR
+   ============================================================================ */
+
+.decant-batch-bar {
+  border-top: 2px solid #000 !important;
+  border-radius: 0 !important;
+}
+
+.decant-batch-bar__btn {
+  border-radius: 0 !important;
+  text-transform: uppercase !important;
+  font-size: 9px !important;
+  letter-spacing: 0.04em !important;
+  font-weight: var(--slate-wt-bold) !important;
+}
+
+/* ============================================================================
+   COLUMN TOGGLE DROPDOWN
+   ============================================================================ */
+
+.decant-column-toggle__menu {
+  border-radius: 0 !important;
+  border: 2px solid #000 !important;
+  box-shadow: 3px 3px 0 #000 !important;
+}
+
+/* ============================================================================
+   COMMAND PALETTE
+   ============================================================================ */
+
+.command-palette {
+  border-radius: 0 !important;
+  border: 2px solid #000 !important;
+  box-shadow: 4px 4px 0 #000 !important;
+}
+
+/* ============================================================================
+   TAG PICKER
+   ============================================================================ */
+
+.decant-tag-picker {
+  border-radius: 0 !important;
+  border: 2px solid #000 !important;
+  box-shadow: 3px 3px 0 #000 !important;
+}
+
+/* ============================================================================
+   INLINE EDIT
+   ============================================================================ */
+
+.decant-inline-edit {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+  font-size: var(--slate-text-base) !important;
+}
+
+/* ============================================================================
+   CHECKBOX
+   ============================================================================ */
+
+.decant-checkbox {
+  border-radius: 0 !important;
+  border-color: #000 !important;
+}
+
+/* ============================================================================
+   ENRICHING BADGE
+   ============================================================================ */
+
+.decant-enriching-badge {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+}
+
+/* ============================================================================
+   EXPANDED ROW
+   ============================================================================ */
+
+.decant-expanded-row {
+  border-bottom: 2px solid #000 !important;
+}
+
+.decant-expanded-row__logo {
+  border-radius: 0 !important;
+}
+
+.decant-expanded-row__type-badge {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+}
+
+.decant-visual-card {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+}
+
+.decant-visual-card__concept {
+  border-radius: 0 !important;
+  border: 1px solid #000 !important;
+}
+
+/* ============================================================================
+   FAVICON & LOGOS
+   ============================================================================ */
+
+.decant-title-favicon {
+  border-radius: 0 !important;
+}
+
+.decant-favicon-placeholder {
+  border-radius: 0 !important;
+}
+
+/* ============================================================================
+   STATUS BAR (new brutalism component)
+   ============================================================================ */
+
+.decant-status-bar {
+  height: 24px;
+  min-height: 24px;
+  max-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  background: #1e293b;
+  border-top: 2px solid #000;
+  font-family: var(--decant-font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.decant-status-bar__left,
+.decant-status-bar__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.decant-status-bar__indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.decant-status-bar__dot {
+  width: 6px;
+  height: 6px;
+  background: #22c55e;
+}
+
+.decant-status-bar__dot--warning {
+  background: #eab308;
+}
+
+.decant-status-bar__dot--error {
+  background: #ef4444;
+}
+
+/* ============================================================================
+   TABBED VIEW SWITCHER (brutalism-specific)
+   ============================================================================ */
+
+.decant-tab-bar {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 2px solid #000;
+  background: #f1f5f9;
+}
+
+.decant-tab-bar__tab {
+  padding: 6px 16px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  border-right: 1px solid #cbd5e1;
+  cursor: pointer;
+  transition: background 0.08s, color 0.08s;
+}
+
+.decant-tab-bar__tab:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.decant-tab-bar__tab--active {
+  background: #ffffff;
+  color: #1e3a8a;
+  border-bottom: 2px solid #1e3a8a;
+  margin-bottom: -2px;
+}
+
+.decant-tab-bar__tab--disabled {
+  color: #cbd5e1;
+  cursor: default;
+}
+
+.decant-tab-bar__tab--disabled:hover {
+  background: transparent;
+  color: #cbd5e1;
+}
+
+/* ============================================================================
+   BRUTALISM ID CELL
+   ============================================================================ */
+
+.decant-id-cell {
+  font-family: var(--decant-font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================================
+   BRUTALISM CLASSIFICATION BADGES
+   ============================================================================ */
+
+.decant-class-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid #000;
+  line-height: 1.2;
+}
+
+.decant-context-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid #000;
+  line-height: 1.2;
+}
+
+/* ============================================================================
+   SYSTEM TAGS SECTION (sidebar)
+   ============================================================================ */
+
+.decant-system-tags {
+  padding: 8px 12px;
+  border-top: 1px solid #000;
+}
+
+.decant-system-tags__title {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.decant-system-tags__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.decant-system-tags__chip {
+  padding: 2px 6px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid #000;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.08s;
+}
+
+.decant-system-tags__chip:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.decant-system-tags__chip--active {
+  background: #1e3a8a;
+  color: #ffffff;
+}
+
+/* ============================================================================
+   PROPERTIES PANEL — BRUTALISM NODE SECTIONS
+   ============================================================================ */
+
+.brut-section {
+  padding: 10px 12px;
+  border-bottom: 1px solid #000;
+}
+
+.brut-section__title {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.brut-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.brut-grid__item {
+  padding: 4px 6px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+.brut-grid__label {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.brut-grid__value {
+  font-size: 10px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-top: 1px;
+}
+
+.brut-code {
+  font-family: var(--decant-font-mono);
+  font-size: 9px;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 6px 8px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.brut-kv {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brut-kv__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.brut-kv__key {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.brut-kv__value {
+  font-family: var(--decant-font-mono);
+  font-size: 9px;
+  color: #0f172a;
+}
+
+.brut-textarea {
+  width: 100%;
+  min-height: 60px;
+  font-family: var(--decant-font-mono);
+  font-size: 9px;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #000;
+  padding: 6px 8px;
+  resize: vertical;
+}
+
+.brut-commit-btn {
+  width: 100%;
+  padding: 6px 0;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: #1e3a8a;
+  color: #ffffff;
+  border: 2px solid #000;
+  cursor: pointer;
+  transition: background 0.08s;
+  margin-top: 6px;
+}
+
+.brut-commit-btn:hover {
+  background: #1e40af;
+}
+
+/* ============================================================================
+   RECLASSIFY PROGRESS BAR
+   ============================================================================ */
+
+.decant-reclassify-progress__bar {
+  border-radius: 0 !important;
+}
+
+.decant-reclassify-progress__fill {
+  border-radius: 0 !important;
+  background: #22c55e !important;
+}
+
+/* ============================================================================
+   SAVED VIEW QUICK FILTERS
+   ============================================================================ */
+
+.decant-quick-filter--saved {
+  border-radius: 0 !important;
+}
+
+.decant-quick-filter--save {
+  border-radius: 0 !important;
+}
+
+/* ============================================================================
+   SUBCATEGORY DIVIDERS
+   ============================================================================ */
+
+.decant-table__subcat-divider {
+  border-bottom: 1px solid #000 !important;
+  text-transform: uppercase !important;
+  font-size: 8px !important;
+  letter-spacing: 0.06em !important;
+  font-weight: 700 !important;
+}
+
+/* ============================================================================
+   ROW ACTIONS
+   ============================================================================ */
+
+.decant-row-actions__btn {
+  border-radius: 0 !important;
+}
+
+/* ============================================================================
+   MISCELLANEOUS CATCH-ALL
+   ============================================================================ */
+
+/* Remove ALL border-radius */
+.decant-topbar__clear-btn,
+.decant-topbar__star-filter,
+.decant-reclassify-wrapper,
+.decant-column-toggle__item input,
+.decant-column-toggle__reset,
+.decant-batch-bar__select-all,
+.decant-tag-picker__option,
+.decant-tag-picker__manage,
+.decant-tag-picker__color-dot,
+.decant-user-tags__add-btn {
+  border-radius: 0 !important;
+}

@@ -70,6 +70,55 @@ export function getSegmentStyle(segCode: string): { color: string; backgroundCol
   return { color: hex, backgroundColor: hex + '18', borderColor: hex + '50' };
 }
 
+// ============================================================================
+// BRUTALISM BADGE HELPERS
+// ============================================================================
+
+/** Map content type code to brutalism CLASS badge */
+export function getClassBadge(contentTypeCode: string): { label: string; bg: string; text: string } {
+  const map: Record<string, { label: string; bg: string; text: string }> = {
+    T: { label: 'TOOL',    bg: '#dbeafe', text: '#1e40af' },
+    A: { label: 'ARTICLE', bg: '#fef3c7', text: '#92400e' },
+    V: { label: 'VIDEO',   bg: '#fce7f3', text: '#9d174d' },
+    R: { label: 'REPO',    bg: '#dcfce7', text: '#166534' },
+    S: { label: 'SERVICE', bg: '#f3e8ff', text: '#6b21a8' },
+    W: { label: 'WEBSITE', bg: '#f1f5f9', text: '#334155' },
+    X: { label: 'SOCIAL',  bg: '#e0e7ff', text: '#3730a3' },
+    N: { label: 'NEWS',    bg: '#fef2f2', text: '#991b1b' },
+    C: { label: 'COURSE',  bg: '#ecfdf5', text: '#065f46' },
+    G: { label: 'GUIDE',   bg: '#fffbeb', text: '#78350f' },
+    I: { label: 'IMAGE',   bg: '#fdf4ff', text: '#86198f' },
+    U: { label: 'TUTORIAL',bg: '#f0fdfa', text: '#134e4a' },
+  };
+  const code = (contentTypeCode || 'W').charAt(0).toUpperCase();
+  return map[code] || { label: 'NODE', bg: '#f1f5f9', text: '#334155' };
+}
+
+/** Map segment code to brutalism CONTEXT badge */
+export function getContextBadge(segmentCode: string): { label: string; bg: string; text: string } {
+  const map: Record<string, { label: string; bg: string; text: string }> = {
+    A: { label: 'PROD-AI',    bg: '#f3e8ff', text: '#7e22ce' },
+    T: { label: 'DEV-TOOLS',  bg: '#e2e8f0', text: '#334155' },
+    F: { label: 'MARKET',     bg: '#fef9c3', text: '#854d0e' },
+    B: { label: 'INFRA',      bg: '#dbeafe', text: '#1e40af' },
+    S: { label: 'SPORTS',     bg: '#dcfce7', text: '#166534' },
+    H: { label: 'HEALTH',     bg: '#fce7f3', text: '#9d174d' },
+    E: { label: 'MEDIA',      bg: '#ccfbf1', text: '#115e59' },
+    L: { label: 'LIFESTYLE',  bg: '#fee2e2', text: '#991b1b' },
+    X: { label: 'SCIENCE',    bg: '#e0e7ff', text: '#3730a3' },
+    C: { label: 'CREATIVE',   bg: '#fdf4ff', text: '#86198f' },
+  };
+  const code = (segmentCode || '').charAt(0).toUpperCase();
+  return map[code] || { label: 'GENERAL', bg: '#f1f5f9', text: '#334155' };
+}
+
+/** Return shortened ID: "#" + first 4 hex chars */
+export function shortId(uuid: string): string {
+  if (!uuid) return '#0000';
+  const clean = uuid.replace(/-/g, '');
+  return '#' + clean.slice(0, 4);
+}
+
 /** Get RGBA background for glyph/expanded card areas */
 export function getSegmentGlyphBg(segCode: string): string {
   const hex = getSegmentHex(segCode);

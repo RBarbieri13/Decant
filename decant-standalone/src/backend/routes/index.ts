@@ -220,6 +220,9 @@ export function registerAPIRoutes(app: Express): void {
   // iMessage routes
   // ============================================================
 
+  // GET /api/imessage/available - Check if iMessage extraction is available
+  app.get('/api/imessage/available', imessageRoutes.checkAvailability);
+
   // POST /api/imessage/extract-urls - Extract recent URLs from self-texts
   app.post('/api/imessage/extract-urls', imessageRoutes.extractUrls);
 

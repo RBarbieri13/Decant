@@ -4,6 +4,13 @@ Decant project work.
 
 Auto-maintained by Claude. Append key decisions, technical hurdles, and lessons learned after each session.
 
+## Deployment & Repo (Official)
+
+- **Live URL:** https://decant-app.fly.dev/
+- **GitHub:** https://github.com/RBarbieri13/Decant
+- **Primary app:** `decant-standalone/` (only meaningful directory in the repo)
+- **Deploy target:** Fly.io (`decant-app`)
+
 ## Decisions
 
 ### 2026-03-19: Holistic classification replaces per-node profiling

@@ -538,6 +538,19 @@ export interface CheckDuplicatesResponse {
 
 export const imessageAPI = {
   /**
+   * Check if iMessage extraction is available on the server platform
+   */
+  async checkAvailable(): Promise<boolean> {
+    try {
+      const res = await fetchWithAuth(`${API_BASE}/imessage/available`);
+      const data = await res.json();
+      return data.available === true;
+    } catch {
+      return false;
+    }
+  },
+
+  /**
    * Extract recent URLs from iMessage self-text thread with pagination
    */
   async extractUrls(count = 20, offset = 0): Promise<ExtractUrlsResponse> {
