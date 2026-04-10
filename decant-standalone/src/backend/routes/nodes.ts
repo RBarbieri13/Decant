@@ -13,6 +13,7 @@ import {
   getNodesPaginated,
   countNodes,
   mergeNodes as dbMergeNodes,
+  updateSurfaceMode,
 } from '../database/nodes.js';
 import {
   validatePaginationParams,
@@ -312,6 +313,33 @@ export async function getBacklinks(req: Request, res: Response): Promise<void> {
       grouped,
       total: backlinks.length,
     });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+/**
+ * PATCH /api/nodes/:id/surface-mode
+ * Flip a node between read_later and reference surfacing modes (feature #17).
+ */
+export async function setSurfaceMode(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { surface_mode } = req.body as { surface_mode?: string };
+
+    if (surface_mode !== 'read_later' && surface_mode !== 'reference') {
+      res.status(400).json({ error: 'surface_mode must be "read_later" or "reference"' });
+      return;
+    }
+
+    const node = readNode(id);
+    if (!node) {
+      res.status(404).json({ error: 'Node not found' });
+      return;
+    }
+
+    updateSurfaceMode(id, surface_mode);
+    res.json({ nodeId: id, surfaceMode: surface_mode, updatedAt: new Date().toISOString() });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

@@ -247,3 +247,30 @@ export async function searchFiltered(req: Request, res: Response): Promise<void>
     });
   }
 }
+
+/**
+ * POST /api/search/parse-nl (feature #9)
+ * Converts a free-text query into a structured filter payload via LLM.
+ */
+export async function parseNaturalLanguage(req: Request, res: Response): Promise<void> {
+  try {
+    const { query } = req.body as { query?: string };
+    if (typeof query !== 'string') {
+      res.status(400).json({ error: 'query must be a string' });
+      return;
+    }
+
+    const { parseNLQuery } = await import('../services/nl_filter.js');
+    const keystore = await import('../services/keystore.js');
+    const apiKey = await keystore.getApiKey('openai');
+    if (!apiKey) {
+      res.status(503).json({ error: 'OpenAI API key not configured' });
+      return;
+    }
+
+    const result = await parseNLQuery(query, apiKey);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}

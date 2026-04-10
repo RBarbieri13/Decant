@@ -20,7 +20,7 @@ import {
 import { getHierarchyEngine, hasHierarchyEngine, type PlacementResult } from '../hierarchy/hierarchy_engine.js';
 import {
   createNode, readNode, findNodeByUrl, findNodeByNormalizedUrl, updateNode,
-  updateWhySaved, updateClassificationReasoning,
+  updateWhySaved, updateClassificationReasoning, findNodeByContentFingerprint,
   type CreateNodeInput,
 } from '../../database/nodes.js';
 import { registerMetadataCodesFromProfile } from '../../database/metadata.js';
@@ -200,6 +200,24 @@ export class ImportOrchestrator {
       log.debug('Generating semantic profile...', { url: normalizedUrl, ...ctx });
       const profileResult = await this.generateProfile(scraped, apiKey);
       const profile = profileResult.profile;
+
+      // Step 5b: Content-fingerprint dedupe (feature #18)
+      // URL-exact check already ran at step 2b. Catches the same article
+      // showing up under a different query string or subdomain.
+      if (!request.forceRefresh && profile.title && scraped.domain) {
+        const contentDupe = findNodeByContentFingerprint(profile.title, scraped.domain);
+        if (contentDupe) {
+          log.info('Content fingerprint match', {
+            url: normalizedUrl, existingId: contentDupe.id, ...ctx,
+          });
+          return {
+            success: false,
+            error: `Similar item already exists: "${contentDupe.title}"`,
+            code: 'DUPLICATE_CONTENT',
+            details: { existingNodeId: contentDupe.id, existingTitle: contentDupe.title },
+          };
+        }
+      }
 
       // Step 6: Create node in database
       log.debug('Creating node...', { url: normalizedUrl, ...ctx });

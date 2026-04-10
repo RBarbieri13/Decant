@@ -98,6 +98,9 @@ export function registerAPIRoutes(app: Express): void {
   // DELETE /api/nodes/:id - Delete node
   app.delete('/api/nodes/:id', validateParams(UuidParamSchema), nodeRoutes.deleteNode);
 
+  // PATCH /api/nodes/:id/surface-mode - Flip read_later vs reference (feature #17)
+  app.patch('/api/nodes/:id/surface-mode', validateParams(UuidParamSchema), nodeRoutes.setSurfaceMode);
+
   // POST /api/nodes/:id/merge - Merge two nodes
   app.post(
     '/api/nodes/:id/merge',
@@ -199,6 +202,9 @@ export function registerAPIRoutes(app: Express): void {
 
   // POST /api/search/filtered - Filtered search with comprehensive filter support
   app.post('/api/search/filtered', validateBody(FilteredSearchSchema), searchRoutes.searchFiltered);
+
+  // POST /api/search/parse-nl - Convert natural-language query to filter state (feature #9)
+  app.post('/api/search/parse-nl', searchRoutes.parseNaturalLanguage);
 
   // ============================================================
   // Import routes (with stricter rate limiting for expensive AI calls)
@@ -345,6 +351,18 @@ export function registerAPIRoutes(app: Express): void {
 
   // POST /api/collections - Create new collection
   app.post('/api/collections', validateBody(CreateCollectionSchema), collectionRoutes.createCollection);
+
+  // POST /api/collections/smart - Create smart collection (feature #13)
+  app.post('/api/collections/smart', collectionRoutes.createSmartCollection);
+
+  // PATCH /api/collections/:id/smart-search - Update saved search
+  app.patch('/api/collections/:id/smart-search', validateParams(UuidParamSchema), collectionRoutes.updateSmartSearch);
+
+  // GET /api/collections/:id/resolve - Run the saved search and return matches
+  app.get('/api/collections/:id/resolve', validateParams(UuidParamSchema), collectionRoutes.resolveSmartCollection);
+
+  // GET /api/collections/by-type?type=smart|folder|all
+  app.get('/api/collections/by-type', collectionRoutes.listByType);
 
   // PUT /api/collections/:id - Update collection
   app.put(

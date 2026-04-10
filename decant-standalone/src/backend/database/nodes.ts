@@ -405,6 +405,31 @@ export function findUntitledNodes(): Array<{ id: string; title: string; url: str
   return findUntitledStmt().all() as Array<{ id: string; title: string; url: string; source_domain: string }>;
 }
 
+/**
+ * Lightweight content-fingerprint dupe check (feature #18).
+ * Matches nodes with the same normalized title under the same domain.
+ * Catches "same article, different URL query string" cases that slip
+ * past the URL-exact dedupe.
+ */
+export function findNodeByContentFingerprint(
+  normalizedTitle: string,
+  sourceDomain: string,
+): { id: string; title: string; url: string } | null {
+  if (!normalizedTitle || normalizedTitle.length < 10) return null;
+
+  const db = getDatabase();
+  const row = db.prepare(
+    `SELECT id, title, url FROM nodes
+     WHERE is_deleted = 0
+       AND source_domain = ?
+       AND LOWER(title) = ?
+     LIMIT 1`
+  ).get(sourceDomain, normalizedTitle.toLowerCase()) as { id: string; title: string; url: string } | undefined;
+
+  return row ?? null;
+}
+
+
 export function updateNode(id: string, data: UpdateNodeInput): unknown {
   const db = getDatabase();
 

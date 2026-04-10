@@ -272,3 +272,88 @@ export function removeNodeFromCollection(collectionId: string, nodeId: string): 
     throw new Error('Node not found in collection');
   }
 }
+
+// ============================================================
+// Smart Collections (feature #13)
+// ============================================================
+// A smart collection stores a saved filter payload in saved_search_json
+// with collection_type = 'smart'. The resolver filters the full node list
+// in-memory — fine for datasets under ~1000 items.
+
+export interface SavedSearchPayload {
+  titleContains?: string;
+  categoryIn?: string[];
+  segmentIn?: string[];
+  contentTypeIn?: string[];
+  tagsInclude?: string[];
+  userTagsInclude?: string[];
+  starredOnly?: boolean;
+  surfaceMode?: 'read_later' | 'reference' | 'all';
+  dateFrom?: string;
+  dateTo?: string;
+  hierarchyPath?: string | null;
+}
+
+export function createSmartCollection(
+  name: string,
+  savedSearch: SavedSearchPayload,
+  icon?: string,
+  color?: string,
+): CollectionRow {
+  const db = getDatabase();
+  const id = uuidv4();
+  const now = new Date().toISOString();
+
+  const maxPos = db.prepare(
+    'SELECT MAX(position) as max_pos FROM collections WHERE parent_id IS NULL'
+  ).get() as { max_pos: number | null } | undefined;
+  const position = (maxPos?.max_pos ?? -1) + 1;
+
+  db.prepare(`
+    INSERT INTO collections (id, name, icon, color, parent_id, position, created_at, updated_at, collection_type, saved_search_json)
+    VALUES (?, ?, ?, ?, NULL, ?, ?, ?, 'smart', ?)
+  `).run(
+    id,
+    name,
+    icon ?? '🔍',
+    color ?? '#3b82f6',
+    position,
+    now,
+    now,
+    JSON.stringify(savedSearch),
+  );
+
+  return getCollectionById(id)!;
+}
+
+export function updateSmartCollectionSearch(id: string, savedSearch: SavedSearchPayload): void {
+  const db = getDatabase();
+  db.prepare(`
+    UPDATE collections
+    SET saved_search_json = ?, updated_at = ?
+    WHERE id = ? AND collection_type = 'smart'
+  `).run(JSON.stringify(savedSearch), new Date().toISOString(), id);
+}
+
+export function getSmartCollectionSearch(id: string): SavedSearchPayload | null {
+  const db = getDatabase();
+  const row = db.prepare(
+    "SELECT saved_search_json FROM collections WHERE id = ? AND collection_type = 'smart'"
+  ).get(id) as { saved_search_json: string | null } | undefined;
+  if (!row?.saved_search_json) return null;
+  try {
+    return JSON.parse(row.saved_search_json) as SavedSearchPayload;
+  } catch {
+    return null;
+  }
+}
+
+export function listCollectionsByType(type: 'folder' | 'smart' | 'all'): CollectionRow[] {
+  const db = getDatabase();
+  if (type === 'all') {
+    return db.prepare('SELECT * FROM collections ORDER BY parent_id NULLS FIRST, position ASC').all() as CollectionRow[];
+  }
+  return db.prepare(
+    'SELECT * FROM collections WHERE collection_type = ? ORDER BY position ASC'
+  ).all(type) as CollectionRow[];
+}
