@@ -265,48 +265,4 @@ export function notFoundHandler(req: Request, _res: Response, next: NextFunction
   next(new NotFoundError(`Route ${req.method} ${req.path} not found`));
 }
 
-/**
- * Global error handler for uncaught exceptions and unhandled rejections
- * Should be called during application startup
- */
-export function setupGlobalErrorHandlers(): void {
-  // Handle uncaught exceptions
-  process.on('uncaughtException', (error: Error) => {
-    log.fatal('Uncaught exception', {
-      err: formatError(error),
-    });
-
-    // Give the logger time to write, then exit
-    setTimeout(() => {
-      process.exit(1);
-    }, 1000);
-  });
-
-  // Handle unhandled promise rejections
-  process.on('unhandledRejection', (reason: unknown) => {
-    const error = reason instanceof Error ? reason : new Error(String(reason));
-
-    log.fatal('Unhandled promise rejection', {
-      err: formatError(error),
-    });
-
-    // Give the logger time to write, then exit
-    setTimeout(() => {
-      process.exit(1);
-    }, 1000);
-  });
-
-  // Handle SIGTERM gracefully
-  process.on('SIGTERM', () => {
-    log.info('SIGTERM received, shutting down gracefully');
-    process.exit(0);
-  });
-
-  // Handle SIGINT gracefully (Ctrl+C)
-  process.on('SIGINT', () => {
-    log.info('SIGINT received, shutting down gracefully');
-    process.exit(0);
-  });
-}
-
 export default errorHandler;

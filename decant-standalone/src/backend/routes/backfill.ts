@@ -3,7 +3,7 @@
 // ============================================================
 // Feature #1: backfill "Untitled" and reasoning-less nodes by
 // re-running the semantic profiler against each one. Mirrors
-// the rescrape pattern — runs in the background with p-limit
+// the rescrape pattern -- runs in the background with p-limit
 // concurrency and exposes a polling endpoint.
 
 import { Request, Response } from 'express';
@@ -15,6 +15,7 @@ import { SemanticProfiler, type SemanticProfileInput } from '../services/semanti
 import * as keystore from '../services/keystore.js';
 import * as cache from '../cache/index.js';
 import { log } from '../logger/index.js';
+import { asyncHandler } from '../middleware/errorHandler.js';
 
 interface BackfillProgress {
   isRunning: boolean;
@@ -50,8 +51,10 @@ export function getBackfillTitlesProgress(_req: Request, res: Response): void {
  * Idempotent: the query (title IS NULL OR title = '' OR title = 'Untitled'
  * OR classification_reasoning IS NULL) means already-fixed nodes skip on
  * the next run.
+ *
+ * NOTE: Responds immediately then runs background work.
  */
-export async function backfillTitles(_req: Request, res: Response): Promise<void> {
+export const backfillTitles = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
   if (progress.isRunning) {
     res.status(409).json({ error: 'Backfill already in progress', progress });
     return;
@@ -76,14 +79,14 @@ export async function backfillTitles(_req: Request, res: Response): Promise<void
 
   res.json({ started: true, total: candidates.length });
 
-  // Run in the background — do NOT await.
+  // Run in the background -- do NOT await.
   void runBackfill(apiKey, candidates).catch((err) => {
     log.error('backfillTitles crashed', { error: (err as Error).message });
     progress.lastError = (err as Error).message;
     progress.isRunning = false;
     progress.completedAt = new Date().toISOString();
   });
-}
+});
 
 async function runBackfill(
   apiKey: string,

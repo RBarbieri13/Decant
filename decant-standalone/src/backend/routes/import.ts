@@ -13,6 +13,7 @@ import {
 } from '../services/import/orchestrator.js';
 import { getImportCache } from '../services/import/cache.js';
 import { readNode } from '../database/nodes.js';
+import { asyncHandler } from '../middleware/errorHandler.js';
 
 // ============================================================
 // Import Endpoint
@@ -23,173 +24,135 @@ import { readNode } from '../database/nodes.js';
  * POST /api/import
  * Body: { url: string, forceRefresh?: boolean, priority?: number }
  */
-export async function importUrl(req: Request, res: Response): Promise<void> {
-  try {
-    const { url, forceRefresh, priority } = req.body;
+export const importUrl = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { url, forceRefresh, priority } = req.body;
 
-    // Basic validation (orchestrator does full validation)
-    if (!url || typeof url !== 'string') {
-      res.status(400).json({
-        success: false,
-        error: 'URL is required',
-        code: 'URL_REQUIRED',
-      });
-      return;
-    }
-
-    // Execute import via orchestrator
-    const orchestrator = getImportOrchestrator();
-    const result = await orchestrator.import({
-      url,
-      forceRefresh: forceRefresh === true,
-      priority: typeof priority === 'number' ? priority : undefined,
-    });
-
-    // Handle error result
-    if (!result.success) {
-      const errorResult = result as ImportError;
-      const status = getStatusCodeFromErrorCode(errorResult.code);
-      res.status(status).json(errorResult);
-      return;
-    }
-
-    // Success - return full result
-    const successResult = result as ImportResult;
-
-    // Get the full node data
-    const node = readNode(successResult.nodeId);
-
-    res.json({
-      success: true,
-      nodeId: successResult.nodeId,
-      cached: successResult.cached,
-      node: node,
-      profile: successResult.profile,
-      placement: successResult.placement,
-      metadata: successResult.metadata,
-      refinement: successResult.refinement,
-    });
-  } catch (error) {
-    log.error('Import route error', { err: error, module: 'import' });
-
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    res.status(500).json({
+  // Basic validation (orchestrator does full validation)
+  if (!url || typeof url !== 'string') {
+    res.status(400).json({
       success: false,
-      error: `Import failed: ${message}`,
-      code: 'INTERNAL_ERROR',
+      error: 'URL is required',
+      code: 'URL_REQUIRED',
     });
+    return;
   }
-}
+
+  // Execute import via orchestrator
+  const orchestrator = getImportOrchestrator();
+  const result = await orchestrator.import({
+    url,
+    forceRefresh: forceRefresh === true,
+    priority: typeof priority === 'number' ? priority : undefined,
+  });
+
+  // Handle error result
+  if (!result.success) {
+    const errorResult = result as ImportError;
+    const status = getStatusCodeFromErrorCode(errorResult.code);
+    res.status(status).json(errorResult);
+    return;
+  }
+
+  // Success - return full result
+  const successResult = result as ImportResult;
+
+  // Get the full node data
+  const node = readNode(successResult.nodeId);
+
+  res.json({
+    success: true,
+    nodeId: successResult.nodeId,
+    cached: successResult.cached,
+    node: node,
+    profile: successResult.profile,
+    placement: successResult.placement,
+    metadata: successResult.metadata,
+    refinement: successResult.refinement,
+  });
+});
 
 /**
  * Check if a URL is already imported
  * GET /api/import/check?url=<url>
  */
-export async function checkImportStatus(req: Request, res: Response): Promise<void> {
-  try {
-    const url = req.query.url as string;
+export const checkImportStatus = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const url = req.query.url as string;
 
-    if (!url || typeof url !== 'string') {
-      res.status(400).json({
-        success: false,
-        error: 'URL query parameter is required',
-        code: 'URL_REQUIRED',
+  if (!url || typeof url !== 'string') {
+    res.status(400).json({
+      success: false,
+      error: 'URL query parameter is required',
+      code: 'URL_REQUIRED',
+    });
+    return;
+  }
+
+  const cache = getImportCache();
+  const cached = cache.get(url);
+
+  if (cached) {
+    // Verify the node still exists
+    const node = readNode(cached.nodeId);
+
+    if (node) {
+      res.json({
+        exists: true,
+        cached: true,
+        nodeId: cached.nodeId,
+        classification: cached.classification,
+        cachedAt: cached.cachedAt,
       });
       return;
     }
 
-    const cache = getImportCache();
-    const cached = cache.get(url);
-
-    if (cached) {
-      // Verify the node still exists
-      const node = readNode(cached.nodeId);
-
-      if (node) {
-        res.json({
-          exists: true,
-          cached: true,
-          nodeId: cached.nodeId,
-          classification: cached.classification,
-          cachedAt: cached.cachedAt,
-        });
-        return;
-      }
-
-      // Node was deleted, invalidate cache
-      cache.invalidate(url);
-    }
-
-    res.json({
-      exists: false,
-      cached: false,
-    });
-  } catch (error) {
-    log.error('Check import status error', { err: error, module: 'import' });
-    res.status(500).json({
-      success: false,
-      error: 'Failed to check import status',
-      code: 'INTERNAL_ERROR',
-    });
+    // Node was deleted, invalidate cache
+    cache.invalidate(url);
   }
-}
+
+  res.json({
+    exists: false,
+    cached: false,
+  });
+});
 
 /**
  * Invalidate import cache for a URL
  * DELETE /api/import/cache?url=<url>
  */
-export async function invalidateImportCache(req: Request, res: Response): Promise<void> {
-  try {
-    const url = req.query.url as string;
+export const invalidateImportCache = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const url = req.query.url as string;
 
-    if (!url || typeof url !== 'string') {
-      res.status(400).json({
-        success: false,
-        error: 'URL query parameter is required',
-        code: 'URL_REQUIRED',
-      });
-      return;
-    }
-
-    const orchestrator = getImportOrchestrator();
-    const invalidated = orchestrator.invalidateCache(url);
-
-    res.json({
-      success: true,
-      invalidated,
-    });
-  } catch (error) {
-    log.error('Invalidate import cache error', { err: error, module: 'import' });
-    res.status(500).json({
+  if (!url || typeof url !== 'string') {
+    res.status(400).json({
       success: false,
-      error: 'Failed to invalidate cache',
-      code: 'INTERNAL_ERROR',
+      error: 'URL query parameter is required',
+      code: 'URL_REQUIRED',
     });
+    return;
   }
-}
+
+  const orchestrator = getImportOrchestrator();
+  const invalidated = orchestrator.invalidateCache(url);
+
+  res.json({
+    success: true,
+    invalidated,
+  });
+});
 
 /**
  * Get import cache statistics
  * GET /api/import/cache/stats
  */
-export async function getImportCacheStats(_req: Request, res: Response): Promise<void> {
-  try {
-    const cache = getImportCache();
-    const stats = cache.getStats();
+export const getImportCacheStats = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
+  const cache = getImportCache();
+  const stats = cache.getStats();
 
-    res.json({
-      success: true,
-      stats,
-    });
-  } catch (error) {
-    log.error('Get import cache stats error', { err: error, module: 'import' });
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get cache stats',
-      code: 'INTERNAL_ERROR',
-    });
-  }
-}
+  res.json({
+    success: true,
+    stats,
+  });
+});
 
 // ============================================================
 // API Key Management Endpoints
@@ -200,59 +163,44 @@ export async function getImportCacheStats(_req: Request, res: Response): Promise
  * POST /api/settings/api-key
  * Body: { apiKey: string }
  */
-export async function setApiKeyEndpoint(req: Request, res: Response): Promise<void> {
-  try {
-    const { apiKey } = req.body;
+export const setApiKeyEndpoint = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { apiKey } = req.body;
 
-    if (!apiKey || typeof apiKey !== 'string') {
-      res.status(400).json({ error: 'API key is required' });
-      return;
-    }
-
-    // Validate API key format (basic check)
-    if (!apiKey.startsWith('sk-') || apiKey.length < 20) {
-      res.status(400).json({ error: 'Invalid API key format' });
-      return;
-    }
-
-    // Store API key securely in encrypted keystore
-    await keystore.setApiKey('openai', apiKey);
-    log.info('API key configured via settings', { module: 'settings' });
-    res.json({ success: true });
-  } catch (error) {
-    log.error('Failed to set API key', { err: error, module: 'settings' });
-    res.status(500).json({ error: 'Failed to set API key' });
+  if (!apiKey || typeof apiKey !== 'string') {
+    res.status(400).json({ error: 'API key is required' });
+    return;
   }
-}
+
+  // Validate API key format (basic check)
+  if (!apiKey.startsWith('sk-') || apiKey.length < 20) {
+    res.status(400).json({ error: 'Invalid API key format' });
+    return;
+  }
+
+  // Store API key securely in encrypted keystore
+  await keystore.setApiKey('openai', apiKey);
+  log.info('API key configured via settings', { module: 'settings' });
+  res.json({ success: true });
+});
 
 /**
  * Check if API key is configured
  * GET /api/settings/api-key/status
  */
-export async function getApiKeyStatus(_req: Request, res: Response): Promise<void> {
-  try {
-    const hasKey = await keystore.isConfigured('openai');
-    res.json({ configured: hasKey });
-  } catch (error) {
-    log.error('Failed to check API key status', { err: error, module: 'settings' });
-    res.status(500).json({ error: 'Failed to check API key status' });
-  }
-}
+export const getApiKeyStatus = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
+  const hasKey = await keystore.isConfigured('openai');
+  res.json({ configured: hasKey });
+});
 
 /**
  * Delete API key endpoint
  * DELETE /api/settings/api-key
  */
-export async function deleteApiKeyEndpoint(_req: Request, res: Response): Promise<void> {
-  try {
-    await keystore.deleteApiKey('openai');
-    log.info('API key deleted via settings', { module: 'settings' });
-    res.json({ success: true });
-  } catch (error) {
-    log.error('Failed to delete API key', { err: error, module: 'settings' });
-    res.status(500).json({ error: 'Failed to delete API key' });
-  }
-}
+export const deleteApiKeyEndpoint = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
+  await keystore.deleteApiKey('openai');
+  log.info('API key deleted via settings', { module: 'settings' });
+  res.json({ success: true });
+});
 
 // ============================================================
 // Helper Functions

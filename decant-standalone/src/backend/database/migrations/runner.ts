@@ -33,6 +33,7 @@ import migration021 from './021_add_saved_from_context.js';
 import migration022 from './022_add_surface_mode.js';
 import migration023 from './023_add_smart_collections.js';
 import migration024 from './024_add_classification_reasoning.js';
+import migration025 from './025_fix_fts5_sync.js';
 
 /**
  * All available migrations in order of execution
@@ -63,6 +64,7 @@ export const migrations: Migration[] = [
   migration022,
   migration023,
   migration024,
+  migration025,
 ];
 
 /**

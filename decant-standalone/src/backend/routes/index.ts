@@ -27,6 +27,7 @@ import { getNotificationService, type NotificationEvent } from '../services/noti
 import { log } from '../logger/index.js';
 import { metricsEndpoint } from '../services/metrics/index.js';
 import * as appCache from '../cache/index.js';
+import { asyncHandler } from '../middleware/errorHandler.js';
 
 // Validation middleware
 import { validateBody, validateQuery, validateParams, validate } from '../middleware/validate.js';
@@ -160,16 +161,12 @@ export function registerAPIRoutes(app: Express): void {
   app.get('/api/hierarchy/organizations', hierarchyRoutes.getOrganizations);
 
   // GET /api/taxonomy/labels - Get current segment and category display labels
-  app.get('/api/taxonomy/labels', (_req: Request, res: Response) => {
-    try {
-      res.json({
-        segments: getSegmentLabels(),
-        categories: getCategoryLabels(),
-      });
-    } catch (error) {
-      res.status(500).json({ error: (error as Error).message });
-    }
-  });
+  app.get('/api/taxonomy/labels', asyncHandler(async (_req: Request, res: Response) => {
+    res.json({
+      segments: getSegmentLabels(),
+      categories: getCategoryLabels(),
+    });
+  }));
 
   // ============================================================
   // Dynamic Hierarchy routes
@@ -310,22 +307,16 @@ export function registerAPIRoutes(app: Express): void {
   // ============================================================
 
   // POST /api/admin/rebuild-hierarchy - Alias for hierarchy rebuild (admin convenience)
-  app.post('/api/admin/rebuild-hierarchy', async (_req: Request, res: Response) => {
-    try {
-      const { getHierarchyEngine, hasHierarchyEngine } = await import('../services/hierarchy/hierarchy_engine.js');
-      if (!hasHierarchyEngine()) {
-        res.status(503).json({ error: 'Hierarchy engine not initialized' });
-        return;
-      }
-      const result = await getHierarchyEngine().buildFullHierarchy();
-      appCache.invalidate('tree:*');
-      res.json({ success: true, ...result });
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      log.error('Admin rebuild-hierarchy failed', { error: msg, module: 'admin' });
-      res.status(500).json({ error: msg });
+  app.post('/api/admin/rebuild-hierarchy', asyncHandler(async (_req: Request, res: Response) => {
+    const { getHierarchyEngine, hasHierarchyEngine } = await import('../services/hierarchy/hierarchy_engine.js');
+    if (!hasHierarchyEngine()) {
+      res.status(503).json({ error: 'Hierarchy engine not initialized' });
+      return;
     }
-  });
+    const result = await getHierarchyEngine().buildFullHierarchy();
+    appCache.invalidate('tree:*');
+    res.json({ success: true, ...result });
+  }));
 
   // POST /api/admin/rescrape-poor-quality - Re-import nodes with minimal extraction quality
   app.post('/api/admin/rescrape-poor-quality', rescrapeRoutes.rescrapePoorQuality);

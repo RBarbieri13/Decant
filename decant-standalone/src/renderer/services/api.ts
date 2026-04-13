@@ -198,6 +198,88 @@ export const nodesAPI = {
     if (!res.ok) throw new Error('Failed to fetch backlinks');
     return res.json();
   },
+
+  async regenerateTitle(id: string): Promise<{ nodeId: string; oldTitle: string; newTitle: string; reasoning: unknown }> {
+    const res = await fetchWithAuth(`${API_BASE}/nodes/${id}/regenerate-title`, { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to regenerate title');
+    return res.json();
+  },
+
+  async updateWhySaved(id: string, text: string): Promise<Node> {
+    const res = await fetchWithAuth(`${API_BASE}/nodes/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ why_saved_text: text, why_saved_is_auto: 0 }),
+    });
+    if (!res.ok) throw new Error('Failed to update why saved');
+    return res.json();
+  },
+
+  async setSurfaceMode(id: string, mode: 'read_later' | 'reference'): Promise<{ nodeId: string; surfaceMode: string }> {
+    const res = await fetchWithAuth(`${API_BASE}/nodes/${id}/surface-mode`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ surface_mode: mode }),
+    });
+    if (!res.ok) throw new Error('Failed to update surface mode');
+    return res.json();
+  },
+};
+
+// ============================================================
+// Admin API (backfill, etc.)
+// ============================================================
+
+export const adminAPI = {
+  async backfillTitles(): Promise<{ started: boolean; total: number }> {
+    const res = await fetchWithAuth(`${API_BASE}/admin/backfill-titles`, { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to start backfill');
+    return res.json();
+  },
+
+  async getBackfillProgress(): Promise<{
+    isRunning: boolean;
+    total: number;
+    completed: number;
+    failed: number;
+    currentId: string | null;
+  }> {
+    const res = await fetchWithAuth(`${API_BASE}/admin/backfill-titles/progress`);
+    if (!res.ok) throw new Error('Failed to fetch backfill progress');
+    return res.json();
+  },
+
+  async reEnrichAll(): Promise<{ queued: boolean; count: number }> {
+    const res = await fetchWithAuth(`${API_BASE}/admin/enrich-all`, {
+      method: 'POST',
+    });
+    if (!res.ok) throw new Error(`Re-enrich all failed: ${res.statusText}`);
+    return res.json();
+  },
+
+  async rescrapePoorQuality(): Promise<{ message: string; total: number }> {
+    const res = await fetchWithAuth(`${API_BASE}/admin/rescrape-poor-quality`, {
+      method: 'POST',
+    });
+    if (!res.ok) throw new Error(`Rescrape failed: ${res.statusText}`);
+    return res.json();
+  },
+
+  async getRescrapeProgress(): Promise<{
+    isRunning: boolean;
+    total: number;
+    completed: number;
+    failed: number;
+    phase: string;
+    startedAt: string | null;
+    completedAt: string | null;
+    lastError: string | null;
+    errorCount: number;
+  }> {
+    const res = await fetchWithAuth(`${API_BASE}/admin/rescrape-poor-quality/progress`);
+    if (!res.ok) throw new Error('Failed to get rescrape progress');
+    return res.json();
+  },
 };
 
 // ============================================================
@@ -241,7 +323,29 @@ export const hierarchyAPI = {
 // Search API
 // ============================================================
 
+export interface NLFilterResult {
+  columnFilters: Record<string, string | undefined>;
+  hierarchyFilter?: { segment?: string | null; category?: string | null } | null;
+  starredOnly?: boolean;
+  surfaceMode?: 'read_later' | 'reference' | 'all';
+  dateRange?: { from?: string | null; to?: string | null } | null;
+  humanReadable: string;
+}
+
 export const searchAPI = {
+  /**
+   * Parse a natural-language query into a structured filter payload (feature #9).
+   */
+  async parseNL(query: string): Promise<NLFilterResult> {
+    const res = await fetchWithAuth(`${API_BASE}/search/parse-nl`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
+    });
+    if (!res.ok) throw new Error('Failed to parse NL query');
+    return res.json();
+  },
+
   /**
    * Search nodes (backward compatible - no pagination)
    */
@@ -583,43 +687,6 @@ export const imessageAPI = {
   },
 };
 
-// ============================================================
-// Admin API
-// ============================================================
-
-export const adminAPI = {
-  async reEnrichAll(): Promise<{ queued: boolean; count: number }> {
-    const res = await fetchWithAuth(`${API_BASE}/admin/enrich-all`, {
-      method: 'POST',
-    });
-    if (!res.ok) throw new Error(`Re-enrich all failed: ${res.statusText}`);
-    return res.json();
-  },
-
-  async rescrapePoorQuality(): Promise<{ message: string; total: number }> {
-    const res = await fetchWithAuth(`${API_BASE}/admin/rescrape-poor-quality`, {
-      method: 'POST',
-    });
-    if (!res.ok) throw new Error(`Rescrape failed: ${res.statusText}`);
-    return res.json();
-  },
-
-  async getRescrapeProgress(): Promise<{
-    isRunning: boolean;
-    total: number;
-    completed: number;
-    failed: number;
-    phase: string;
-    startedAt: string | null;
-    completedAt: string | null;
-    lastError: string | null;
-    errorCount: number;
-  }> {
-    const res = await fetchWithAuth(`${API_BASE}/admin/rescrape-poor-quality/progress`);
-    if (!res.ok) throw new Error('Failed to get rescrape progress');
-    return res.json();
-  },
-};
 
 export interface ReclassifyResult {
   message: string;

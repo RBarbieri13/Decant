@@ -11,6 +11,7 @@ import {
 } from '../health/index.js';
 import { getCircuitBreakerRegistry } from '../services/retry/circuit-breaker.js';
 import { hasHierarchyEngine, getHierarchyEngine } from '../services/hierarchy/hierarchy_engine.js';
+import { asyncHandler } from '../middleware/errorHandler.js';
 
 /**
  * Format uptime in human-readable format.
@@ -58,72 +59,56 @@ export function liveness(_req: Request, res: Response): void {
  * Comprehensive readiness check with all components
  * Returns 200 only if all critical systems are healthy, 503 otherwise.
  */
-export async function readiness(
+export const readiness = asyncHandler(async (
   _req: Request,
   res: Response
-): Promise<void> {
-  try {
-    const healthCheck = await fullHealthCheck();
+): Promise<void> => {
+  const healthCheckResult = await fullHealthCheck();
 
-    // Consider ready if status is healthy or degraded
-    // Only return 503 if unhealthy (critical systems down)
-    if (healthCheck.status === 'unhealthy') {
-      res.status(503).json({
-        status: 'not_ready',
-        timestamp: healthCheck.timestamp,
-        checks: healthCheck.checks,
-      });
-    } else {
-      res.status(200).json({
-        status: 'ready',
-        timestamp: healthCheck.timestamp,
-        overallStatus: healthCheck.status,
-        checks: healthCheck.checks,
-      });
-    }
-  } catch (error) {
+  // Consider ready if status is healthy or degraded
+  // Only return 503 if unhealthy (critical systems down)
+  if (healthCheckResult.status === 'unhealthy') {
     res.status(503).json({
       status: 'not_ready',
-      timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Health check failed',
+      timestamp: healthCheckResult.timestamp,
+      checks: healthCheckResult.checks,
+    });
+  } else {
+    res.status(200).json({
+      status: 'ready',
+      timestamp: healthCheckResult.timestamp,
+      overallStatus: healthCheckResult.status,
+      checks: healthCheckResult.checks,
     });
   }
-}
+});
 
 /**
  * GET /health/full - Full health check with all components
  * Detailed health information for all system components
  */
-export async function fullHealth(_req: Request, res: Response): Promise<void> {
-  try {
-    const healthCheck = await fullHealthCheck();
+export const fullHealth = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
+  const healthCheckResult = await fullHealthCheck();
 
-    // Return appropriate status code based on health
-    const statusCode =
-      healthCheck.status === 'unhealthy'
-        ? 503
-        : healthCheck.status === 'degraded'
-          ? 200 // Still operational, just degraded
-          : 200;
+  // Return appropriate status code based on health
+  const statusCode =
+    healthCheckResult.status === 'unhealthy'
+      ? 503
+      : healthCheckResult.status === 'degraded'
+        ? 200 // Still operational, just degraded
+        : 200;
 
-    res.status(statusCode).json(healthCheck);
-  } catch (error) {
-    res.status(500).json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Health check failed',
-    });
-  }
-}
+  res.status(statusCode).json(healthCheckResult);
+});
 
 /**
  * GET /health/component/:name - Individual component health check
  * Check specific component health
  */
-export async function componentHealth(
+export const componentHealth = asyncHandler(async (
   req: Request,
   res: Response
-): Promise<void> {
+): Promise<void> => {
   const { name } = req.params;
 
   const validComponents = ['database', 'llm', 'queue', 'cache', 'filesystem'];
@@ -135,26 +120,17 @@ export async function componentHealth(
     return;
   }
 
-  try {
-    const health = await getComponentHealth(
-      name as 'database' | 'llm' | 'queue' | 'cache' | 'filesystem'
-    );
+  const health = await getComponentHealth(
+    name as 'database' | 'llm' | 'queue' | 'cache' | 'filesystem'
+  );
 
-    const statusCode = health.status === 'unhealthy' ? 503 : 200;
+  const statusCode = health.status === 'unhealthy' ? 503 : 200;
 
-    res.status(statusCode).json({
-      component: name,
-      ...health,
-    });
-  } catch (error) {
-    res.status(500).json({
-      component: name,
-      status: 'unhealthy',
-      error: error instanceof Error ? error.message : 'Component check failed',
-      timestamp: new Date().toISOString(),
-    });
-  }
-}
+  res.status(statusCode).json({
+    component: name,
+    ...health,
+  });
+});
 
 /**
  * GET /metrics - Application metrics

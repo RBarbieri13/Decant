@@ -13,6 +13,7 @@ import {
   validatePaginationParams,
   buildPaginatedResponse,
 } from '../types/pagination.js';
+import { asyncHandler } from '../middleware/errorHandler.js';
 
 /**
  * Parse search filters from query parameters
@@ -75,40 +76,36 @@ function parseSearchFilters(query: any): SearchFilters | undefined {
  * If no pagination params are provided, returns results without pagination wrapper (backward compatible)
  * If pagination params are provided, returns paginated response with metadata
  */
-export async function search(req: Request, res: Response): Promise<void> {
-  try {
-    const { q: query, filters, page, limit } = req.query;
+export const search = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { q: query, filters, page, limit } = req.query;
 
-    if (!query || typeof query !== 'string') {
-      res.status(400).json({ error: 'Query parameter "q" is required' });
-      return;
-    }
-
-    // Check if pagination was requested
-    const hasPaginationParams = page !== undefined || limit !== undefined;
-
-    if (hasPaginationParams) {
-      // Validate and normalize pagination parameters
-      const pagination = validatePaginationParams(
-        page as string | undefined,
-        limit as string | undefined
-      );
-
-      // Get paginated results and total count
-      const results = dbSearchNodes(query, filters, pagination);
-      const total = countSearchResults(query, filters);
-
-      // Return paginated response
-      res.json(buildPaginatedResponse(results, total, pagination.page, pagination.limit));
-    } else {
-      // Backward compatible: return results without pagination wrapper
-      const results = dbSearchNodes(query, filters);
-      res.json(results);
-    }
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+  if (!query || typeof query !== 'string') {
+    res.status(400).json({ error: 'Query parameter "q" is required' });
+    return;
   }
-}
+
+  // Check if pagination was requested
+  const hasPaginationParams = page !== undefined || limit !== undefined;
+
+  if (hasPaginationParams) {
+    // Validate and normalize pagination parameters
+    const pagination = validatePaginationParams(
+      page as string | undefined,
+      limit as string | undefined
+    );
+
+    // Get paginated results and total count
+    const results = dbSearchNodes(query, filters, pagination);
+    const total = countSearchResults(query, filters);
+
+    // Return paginated response
+    res.json(buildPaginatedResponse(results, total, pagination.page, pagination.limit));
+  } else {
+    // Backward compatible: return results without pagination wrapper
+    const results = dbSearchNodes(query, filters);
+    res.json(results);
+  }
+});
 
 /**
  * GET /api/search/advanced
@@ -143,36 +140,28 @@ export async function search(req: Request, res: Response): Promise<void> {
  * Example:
  * GET /api/search/advanced?q=machine+learning&segment=A&contentType=T&page=1&limit=20
  */
-export async function searchAdvanced(req: Request, res: Response): Promise<void> {
-  try {
-    const { q: query, page, limit } = req.query;
+export const searchAdvanced = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { q: query, page, limit } = req.query;
 
-    if (!query || typeof query !== 'string') {
-      res.status(400).json({ error: 'Query parameter "q" is required' });
-      return;
-    }
-
-    // Parse filters from query parameters
-    const filters = parseSearchFilters(req.query);
-
-    // Validate and normalize pagination parameters
-    const pagination = validatePaginationParams(
-      page as string | undefined,
-      limit as string | undefined
-    );
-
-    // Execute advanced search with filters and facets
-    const response = searchNodesAdvanced(query, filters, pagination);
-
-    res.json(response);
-  } catch (error) {
-    const err = error as Error;
-    res.status(500).json({
-      error: err.message,
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-    });
+  if (!query || typeof query !== 'string') {
+    res.status(400).json({ error: 'Query parameter "q" is required' });
+    return;
   }
-}
+
+  // Parse filters from query parameters
+  const filters = parseSearchFilters(req.query);
+
+  // Validate and normalize pagination parameters
+  const pagination = validatePaginationParams(
+    page as string | undefined,
+    limit as string | undefined
+  );
+
+  // Execute advanced search with filters and facets
+  const response = searchNodesAdvanced(query, filters, pagination);
+
+  res.json(response);
+});
 
 /**
  * POST /api/search/filtered
@@ -220,57 +209,45 @@ export async function searchAdvanced(req: Request, res: Response): Promise<void>
  *   "limit": 20
  * }
  */
-export async function searchFiltered(req: Request, res: Response): Promise<void> {
-  try {
-    const { query, filters, page, limit } = req.body;
+export const searchFiltered = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { query, filters, page, limit } = req.body;
 
-    if (!query || typeof query !== 'string') {
-      res.status(400).json({ error: 'Query is required' });
-      return;
-    }
-
-    // Validate and normalize pagination parameters
-    const pagination = validatePaginationParams(
-      page?.toString(),
-      limit?.toString()
-    );
-
-    // Execute advanced search with filters and facets
-    const response = searchNodesAdvanced(query, filters, pagination);
-
-    res.json(response);
-  } catch (error) {
-    const err = error as Error;
-    res.status(500).json({
-      error: err.message,
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-    });
+  if (!query || typeof query !== 'string') {
+    res.status(400).json({ error: 'Query is required' });
+    return;
   }
-}
+
+  // Validate and normalize pagination parameters
+  const pagination = validatePaginationParams(
+    page?.toString(),
+    limit?.toString()
+  );
+
+  // Execute advanced search with filters and facets
+  const response = searchNodesAdvanced(query, filters, pagination);
+
+  res.json(response);
+});
 
 /**
  * POST /api/search/parse-nl (feature #9)
  * Converts a free-text query into a structured filter payload via LLM.
  */
-export async function parseNaturalLanguage(req: Request, res: Response): Promise<void> {
-  try {
-    const { query } = req.body as { query?: string };
-    if (typeof query !== 'string') {
-      res.status(400).json({ error: 'query must be a string' });
-      return;
-    }
-
-    const { parseNLQuery } = await import('../services/nl_filter.js');
-    const keystore = await import('../services/keystore.js');
-    const apiKey = await keystore.getApiKey('openai');
-    if (!apiKey) {
-      res.status(503).json({ error: 'OpenAI API key not configured' });
-      return;
-    }
-
-    const result = await parseNLQuery(query, apiKey);
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+export const parseNaturalLanguage = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { query } = req.body as { query?: string };
+  if (typeof query !== 'string') {
+    res.status(400).json({ error: 'query must be a string' });
+    return;
   }
-}
+
+  const { parseNLQuery } = await import('../services/nl_filter.js');
+  const keystore = await import('../services/keystore.js');
+  const apiKey = await keystore.getApiKey('openai');
+  if (!apiKey) {
+    res.status(503).json({ error: 'OpenAI API key not configured' });
+    return;
+  }
+
+  const result = await parseNLQuery(query, apiKey);
+  res.json(result);
+});

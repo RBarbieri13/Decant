@@ -17,6 +17,7 @@ import { replaceTaxonomy } from '../database/taxonomy_ops.js';
 import * as keystore from '../services/keystore.js';
 import { log } from '../logger/index.js';
 import * as cache from '../cache/index.js';
+import { asyncHandler } from '../middleware/errorHandler.js';
 
 // ============================================================
 // In-memory progress tracking (single-process server)
@@ -58,271 +59,251 @@ export function getReclassifyProgress(_req: Request, res: Response): void {
  * for all nodes, then rebuilds the hierarchy from the result.
  *
  * Phases (tracked via progress.completed / progress.total=3):
- *   1. Classify — DynamicClassifier.classifyAll() generates taxonomy + assignments
- *   2. Apply    — applyDynamicAssignments() + replaceTaxonomy() persist to DB
- *   3. Build    — engine.buildFromClassification() rebuilds hierarchy_branches
+ *   1. Classify -- DynamicClassifier.classifyAll() generates taxonomy + assignments
+ *   2. Apply    -- applyDynamicAssignments() + replaceTaxonomy() persist to DB
+ *   3. Build    -- engine.buildFromClassification() rebuilds hierarchy_branches
+ *
+ * NOTE: This handler responds immediately then runs background work.
+ * The outer try-catch protects setup; the background job has its own error handling.
  */
-export async function reclassifyAll(_req: Request, res: Response): Promise<void> {
+export const reclassifyAll = asyncHandler(async (_req: Request, res: Response): Promise<void> => {
   if (progress.isRunning) {
     res.status(409).json({ error: 'Reclassification already in progress', progress: { ...progress } });
     return;
   }
 
-  try {
-    if (!hasHierarchyEngine()) {
-      res.status(503).json({ error: 'Hierarchy engine not initialized' });
-      return;
-    }
-
-    const apiKey = await keystore.getApiKey('openai');
-    if (!apiKey) {
-      res.status(400).json({ error: 'OpenAI API key not configured' });
-      return;
-    }
-
-    const nodes = getAllNodes() as Array<Record<string, unknown>>;
-
-    // Initialize progress — 3 phases: classify, apply, build
-    progress.isRunning = true;
-    progress.total = 3;
-    progress.completed = 0;
-    progress.failed = 0;
-    progress.phase = 'Analyzing all content...';
-    progress.startedAt = new Date().toISOString();
-    progress.completedAt = null;
-    progress.lastError = null;
-
-    // Respond immediately so the client can start polling
-    res.json({
-      message: `Classifying ${nodes.length} nodes holistically — poll /api/nodes/reclassify/progress for status`,
-      total: nodes.length,
-    });
-
-    // Run classification async (after response is sent)
-    setImmediate(async () => {
-      try {
-        log.info(`Starting holistic reclassification of ${nodes.length} nodes`, { module: 'reclassify' });
-
-        const classifier = new DynamicClassifier(apiKey, {
-          taxonomyModel: 'gpt-4o',
-          assignmentModel: 'gpt-4o-mini',
-        });
-        const engine = getHierarchyEngine();
-
-        // Build condensed representations for the classifier
-        const condensedNodes: CondensedNode[] = nodes.map(node => ({
-          id: node.id as string,
-          title: (node.title as string) || '',
-          domain: (node.source_domain as string) || '',
-          quickPhrase: (node.phrase_description as string) || undefined,
-          shortDescription: (node.short_description as string) || undefined,
-          keyConcepts: (node.key_concepts as string[]) || undefined,
-        }));
-
-        // Phase 1: Classify all nodes in one holistic LLM call
-        progress.phase = `Classifying ${condensedNodes.length} items with AI...`;
-        log.info('Phase 1/3: Running holistic classification', { module: 'reclassify', nodeCount: condensedNodes.length });
-        const { taxonomy, assignments, tokenUsage } = await classifier.classifyAll(condensedNodes);
-        progress.completed = 1;
-        log.info('Phase 1/3 complete: classification done', {
-          module: 'reclassify',
-          segments: taxonomy.segments.length,
-          categories: taxonomy.categories.length,
-          assignments: assignments.length,
-          totalTokens: tokenUsage.totalTokens,
-        });
-
-        // Phase 2: Persist taxonomy and node assignments to DB
-        progress.phase = `Saving ${taxonomy.segments.length} categories & ${assignments.length} assignments...`;
-        log.info('Phase 2/3: Applying assignments and saving taxonomy', { module: 'reclassify' });
-        replaceTaxonomy(taxonomy);
-        applyDynamicAssignments(assignments);
-        progress.completed = 2;
-        log.info('Phase 2/3 complete: DB updated', { module: 'reclassify' });
-
-        // Phase 3: Rebuild hierarchy branches from taxonomy + assignments
-        progress.phase = 'Building hierarchy tree...';
-        log.info('Phase 3/3: Building hierarchy from classification', { module: 'reclassify' });
-        await engine.buildFromClassification(taxonomy, assignments);
-        cache.invalidate('tree:*');
-        progress.completed = 3;
-        progress.phase = 'Complete';
-
-        progress.isRunning = false;
-        progress.completedAt = new Date().toISOString();
-        log.info('Reclassification complete', {
-          module: 'reclassify',
-          segments: taxonomy.segments.length,
-          categories: taxonomy.categories.length,
-          assignments: assignments.length,
-          totalTokens: tokenUsage.totalTokens,
-        });
-      } catch (err) {
-        progress.isRunning = false;
-        progress.failed = 1;
-        progress.completedAt = new Date().toISOString();
-        progress.lastError = err instanceof Error ? err.message : String(err);
-        log.error('Reclassification background job failed', { error: progress.lastError, module: 'reclassify' });
-      }
-    });
-
-  } catch (error) {
-    progress.isRunning = false;
-    log.error('Reclassification setup failed', {
-      error: error instanceof Error ? error.message : String(error),
-      module: 'reclassify',
-    });
-    // Response already sent in the happy path, so only send error if we haven't responded yet
-    if (!res.headersSent) {
-      res.status(500).json({ error: (error as Error).message });
-    }
+  if (!hasHierarchyEngine()) {
+    res.status(503).json({ error: 'Hierarchy engine not initialized' });
+    return;
   }
-}
+
+  const apiKey = await keystore.getApiKey('openai');
+  if (!apiKey) {
+    res.status(400).json({ error: 'OpenAI API key not configured' });
+    return;
+  }
+
+  const nodes = getAllNodes() as Array<Record<string, unknown>>;
+
+  // Initialize progress -- 3 phases: classify, apply, build
+  progress.isRunning = true;
+  progress.total = 3;
+  progress.completed = 0;
+  progress.failed = 0;
+  progress.phase = 'Analyzing all content...';
+  progress.startedAt = new Date().toISOString();
+  progress.completedAt = null;
+  progress.lastError = null;
+
+  // Respond immediately so the client can start polling
+  res.json({
+    message: `Classifying ${nodes.length} nodes holistically — poll /api/nodes/reclassify/progress for status`,
+    total: nodes.length,
+  });
+
+  // Run classification async (after response is sent)
+  setImmediate(async () => {
+    try {
+      log.info(`Starting holistic reclassification of ${nodes.length} nodes`, { module: 'reclassify' });
+
+      const classifier = new DynamicClassifier(apiKey, {
+        taxonomyModel: 'gpt-4o',
+        assignmentModel: 'gpt-4o-mini',
+      });
+      const engine = getHierarchyEngine();
+
+      // Build condensed representations for the classifier
+      const condensedNodes: CondensedNode[] = nodes.map(node => ({
+        id: node.id as string,
+        title: (node.title as string) || '',
+        domain: (node.source_domain as string) || '',
+        quickPhrase: (node.phrase_description as string) || undefined,
+        shortDescription: (node.short_description as string) || undefined,
+        keyConcepts: (node.key_concepts as string[]) || undefined,
+      }));
+
+      // Phase 1: Classify all nodes in one holistic LLM call
+      progress.phase = `Classifying ${condensedNodes.length} items with AI...`;
+      log.info('Phase 1/3: Running holistic classification', { module: 'reclassify', nodeCount: condensedNodes.length });
+      const { taxonomy, assignments, tokenUsage } = await classifier.classifyAll(condensedNodes);
+      progress.completed = 1;
+      log.info('Phase 1/3 complete: classification done', {
+        module: 'reclassify',
+        segments: taxonomy.segments.length,
+        categories: taxonomy.categories.length,
+        assignments: assignments.length,
+        totalTokens: tokenUsage.totalTokens,
+      });
+
+      // Phase 2: Persist taxonomy and node assignments to DB
+      progress.phase = `Saving ${taxonomy.segments.length} categories & ${assignments.length} assignments...`;
+      log.info('Phase 2/3: Applying assignments and saving taxonomy', { module: 'reclassify' });
+      replaceTaxonomy(taxonomy);
+      applyDynamicAssignments(assignments);
+      progress.completed = 2;
+      log.info('Phase 2/3 complete: DB updated', { module: 'reclassify' });
+
+      // Phase 3: Rebuild hierarchy branches from taxonomy + assignments
+      progress.phase = 'Building hierarchy tree...';
+      log.info('Phase 3/3: Building hierarchy from classification', { module: 'reclassify' });
+      await engine.buildFromClassification(taxonomy, assignments);
+      cache.invalidate('tree:*');
+      progress.completed = 3;
+      progress.phase = 'Complete';
+
+      progress.isRunning = false;
+      progress.completedAt = new Date().toISOString();
+      log.info('Reclassification complete', {
+        module: 'reclassify',
+        segments: taxonomy.segments.length,
+        categories: taxonomy.categories.length,
+        assignments: assignments.length,
+        totalTokens: tokenUsage.totalTokens,
+      });
+    } catch (err) {
+      progress.isRunning = false;
+      progress.failed = 1;
+      progress.completedAt = new Date().toISOString();
+      progress.lastError = err instanceof Error ? err.message : String(err);
+      log.error('Reclassification background job failed', { error: progress.lastError, module: 'reclassify' });
+    }
+  });
+});
 
 /**
  * POST /api/nodes/:id/reclassify
  * Re-profile a single node and re-place it in the hierarchy.
  * Also persists the new profile data back to the nodes table.
  */
-export async function reclassifyNode(req: Request, res: Response): Promise<void> {
-  try {
-    const { id } = req.params;
-    const node = readNode(id);
-    if (!node) {
-      res.status(404).json({ error: 'Node not found' });
-      return;
-    }
-
-    const apiKey = await keystore.getApiKey('openai');
-    if (!apiKey) {
-      res.status(400).json({ error: 'OpenAI API key not configured' });
-      return;
-    }
-
-    if (!hasHierarchyEngine()) {
-      res.status(503).json({ error: 'Hierarchy engine not initialized' });
-      return;
-    }
-
-    // Re-profile the node
-    const profiler = new SemanticProfiler(apiKey, { model: 'gpt-4o' });
-    const input: SemanticProfileInput = {
-      url: (node.url as string) || '',
-      title: (node.title as string) || '',
-      domain: (node.source_domain as string) || undefined,
-      description: (node.short_description as string) || (node.phrase_description as string) || undefined,
-      content: (node.ai_summary as string) || undefined,
-    };
-
-    const result = await profiler.profile(input);
-    const profile = result.profile;
-
-    // Persist profile data to the nodes table
-    updateNodeWithSemanticProfile(id, profile);
-
-    // Also persist whySaved + classification reasoning (features #3, #14)
-    if (profile.whySaved) {
-      updateWhySaved(id, profile.whySaved, true, new Date().toISOString());
-    }
-    if (profile.classificationReasoning) {
-      updateClassificationReasoning(id, {
-        primaryDomainReason: profile.classificationReasoning.primaryDomainReason || '',
-        resourceTypeReason: profile.classificationReasoning.resourceTypeReason || '',
-        confidence: profile.confidence,
-      });
-    }
-
-    // Update faceted metadata
-    registerMetadataCodesFromProfile(id, profile);
-
-    // Re-place in hierarchy
-    const engine = getHierarchyEngine();
-    const placement = engine.placeNode(id, profile);
-
-    cache.invalidate('tree:*');
-
-    const updatedNode = readNode(id);
-
-    res.json({
-      message: 'Node re-profiled and re-placed',
-      profile: {
-        title: profile.title,
-        company: profile.company,
-        primaryFunction: profile.primaryFunction,
-        primaryDomain: profile.primaryDomain,
-        resourceType: profile.resourceType,
-        confidence: profile.confidence,
-      },
-      placement: {
-        branchId: placement.branchId,
-        branchLabel: placement.branchLabel,
-        branchDepth: placement.branchDepth,
-        path: placement.path,
-      },
-      node: updatedNode,
-    });
-  } catch (error) {
-    res.status(500).json({ error: (error as Error).message });
+export const reclassifyNode = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const node = readNode(id);
+  if (!node) {
+    res.status(404).json({ error: 'Node not found' });
+    return;
   }
-}
+
+  const apiKey = await keystore.getApiKey('openai');
+  if (!apiKey) {
+    res.status(400).json({ error: 'OpenAI API key not configured' });
+    return;
+  }
+
+  if (!hasHierarchyEngine()) {
+    res.status(503).json({ error: 'Hierarchy engine not initialized' });
+    return;
+  }
+
+  // Re-profile the node
+  const profiler = new SemanticProfiler(apiKey, { model: 'gpt-4o' });
+  const input: SemanticProfileInput = {
+    url: (node.url as string) || '',
+    title: (node.title as string) || '',
+    domain: (node.source_domain as string) || undefined,
+    description: (node.short_description as string) || (node.phrase_description as string) || undefined,
+    content: (node.ai_summary as string) || undefined,
+  };
+
+  const result = await profiler.profile(input);
+  const profile = result.profile;
+
+  // Persist profile data to the nodes table
+  updateNodeWithSemanticProfile(id, profile);
+
+  // Also persist whySaved + classification reasoning (features #3, #14)
+  if (profile.whySaved) {
+    updateWhySaved(id, profile.whySaved, true, new Date().toISOString());
+  }
+  if (profile.classificationReasoning) {
+    updateClassificationReasoning(id, {
+      primaryDomainReason: profile.classificationReasoning.primaryDomainReason || '',
+      resourceTypeReason: profile.classificationReasoning.resourceTypeReason || '',
+      confidence: profile.confidence,
+    });
+  }
+
+  // Update faceted metadata
+  registerMetadataCodesFromProfile(id, profile);
+
+  // Re-place in hierarchy
+  const engine = getHierarchyEngine();
+  const placement = engine.placeNode(id, profile);
+
+  cache.invalidate('tree:*');
+
+  const updatedNode = readNode(id);
+
+  res.json({
+    message: 'Node re-profiled and re-placed',
+    profile: {
+      title: profile.title,
+      company: profile.company,
+      primaryFunction: profile.primaryFunction,
+      primaryDomain: profile.primaryDomain,
+      resourceType: profile.resourceType,
+      confidence: profile.confidence,
+    },
+    placement: {
+      branchId: placement.branchId,
+      branchLabel: placement.branchLabel,
+      branchDepth: placement.branchDepth,
+      path: placement.path,
+    },
+    node: updatedNode,
+  });
+});
 
 /**
  * POST /api/nodes/:id/regenerate-title
  *
  * Title-only regeneration. Re-runs the semantic profiler but only
- * persists the new title and classification reasoning — hierarchy
+ * persists the new title and classification reasoning -- hierarchy
  * placement, category, function tags, and everything else stay put.
  * Used by the refresh button next to the title in PropertiesPanel
  * (feature #4).
  */
-export async function regenerateNodeTitle(req: Request, res: Response): Promise<void> {
-  try {
-    const { id } = req.params;
-    const node = readNode(id);
-    if (!node) {
-      res.status(404).json({ error: 'Node not found' });
-      return;
-    }
-
-    const apiKey = await keystore.getApiKey('openai');
-    if (!apiKey) {
-      res.status(400).json({ error: 'OpenAI API key not configured' });
-      return;
-    }
-
-    const profiler = new SemanticProfiler(apiKey, { model: 'gpt-4o' });
-    const input: SemanticProfileInput = {
-      url: (node.url as string) || '',
-      title: (node.title as string) || '',
-      domain: (node.source_domain as string) || undefined,
-      description: (node.short_description as string) || (node.phrase_description as string) || undefined,
-      content: (node.ai_summary as string) || undefined,
-    };
-
-    const result = await profiler.profile(input);
-    const profile = result.profile;
-    const oldTitle = (node.title as string) || '';
-
-    updateTitleOnly(id, profile.title.slice(0, 500));
-    if (profile.classificationReasoning) {
-      updateClassificationReasoning(id, {
-        primaryDomainReason: profile.classificationReasoning.primaryDomainReason || '',
-        resourceTypeReason: profile.classificationReasoning.resourceTypeReason || '',
-        confidence: profile.confidence,
-      });
-    }
-
-    cache.invalidate('tree:*');
-
-    res.json({
-      nodeId: id,
-      oldTitle,
-      newTitle: profile.title,
-      reasoning: profile.classificationReasoning ?? null,
-    });
-  } catch (error) {
-    log.error('regenerateNodeTitle failed', { error: (error as Error).message });
-    res.status(500).json({ error: (error as Error).message });
+export const regenerateNodeTitle = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const node = readNode(id);
+  if (!node) {
+    res.status(404).json({ error: 'Node not found' });
+    return;
   }
-}
 
+  const apiKey = await keystore.getApiKey('openai');
+  if (!apiKey) {
+    res.status(400).json({ error: 'OpenAI API key not configured' });
+    return;
+  }
+
+  const profiler = new SemanticProfiler(apiKey, { model: 'gpt-4o' });
+  const input: SemanticProfileInput = {
+    url: (node.url as string) || '',
+    title: (node.title as string) || '',
+    domain: (node.source_domain as string) || undefined,
+    description: (node.short_description as string) || (node.phrase_description as string) || undefined,
+    content: (node.ai_summary as string) || undefined,
+  };
+
+  const result = await profiler.profile(input);
+  const profile = result.profile;
+  const oldTitle = (node.title as string) || '';
+
+  updateTitleOnly(id, profile.title.slice(0, 500));
+  if (profile.classificationReasoning) {
+    updateClassificationReasoning(id, {
+      primaryDomainReason: profile.classificationReasoning.primaryDomainReason || '',
+      resourceTypeReason: profile.classificationReasoning.resourceTypeReason || '',
+      confidence: profile.confidence,
+    });
+  }
+
+  cache.invalidate('tree:*');
+
+  res.json({
+    nodeId: id,
+    oldTitle,
+    newTitle: profile.title,
+    reasoning: profile.classificationReasoning ?? null,
+  });
+});

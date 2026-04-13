@@ -8,7 +8,7 @@ import { runPendingMigrations } from '../database/migrations/runner.js';
 import {
   DROP_FTS_TRIGGERS_SQL,
   CREATE_FTS_TRIGGERS_SQL,
-} from '../database/migrations/019_add_fts5_sync_triggers.js';
+} from '../database/migrations/025_fix_fts5_sync.js';
 
 // Store the test database instance
 let testDb: Database.Database | null = null;
