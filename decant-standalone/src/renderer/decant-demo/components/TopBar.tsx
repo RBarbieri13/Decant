@@ -23,6 +23,7 @@ interface TopBarProps {
   userName?: string;
   showStarredOnly?: boolean;
   onToggleStarredFilter?: () => void;
+  onToggleUiMode?: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = React.memo(({
@@ -43,6 +44,7 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
   onUserClick,
   showStarredOnly,
   onToggleStarredFilter,
+  onToggleUiMode,
 }) => {
   return (
     <header className="decant-topbar decant-topbar--light">
@@ -181,6 +183,12 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
         <button className="decant-topbar__icon-btn" onClick={onSettingsClick} data-tooltip="Settings">
           <i className="bx bx-cog" />
         </button>
+
+        {onToggleUiMode && (
+          <button className="decant-topbar__icon-btn" onClick={onToggleUiMode} data-tooltip="Switch UI theme">
+            <i className="bx bx-palette" />
+          </button>
+        )}
 
         <button className="decant-topbar__user" onClick={onUserClick} data-tooltip="Account">
           <div className="decant-topbar__user-avatar decant-topbar__user-avatar--placeholder">

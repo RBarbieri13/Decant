@@ -8,6 +8,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import '../styles/app.css';
 import '../styles/theme-d-brutalism.css';
+import '../styles/brutalist-v2.css';
 import { BatchImportModal } from '../components/import/BatchImportModal';
 import { QuickAddModal } from '../components/import/QuickAddModal';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
@@ -41,6 +42,9 @@ import { CollectionsPanel } from '../components/collections/CollectionsPanel';
 import { UserTagsPanel } from '../components/user-tags/UserTagsPanel';
 import { BottomBarSlot } from '../components/BottomBarSlot';
 import { StatusBar } from './components/StatusBar';
+import { BrutalistShell } from './brutalist-v2/BrutalistShell';
+
+type UiMode = 'default' | 'brutalist-v2';
 
 // ============================================================================
 // HOOKS
@@ -145,6 +149,22 @@ function mapNodeToTableRow(
 
 export default function DecantDemo() {
   const { state: appState, actions: appActions } = useApp();
+
+  // UI mode toggle — persisted in localStorage
+  const [uiMode, setUiMode] = useState<UiMode>(() => {
+    try {
+      const saved = localStorage.getItem('decant-ui-mode');
+      if (saved === 'brutalist-v2') return 'brutalist-v2';
+    } catch { /* ignore */ }
+    return 'default';
+  });
+  const toggleUiMode = useCallback(() => {
+    setUiMode(prev => {
+      const next = prev === 'default' ? 'brutalist-v2' : 'default';
+      try { localStorage.setItem('decant-ui-mode', next); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
 
   // State
   const [searchQuery, setSearchQuery] = useState('');
@@ -836,96 +856,8 @@ export default function DecantDemo() {
 
   // ---- Render ----
 
-  return (
-    <div className="decant-app">
-      <TopBar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        breadcrumbs={breadcrumbs}
-        onBreadcrumbClick={handleBreadcrumbClick}
-        onClearFilter={handleClearFilter}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        onBatchImportClick={() => setIsBatchImportOpen(true)}
-        onImessageImportClick={handleImessageImport}
-        showImessageButton={imessageAvailable}
-        onQuickAddClick={() => setIsQuickAddOpen(true)}
-        onRefreshAllClick={handleRefreshAll}
-        onReclassifyClick={handleReclassifyAll}
-        isReclassifying={isReclassifying}
-        reclassifyProgress={reclassifyProgress}
-        onSettingsClick={() => appActions.openSettingsDialog()}
-        onUserClick={() => {}}
-        showStarredOnly={showStarredOnly}
-        onToggleStarredFilter={() => setShowStarredOnly(prev => !prev)}
-      />
-
-      <div className="decant-app__body">
-        <Sidebar
-          data={treeData}
-          selectedId={selectedTreeId}
-          onSelect={handleTreeSelect}
-          isCollapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed(prev => !prev)}
-          totalCount={tableData.length}
-          width={sidebarWidth}
-          onResizeStart={handleSidebarResizeStart}
-          itemCounts={sidebarItemCounts}
-          onDropItem={handleDropItem}
-        />
-
-        <main className="decant-main">
-          {viewMode === 'dashboard' ? (
-            <Dashboard
-              data={tableData}
-              onNavigateSegment={handleSegmentBadgeClick}
-              onNavigateCategory={handleCategoryClick}
-              onToggleStarred={() => setShowStarredOnly(prev => !prev)}
-            />
-          ) : (
-            <DataTable
-              data={filteredTableData}
-              selectedId={selectedRowId}
-              onSelect={handleRowSelect}
-              onToggleStar={handleToggleStar}
-              categoryName={currentCategoryTitle}
-              totalCount={tableData.length}
-              groupedData={groupedTableData}
-              segmentCode={hierarchyFilter.segmentCode}
-              onTagClick={handleTagClick}
-              onSegmentClick={handleSegmentBadgeClick}
-              onCategoryClick={handleCategoryClick}
-              pendingEnrichmentIds={pendingEnrichmentIds}
-              columnFilters={columnFilters}
-              onColumnFilterChange={setColumnFilters}
-              onCellEdit={handleCellEdit}
-              showStarredOnly={showStarredOnly}
-              onToggleStarredFilter={() => setShowStarredOnly(prev => !prev)}
-              onBatchDelete={handleBatchDelete}
-              onBatchReclassify={handleBatchReclassify}
-              onBatchExport={handleBatchExport}
-              allUserTags={allUserTags}
-              onUserTagChange={handleUserTagChange}
-              onManageUserTags={() => setIsTagManagerOpen(true)}
-            />
-          )}
-        </main>
-
-        <PropertiesPanel
-          item={selectedItem}
-          onClose={handleClosePanel}
-          onToggle={handleTogglePanel}
-          isVisible={rightPanelVisible}
-        />
-      </div>
-
-      <StatusBar
-        nodeCount={tableData.length}
-        filteredCount={filteredTableData.length}
-        pendingCount={pendingEnrichmentIds.size}
-      />
-
-      {/* Full-width bottom bar — each panel is an independently slidable tab */}
+  const sharedModals = (
+    <>
       <div className="decant-app__bottom-bar">
         <BottomBarSlot storageKey="decant-bottombar-collections" defaultLeft={16}>
           <CollectionsPanel />
@@ -995,6 +927,137 @@ export default function DecantDemo() {
         onToggleStarred={() => setShowStarredOnly(prev => !prev)}
         onShowAll={handleClearFilter}
       />
+    </>
+  );
+
+  if (uiMode === 'brutalist-v2') {
+    return (
+      <div className="bv2">
+        <BrutalistShell
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onQuickAddClick={() => setIsQuickAddOpen(true)}
+          onRefreshAllClick={handleRefreshAll}
+          onReclassifyClick={handleReclassifyAll}
+          isReclassifying={isReclassifying}
+          reclassifyProgress={reclassifyProgress}
+          onSettingsClick={() => appActions.openSettingsDialog()}
+          onToggleUiMode={toggleUiMode}
+          treeData={treeData}
+          selectedTreeId={selectedTreeId}
+          onTreeNodeSelect={handleTreeSelect}
+          itemCounts={sidebarItemCounts}
+          tableData={filteredTableData}
+          groupedData={groupedTableData}
+          selectedRowId={selectedRowId}
+          onRowSelect={handleRowSelect}
+          onToggleStar={handleToggleStar}
+          onCellEdit={handleCellEdit}
+          columnFilters={columnFilters}
+          onColumnFilterChange={setColumnFilters}
+          pendingEnrichmentIds={pendingEnrichmentIds}
+          selectedItem={selectedItem}
+          onDetailClose={handleClosePanel}
+          nodeCount={tableData.length}
+          filteredCount={filteredTableData.length}
+          pendingCount={pendingEnrichmentIds.size}
+        />
+        {sharedModals}
+      </div>
+    );
+  }
+
+  return (
+    <div className="decant-app">
+      <TopBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        breadcrumbs={breadcrumbs}
+        onBreadcrumbClick={handleBreadcrumbClick}
+        onClearFilter={handleClearFilter}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        onBatchImportClick={() => setIsBatchImportOpen(true)}
+        onImessageImportClick={handleImessageImport}
+        showImessageButton={imessageAvailable}
+        onQuickAddClick={() => setIsQuickAddOpen(true)}
+        onRefreshAllClick={handleRefreshAll}
+        onReclassifyClick={handleReclassifyAll}
+        isReclassifying={isReclassifying}
+        reclassifyProgress={reclassifyProgress}
+        onSettingsClick={() => appActions.openSettingsDialog()}
+        onUserClick={() => {}}
+        showStarredOnly={showStarredOnly}
+        onToggleStarredFilter={() => setShowStarredOnly(prev => !prev)}
+        onToggleUiMode={toggleUiMode}
+      />
+
+      <div className="decant-app__body">
+        <Sidebar
+          data={treeData}
+          selectedId={selectedTreeId}
+          onSelect={handleTreeSelect}
+          isCollapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(prev => !prev)}
+          totalCount={tableData.length}
+          width={sidebarWidth}
+          onResizeStart={handleSidebarResizeStart}
+          itemCounts={sidebarItemCounts}
+          onDropItem={handleDropItem}
+        />
+
+        <main className="decant-main">
+          {viewMode === 'dashboard' ? (
+            <Dashboard
+              data={tableData}
+              onNavigateSegment={handleSegmentBadgeClick}
+              onNavigateCategory={handleCategoryClick}
+              onToggleStarred={() => setShowStarredOnly(prev => !prev)}
+            />
+          ) : (
+            <DataTable
+              data={filteredTableData}
+              selectedId={selectedRowId}
+              onSelect={handleRowSelect}
+              onToggleStar={handleToggleStar}
+              categoryName={currentCategoryTitle}
+              totalCount={tableData.length}
+              groupedData={groupedTableData}
+              segmentCode={hierarchyFilter.segmentCode}
+              onTagClick={handleTagClick}
+              onSegmentClick={handleSegmentBadgeClick}
+              onCategoryClick={handleCategoryClick}
+              pendingEnrichmentIds={pendingEnrichmentIds}
+              columnFilters={columnFilters}
+              onColumnFilterChange={setColumnFilters}
+              onCellEdit={handleCellEdit}
+              showStarredOnly={showStarredOnly}
+              onToggleStarredFilter={() => setShowStarredOnly(prev => !prev)}
+              onBatchDelete={handleBatchDelete}
+              onBatchReclassify={handleBatchReclassify}
+              onBatchExport={handleBatchExport}
+              allUserTags={allUserTags}
+              onUserTagChange={handleUserTagChange}
+              onManageUserTags={() => setIsTagManagerOpen(true)}
+            />
+          )}
+        </main>
+
+        <PropertiesPanel
+          item={selectedItem}
+          onClose={handleClosePanel}
+          onToggle={handleTogglePanel}
+          isVisible={rightPanelVisible}
+        />
+      </div>
+
+      <StatusBar
+        nodeCount={tableData.length}
+        filteredCount={filteredTableData.length}
+        pendingCount={pendingEnrichmentIds.size}
+      />
+
+      {sharedModals}
     </div>
   );
 }
