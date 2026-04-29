@@ -24,6 +24,7 @@ import { UserTagManager } from './components/UserTagManager';
 import type {
   ViewMode, TagColor, RowColor, ColumnFilters,
   TableRow, TreeNodeData, BreadcrumbItem, HierarchyFilter,
+  DateAddedFilter,
 } from './types';
 import {
   DEFAULT_SEGMENT_LABELS, DEFAULT_CATEGORY_LABELS,
@@ -200,6 +201,7 @@ export default function DecantDemo() {
   const [imessageAvailable, setImessageAvailable] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [showStarredOnly, setShowStarredOnly] = useState(false);
+  const [dateAddedFilter, setDateAddedFilter] = useState<DateAddedFilter>('all');
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
   const [, setRefreshQueuedCount] = useState<number | null>(null);
   const [isReclassifying, setIsReclassifying] = useState(false);
@@ -486,8 +488,32 @@ export default function DecantDemo() {
     // Starred filter
     if (showStarredOnly) filtered = filtered.filter(item => item.starred);
 
+    // Date-added quick filter (Today, Last N days). All buckets are inclusive
+    // rolling windows ending "now"; "today" snaps to local midnight.
+    if (dateAddedFilter !== 'all') {
+      const now = Date.now();
+      let cutoff: number;
+      if (dateAddedFilter === 'today') {
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        cutoff = start.getTime();
+      } else {
+        const days =
+          dateAddedFilter === '2d' ? 2 :
+          dateAddedFilter === '3d' ? 3 :
+          dateAddedFilter === '7d' ? 7 :
+          dateAddedFilter === '30d' ? 30 : 0;
+        cutoff = now - days * 24 * 60 * 60 * 1000;
+      }
+      filtered = filtered.filter((item) => {
+        if (!item.date) return false;
+        const ts = Date.parse(item.date);
+        return !Number.isNaN(ts) && ts >= cutoff;
+      });
+    }
+
     return filtered;
-  }, [tableData, hierarchyFilter, debouncedColumnFilters, searchQuery, showStarredOnly]);
+  }, [tableData, hierarchyFilter, debouncedColumnFilters, searchQuery, showStarredOnly, dateAddedFilter]);
 
   const groupedTableData = useMemo(() => {
     if (hierarchyFilter.type === 'all') {
@@ -989,6 +1015,8 @@ export default function DecantDemo() {
         onUserClick={() => {}}
         showStarredOnly={showStarredOnly}
         onToggleStarredFilter={() => setShowStarredOnly(prev => !prev)}
+        dateAddedFilter={dateAddedFilter}
+        onDateAddedFilterChange={setDateAddedFilter}
         onToggleUiMode={toggleUiMode}
       />
 
