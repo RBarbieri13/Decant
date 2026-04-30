@@ -1,6 +1,9 @@
-import React from 'react';
-import type { BreadcrumbItem, ViewMode } from '../types';
+import React, { useEffect, useRef, useState } from 'react';
+import type { BreadcrumbItem, ViewMode, DateAddedFilter } from '../types';
+import { DATE_ADDED_FILTER_LABELS } from '../types';
 import decantLogoLight from '../../assets/decant-logo-light.png';
+
+const DATE_ADDED_FILTER_OPTIONS: DateAddedFilter[] = ['all', 'today', '2d', '3d', '7d', '30d'];
 
 interface TopBarProps {
   searchQuery: string;
@@ -23,6 +26,8 @@ interface TopBarProps {
   userName?: string;
   showStarredOnly?: boolean;
   onToggleStarredFilter?: () => void;
+  dateAddedFilter?: DateAddedFilter;
+  onDateAddedFilterChange?: (value: DateAddedFilter) => void;
   onToggleUiMode?: () => void;
 }
 
@@ -44,8 +49,34 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
   onUserClick,
   showStarredOnly,
   onToggleStarredFilter,
+  dateAddedFilter = 'all',
+  onDateAddedFilterChange,
   onToggleUiMode,
 }) => {
+  const [isDateMenuOpen, setIsDateMenuOpen] = useState(false);
+  const dateMenuRef = useRef<HTMLDivElement | null>(null);
+
+  // Close the date-filter menu when clicking outside or pressing Escape.
+  useEffect(() => {
+    if (!isDateMenuOpen) return;
+    const handlePointerDown = (e: MouseEvent) => {
+      if (dateMenuRef.current && !dateMenuRef.current.contains(e.target as Node)) {
+        setIsDateMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsDateMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isDateMenuOpen]);
+
+  const isDateFilterActive = dateAddedFilter !== 'all';
+
   return (
     <header className="decant-topbar decant-topbar--light">
       <div className="decant-topbar__left">
@@ -100,6 +131,87 @@ export const TopBar: React.FC<TopBarProps> = React.memo(({
       <div className="decant-topbar__spacer" />
 
       <div className="decant-topbar__actions">
+        {/* Date-added quick filter */}
+        <div
+          ref={dateMenuRef}
+          className="decant-topbar__date-filter"
+          style={{ position: 'relative' }}
+        >
+          <button
+            type="button"
+            className={`decant-topbar__icon-btn decant-topbar__date-filter-btn ${isDateFilterActive ? 'decant-topbar__date-filter-btn--active' : ''}`}
+            onClick={() => setIsDateMenuOpen((open) => !open)}
+            data-tooltip={
+              isDateFilterActive
+                ? `Date added: ${DATE_ADDED_FILTER_LABELS[dateAddedFilter]}`
+                : 'Filter by date added'
+            }
+            aria-haspopup="menu"
+            aria-expanded={isDateMenuOpen}
+            aria-label="Filter by date added"
+          >
+            <i className="bx bx-calendar" />
+          </button>
+          {isDateMenuOpen && (
+            <div
+              role="menu"
+              className="decant-topbar__date-filter-menu"
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 4px)',
+                right: 0,
+                minWidth: '160px',
+                background: '#fff',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                padding: '4px',
+                zIndex: 50,
+              }}
+            >
+              {DATE_ADDED_FILTER_OPTIONS.map((option) => {
+                const selected = option === dateAddedFilter;
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={selected}
+                    onClick={() => {
+                      onDateAddedFilterChange?.(option);
+                      setIsDateMenuOpen(false);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      padding: '6px 10px',
+                      background: selected ? '#eff6ff' : 'transparent',
+                      color: selected ? '#1d4ed8' : '#111827',
+                      fontWeight: selected ? 600 : 500,
+                      fontSize: '13px',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!selected) (e.currentTarget as HTMLButtonElement).style.background = '#f3f4f6';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!selected) (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
+                    }}
+                  >
+                    <span>{DATE_ADDED_FILTER_LABELS[option]}</span>
+                    {selected && <i className="bx bx-check" style={{ fontSize: '16px' }} />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         <button
           className={`decant-topbar__icon-btn decant-topbar__star-filter ${showStarredOnly ? 'decant-topbar__star-filter--active' : ''}`}
           onClick={onToggleStarredFilter}

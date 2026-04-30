@@ -7,6 +7,26 @@ export type SortKey = 'title' | 'segment' | 'type' | 'category' | 'subcategoryLa
 export type SortDir = 'asc' | 'desc';
 export type ColumnWidths = Record<string, number>;
 
+/**
+ * Quick "date added" filter buckets for the top-bar filter dropdown.
+ * - 'all'   — no date filter
+ * - 'today' — items added since 00:00 of the current local day
+ * - '2d'    — last 2 days (rolling 48h window)
+ * - '3d'    — last 3 days (rolling 72h window)
+ * - '7d'    — last 7 days
+ * - '30d'   — last 30 days
+ */
+export type DateAddedFilter = 'all' | 'today' | '2d' | '3d' | '7d' | '30d';
+
+export const DATE_ADDED_FILTER_LABELS: Record<DateAddedFilter, string> = {
+  all: 'All time',
+  today: 'Today',
+  '2d': 'Last 2 days',
+  '3d': 'Last 3 days',
+  '7d': 'Last 7 days',
+  '30d': 'Last 30 days',
+};
+
 export interface BreadcrumbItem {
   label: string;
   id?: string;
