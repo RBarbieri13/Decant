@@ -219,6 +219,7 @@ If you remembered nothing else: **cream paper + serif giant + lavender CTA + til
 ## 8. Responsive Behavior
 
 ### Breakpoints
+
 | Name | Width |
 |---|---|
 | Mobile Portrait | ≤ 479px |

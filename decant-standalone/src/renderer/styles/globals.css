@@ -48,9 +48,9 @@
   --space-xl: var(--space-8);
   --space-2xl: var(--space-12);
 
-  /* Legacy transitions */
-  --transition-fast: var(--transition-fast);
-  --transition-normal: var(--transition-normal);
+  /* Legacy transitions — concrete values, not self-referential */
+  --transition-fast: 100ms ease;
+  --transition-normal: 200ms ease;
 
   /* Legacy layout */
   --panel-spaces-width: 220px;
@@ -342,7 +342,11 @@ select {
    Badge — design.md: Figtree weight 600, 2px border
    ============================================================ */
 
-.gum-badge {
+.gum-badge,
+.gum-badge--pink,
+.gum-badge--yellow,
+.gum-badge--blue,
+.gum-badge--green {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
