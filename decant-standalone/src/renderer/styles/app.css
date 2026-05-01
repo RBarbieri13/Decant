@@ -64,11 +64,11 @@
 
   /* Zone backgrounds — visual distinction between layout panels */
   --decant-zone-sidebar-bg: #e8e4df;
-  --decant-zone-titlebar-bg: #2d5b47;
-  --decant-zone-titlebar-text: #f5f1ed;
-  --decant-zone-panel-bg: #f0ece7;
-  --decant-zone-table-bg: #ffffff;
-  --decant-zone-sidebar-border: #c4bfb8;
+  --decant-zone-titlebar-bg: var(--color-fathom);
+  --decant-zone-titlebar-text: var(--color-lumen);
+  --decant-zone-panel-bg: var(--color-lumen);
+  --decant-zone-table-bg: var(--color-lumen);
+  --decant-zone-sidebar-border: var(--border-lumen-dark);
   --decant-zone-panel-border: #d4cfca;
 }
 
@@ -121,12 +121,12 @@ textarea:focus-visible {
 
 /* Show scrollbars on hover */
 *:hover::-webkit-scrollbar-track {
-  background: #e8e4dc;
+  background: var(--border-lumen-dark);
 }
 
 *:hover::-webkit-scrollbar-thumb {
   background: var(--decant-brand-primary);
-  border-color: #e8e4dc;
+  border-color: var(--border-lumen-dark);
 }
 
 *:hover::-webkit-scrollbar-thumb:hover {
@@ -944,7 +944,7 @@ textarea:focus-visible {
   padding: 0 12px;
   gap: 6px;
   white-space: nowrap;
-  background: linear-gradient(135deg, #16a34a, #22c55e);
+  background: var(--color-fathom);
   border-radius: var(--radius-sm);
   margin: 4px 0;
   height: 32px;
@@ -982,7 +982,7 @@ textarea:focus-visible {
 
 .bottom-bar-slot .collections-panel__bar:hover,
 .bottom-bar-slot .utag-panel-header:hover {
-  background: linear-gradient(135deg, #356a53, #45896a);
+  background: var(--color-fathom);
 }
 
 /* Resize handle on right edge of each slot */
@@ -1123,7 +1123,7 @@ textarea:focus-visible {
 .decant-topbar__separator {
   width: 1px;
   height: 20px;
-  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.18) 30%, rgba(255, 255, 255, 0.18) 70%, transparent);
+  background: var(--vast-5);
   margin: 0 6px;
   flex-shrink: 0;
 }
@@ -1280,9 +1280,9 @@ textarea:focus-visible {
   align-items: center;
   gap: 5px;
   padding: 6px 14px;
-  border: 1px solid rgba(43, 174, 130, 0.35);
+  border: 2px solid rgba(43, 174, 130, 0.35);
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, rgba(43, 174, 130, 0.18), rgba(30, 140, 100, 0.12));
+  background: var(--vast-10);
   color: #5cedb8;
   font-size: 14px;
   font-weight: 600;
@@ -1294,14 +1294,14 @@ textarea:focus-visible {
 }
 
 .decant-topbar__reclassify-btn:hover {
-  background: linear-gradient(135deg, rgba(43, 174, 130, 0.28), rgba(30, 140, 100, 0.2));
+  background: var(--vast-15);
   border-color: rgba(43, 174, 130, 0.55);
   box-shadow: 0 0 14px rgba(43, 174, 130, 0.2);
 }
 
 .decant-topbar__reclassify-btn:active:not(:disabled) {
   transform: scale(0.96);
-  background: linear-gradient(135deg, rgba(43, 174, 130, 0.35), rgba(30, 140, 100, 0.28));
+  background: var(--vast-15);
 }
 
 .decant-topbar__reclassify-btn:disabled {
@@ -1339,7 +1339,7 @@ textarea:focus-visible {
 
 .decant-reclassify-progress__fill {
   height: 100%;
-  background: linear-gradient(90deg, #1b7a5a, #2bae82);
+  background: var(--color-fathom);
   border-radius: 2px;
   transition: width 0.6s ease;
   position: relative;
@@ -1598,7 +1598,7 @@ textarea:focus-visible {
   bottom: 12px;
   width: 2px;
   border-radius: 1px;
-  background: linear-gradient(to bottom, rgba(45, 91, 71, 0.30), rgba(45, 91, 71, 0.06));
+  background: var(--vast-10);
 }
 
 .decant-tree-node__row {
@@ -1729,7 +1729,7 @@ textarea:focus-visible {
   margin-bottom: 8px;
   padding-bottom: 10px;
   position: relative;
-  background: linear-gradient(180deg, rgba(0,0,0,0.01) 0%, transparent 100%);
+  background: transparent;
   transition: background-color 0.15s ease;
 }
 
@@ -2046,9 +2046,9 @@ textarea:focus-visible {
   align-items: center;
   gap: 0;
   padding: 6px 16px;
-  background: linear-gradient(to right, #f0ece4, #f5f1ed);
-  border-bottom: 1.5px solid #b8b2a8;
-  border-top: 1.5px solid #b8b2a8;
+  background: var(--color-lumen);
+  border-bottom: 2px solid var(--border-lumen-dark);
+  border-top: 2px solid var(--border-lumen-dark);
   user-select: none;
   position: sticky;
   top: 0;
@@ -2155,7 +2155,7 @@ textarea:focus-visible {
 .decant-table__group-count {
   font-size: 11px;
   font-weight: 700;
-  color: #334155;
+  color: var(--text-black-70);
   background: rgba(0, 0, 0, 0.10);
   padding: 2px 8px;
   border-radius: 10px;
@@ -2656,7 +2656,7 @@ textarea:focus-visible {
   object-fit: contain;
   background-color: #f0f4f8;
   padding: 2px;
-  border: 1px solid #e5e7eb;
+  border: 2px solid var(--border-lumen-dark);
 }
 
 .decant-title-favicon {
@@ -3152,7 +3152,7 @@ textarea:focus-visible {
 .decant-tag--overflow {
   background-color: var(--decant-gray-100);
   color: var(--decant-gray-600);
-  border: 1px solid var(--decant-gray-200);
+  border: 2px solid var(--border-lumen-dark);
   font-size: 10px;
   font-weight: 700;
   padding: 2px 6px;
@@ -3960,7 +3960,7 @@ textarea:focus-visible {
   background: transparent;
   font-size: 14px;
   font-weight: 500;
-  color: #57534e;
+  color: var(--text-black-70);
   cursor: pointer;
   position: relative;
   transition: all 0.15s ease;
@@ -4566,13 +4566,13 @@ textarea:focus-visible {
 .decant-tree-node__row--category {
   padding-top: 4px;
   padding-bottom: 4px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.03);
 }
 
 .decant-tree-node__row--category .decant-tree-node__label {
   font-size: 14px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   white-space: normal;
   line-height: 1.3;
 }
@@ -4670,7 +4670,7 @@ textarea:focus-visible {
 }
 
 .decant-tree-node__row--segment + .decant-tree-node__children {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.06);
   padding-bottom: 6px;
   margin-bottom: 2px;
 }
@@ -4682,12 +4682,12 @@ textarea:focus-visible {
   gap: 8px;
   padding: 3px 16px 3px 48px;
   background: rgba(0, 0, 0, 0.02);
-  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+  border-top: 2px dashed rgba(0, 0, 0, 0.08);
 }
 .decant-table__subcat-divider__label {
   font-size: 11px;
   font-weight: 600;
-  color: #78716c;
+  color: var(--text-black-50);
   letter-spacing: 0.3px;
   text-transform: capitalize;
 }
@@ -4773,9 +4773,9 @@ textarea:focus-visible {
 .command-palette__kbd {
   font-size: 11px;
   font-family: var(--decant-font-mono);
-  color: var(--decant-gray-400);
-  background: var(--decant-gray-100);
-  border: 1px solid var(--decant-gray-200);
+  color: var(--text-black-50);
+  background: var(--vast-5);
+  border: 2px solid var(--border-lumen-dark);
   border-radius: var(--radius-xs);
   padding: 2px 6px;
   flex-shrink: 0;
@@ -5283,7 +5283,7 @@ textarea:focus-visible {
   font-weight: 600;
   letter-spacing: 0.01em;
   max-width: 90px;
-  border-width: 1.5px;
+  border-width: 2px;
   text-shadow: 0 0 0.5px currentColor;
 }
 
@@ -5295,7 +5295,7 @@ textarea:focus-visible {
   width: 24px;
   height: 24px;
   border-radius: var(--radius-sm);
-  border: 1.5px dashed #9ca3af;
+  border: 2px dashed var(--text-black-50);
   background: transparent;
   color: var(--text-black-70);
   font-size: 16px;
@@ -5689,7 +5689,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 8px;
   padding: 8px 0;
-  border-bottom: 1px solid var(--decant-gray-100);
+  border-bottom: 2px solid var(--border-lumen-dark);
 }
 
 .decant-tag-manager__display-row:last-child {
