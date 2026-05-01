@@ -10,9 +10,9 @@
   min-width: 320px;
   max-width: 420px;
   padding: 16px;
-  background: var(--color-lumen);
-  border-radius: var(--radius-button);
-  box-shadow: var(--shadow-soft);
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--slate-shadow-lg, 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04));
   border-left: 4px solid;
   animation: toast-slide-in 0.3s ease-out;
   transition: all 0.3s ease;
@@ -48,19 +48,19 @@
 
 /* Toast types */
 .decant-toast--success {
-  border-left-color: var(--color-success-text);
+  border-left-color: var(--decant-green, #22c55e);
 }
 
 .decant-toast--error {
-  border-left-color: var(--color-error-text);
+  border-left-color: #ef4444;
 }
 
 .decant-toast--warning {
-  border-left-color: var(--color-warning-text);
+  border-left-color: #f59e0b;
 }
 
 .decant-toast--info {
-  border-left-color: var(--color-fathom);
+  border-left-color: #3b82f6;
 }
 
 /* Icon */
@@ -76,23 +76,23 @@
 }
 
 .decant-toast__icon--success {
-  color: var(--color-success-text);
-  background-color: var(--color-success-bg);
+  color: var(--decant-green, #22c55e);
+  background-color: #f0fdf4;
 }
 
 .decant-toast__icon--error {
-  color: var(--color-error-text);
-  background-color: var(--color-error-bg);
+  color: #ef4444;
+  background-color: #fef2f2;
 }
 
 .decant-toast__icon--warning {
-  color: var(--color-warning-text);
-  background-color: var(--color-warning-bg);
+  color: #f59e0b;
+  background-color: #fffbeb;
 }
 
 .decant-toast__icon--info {
-  color: var(--color-fathom);
-  background-color: var(--tag-teal-bg);
+  color: #3b82f6;
+  background-color: #eff6ff;
 }
 
 /* Content */
@@ -104,13 +104,13 @@
 .decant-toast__title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--decant-gray-900, #1c1917);
   margin-bottom: 2px;
 }
 
 .decant-toast__message {
   font-size: 13px;
-  color: var(--text-black-70);
+  color: var(--decant-gray-600, #57534e);
   line-height: 1.4;
   word-wrap: break-word;
 }
@@ -120,18 +120,18 @@
   flex-shrink: 0;
   padding: 6px 12px;
   background: transparent;
-  border: 2px solid var(--border-lumen-dark);
-  border-radius: var(--radius-button);
+  border: 1px solid var(--decant-gray-300, #d6d3d1);
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--decant-gray-700, #44403c);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .decant-toast__action:hover {
-  background-color: var(--vast-5);
-  border-color: var(--border-secondary);
+  background-color: var(--decant-gray-50, #fafaf9);
+  border-color: var(--decant-gray-400, #a8a29e);
 }
 
 .decant-toast__action:active {
@@ -149,16 +149,16 @@
   padding: 0;
   background: transparent;
   border: none;
-  border-radius: var(--radius-xs);
-  color: var(--text-black-50);
+  border-radius: 4px;
+  color: var(--decant-gray-500, #78716c);
   cursor: pointer;
   transition: all 0.2s;
   font-size: 18px;
 }
 
 .decant-toast__close:hover {
-  background-color: var(--vast-5);
-  color: var(--text-primary);
+  background-color: var(--decant-gray-100, #f5f5f4);
+  color: var(--decant-gray-700, #44403c);
 }
 
 .decant-toast__close:active {
@@ -172,8 +172,8 @@
   left: 0;
   right: 0;
   height: 3px;
-  background-color: var(--border-lumen-dark);
-  border-radius: 0 0 var(--radius-button) var(--radius-button);
+  background-color: var(--decant-gray-200, #e7e5e4);
+  border-radius: 0 0 8px 8px;
   overflow: hidden;
 }
 
@@ -184,19 +184,19 @@
 }
 
 .decant-toast--success .decant-toast__progress-bar {
-  background-color: var(--color-success-text);
+  background-color: var(--decant-brand-accent, #2bae82);
 }
 
 .decant-toast--error .decant-toast__progress-bar {
-  background-color: var(--color-error-text);
+  background-color: #ef4444;
 }
 
 .decant-toast--warning .decant-toast__progress-bar {
-  background-color: var(--color-warning-text);
+  background-color: #f59e0b;
 }
 
 .decant-toast--info .decant-toast__progress-bar {
-  background-color: var(--color-fathom);
+  background-color: #3b82f6;
 }
 
 /* Hover to pause auto-dismiss (visual feedback) */

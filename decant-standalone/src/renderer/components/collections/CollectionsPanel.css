@@ -6,8 +6,8 @@
 
 .collections-panel-anchor {
   flex-shrink: 0;
-  background-color: var(--color-lumen);
-  border-top: 2px solid var(--border-lumen-dark);
+  background-color: var(--decant-zone-sidebar-bg, #e8e4df);
+  border-top: 1px solid #d5cec3;
 }
 
 /* ---- Floating Panel (expanded) ---- */
@@ -17,10 +17,10 @@
   z-index: 500;
   display: flex;
   flex-direction: column;
-  background: var(--color-lumen);
-  border: 2px solid var(--border-secondary);
-  border-radius: var(--radius-button);
-  box-shadow: var(--shadow-dialog);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06);
   animation: collections-float-in 0.15s ease;
   overflow: hidden;
 }
@@ -48,8 +48,8 @@
   height: 42px;
   min-height: 42px;
   padding: 0 10px 0 14px;
-  background: var(--vast-5);
-  border-bottom: 2px solid var(--border-lumen-dark);
+  background: var(--decant-zone-sidebar-bg, #e8e4df);
+  border-bottom: 1px solid #d5cec3;
   cursor: grab;
   user-select: none;
 }
@@ -68,14 +68,15 @@
 .collections-floating-title {
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #374151;
   white-space: nowrap;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   letter-spacing: -0.01em;
 }
 
 .collections-floating-subtitle {
   font-size: 11px;
-  color: var(--text-black-50);
+  color: #9ca3af;
   white-space: nowrap;
 }
 
@@ -94,16 +95,16 @@
   height: 24px;
   padding: 0;
   border: none;
-  border-radius: var(--radius-xs);
+  border-radius: 4px;
   background: transparent;
-  color: var(--text-black-50);
+  color: #9ca3af;
   cursor: pointer;
   transition: all 0.12s ease;
 }
 
 .collections-floating-close:hover {
-  background: var(--vast-10);
-  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.08);
+  color: #374151;
 }
 
 /* Floating body */
@@ -143,7 +144,7 @@
 }
 
 .floating-resize-handle:hover {
-  background: rgba(3, 79, 70, 0.15);
+  background: rgba(45, 91, 71, 0.15);
   border-radius: 2px;
 }
 
@@ -161,7 +162,7 @@
 }
 
 .collections-panel__bar:hover {
-  background-color: var(--vast-5);
+  background-color: rgba(0, 0, 0, 0.03);
 }
 
 .collections-panel__bar-left {
@@ -183,20 +184,21 @@
   width: 3px;
   height: 18px;
   border-radius: 2px;
-  background-color: var(--color-fathom);
+  background-color: var(--decant-brand-primary, #2d5b47);
   flex-shrink: 0;
 }
 
 .collections-panel__bar-icon {
-  color: var(--text-black-70);
+  color: #6b7280;
   flex-shrink: 0;
 }
 
 .collections-panel__bar-label {
   font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #374151;
   white-space: nowrap;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   letter-spacing: -0.01em;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -205,15 +207,15 @@
 .collections-panel__bar-count {
   font-size: 11px;
   font-weight: 500;
-  color: var(--text-black-70);
-  background-color: var(--vast-10);
+  color: #6b7280;
+  background-color: rgba(0, 0, 0, 0.06);
   padding: 1px 7px;
-  border-radius: var(--radius-pill);
+  border-radius: 10px;
   flex-shrink: 0;
 }
 
 .collections-panel__bar-chevron {
-  color: var(--text-black-50);
+  color: #9ca3af;
 }
 
 .collections-panel__bar-add {
@@ -224,23 +226,23 @@
   height: 24px;
   padding: 0;
   border: none;
-  border-radius: var(--radius-xs);
+  border-radius: 4px;
   background: transparent;
-  color: var(--text-black-50);
+  color: #9ca3af;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .collections-panel__bar-add:hover {
-  background-color: var(--vast-10);
-  color: var(--text-primary);
+  background-color: rgba(0, 0, 0, 0.06);
+  color: #374151;
 }
 
 /* ---- Expanded Content (used inside floating body) ---- */
 
 .collections-panel__subtitle {
   font-size: 11px;
-  color: var(--text-black-50);
+  color: #9ca3af;
   padding: 0 12px 4px;
   font-weight: 500;
 }
@@ -258,13 +260,13 @@
 
 .collection-tree-empty__text {
   font-size: 13px;
-  color: var(--text-black-70);
+  color: #6b7280;
   margin: 0 0 4px;
 }
 
 .collection-tree-empty__hint {
   font-size: 11px;
-  color: var(--text-black-50);
+  color: #9ca3af;
   margin: 0;
 }
 
@@ -277,21 +279,21 @@
   height: 30px;
   padding-right: 8px;
   cursor: pointer;
-  border-radius: var(--radius-xs);
+  border-radius: 4px;
   margin: 1px 4px;
   transition: background-color 0.1s ease;
 }
 
 .collection-tree-item:hover {
-  background-color: var(--vast-5);
+  background-color: rgba(0, 0, 0, 0.04);
 }
 
 .collection-tree-item--selected {
-  background-color: rgba(3, 79, 70, 0.08);
+  background-color: rgba(45, 91, 71, 0.08);
 }
 
 .collection-tree-item--selected:hover {
-  background-color: rgba(3, 79, 70, 0.12);
+  background-color: rgba(45, 91, 71, 0.12);
 }
 
 /* Chevron */
@@ -302,13 +304,13 @@
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  color: var(--text-black-50);
+  color: #9ca3af;
   cursor: pointer;
   border-radius: 3px;
 }
 
 .collection-tree-chevron:hover {
-  background-color: var(--vast-10);
+  background-color: rgba(0, 0, 0, 0.06);
 }
 
 .collection-tree-chevron--hidden {
@@ -323,7 +325,7 @@
   width: 22px;
   height: 22px;
   font-size: 13px;
-  border-radius: var(--radius-xs);
+  border-radius: 4px;
   flex-shrink: 0;
 }
 
@@ -331,7 +333,7 @@
 .collection-tree-item__name {
   flex: 1;
   font-size: 13px;
-  color: var(--text-primary);
+  color: #374151;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -341,7 +343,7 @@
 /* Count badge */
 .collection-tree-item__count {
   font-size: 11px;
-  color: var(--text-black-50);
+  color: #9ca3af;
   flex-shrink: 0;
   margin-left: auto;
   padding-right: 2px;
@@ -356,9 +358,9 @@
   height: 22px;
   padding: 0;
   border: none;
-  border-radius: var(--radius-xs);
+  border-radius: 4px;
   background: transparent;
-  color: var(--text-black-50);
+  color: #9ca3af;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -368,8 +370,8 @@
 }
 
 .collection-tree-item__menu:hover {
-  background-color: var(--vast-10);
-  color: var(--text-primary);
+  background-color: rgba(0, 0, 0, 0.06);
+  color: #374151;
 }
 
 /* ---- Rename Field ---- */
@@ -378,11 +380,11 @@
   flex: 1;
   min-width: 0;
   font-size: 13px;
-  color: var(--text-primary);
+  color: #374151;
   padding: 2px 6px;
-  border: 2px solid var(--color-fathom);
-  border-radius: var(--radius-xs);
-  background-color: var(--color-lumen);
+  border: 1px solid var(--decant-brand-primary, #2d5b47);
+  border-radius: 4px;
+  background-color: #fff;
   outline: none;
   font-family: inherit;
 }
@@ -396,32 +398,32 @@
   height: 22px;
   padding: 0;
   border: none;
-  border-radius: var(--radius-xs);
+  border-radius: 4px;
   background: transparent;
   cursor: pointer;
   flex-shrink: 0;
 }
 
 .collection-rename-confirm {
-  color: var(--color-fathom);
+  color: var(--decant-brand-primary, #2d5b47);
 }
 
 .collection-rename-confirm:hover {
-  background-color: rgba(3, 79, 70, 0.1);
+  background-color: rgba(45, 91, 71, 0.1);
 }
 
 .collection-rename-confirm:disabled {
-  color: var(--text-black-20);
+  color: #d1d5db;
   cursor: default;
 }
 
 .collection-rename-cancel {
-  color: var(--text-black-50);
+  color: #9ca3af;
 }
 
 .collection-rename-cancel:hover {
-  background-color: var(--vast-10);
-  color: var(--text-black-70);
+  background-color: rgba(0, 0, 0, 0.06);
+  color: #6b7280;
 }
 
 /* ---- New Collection Input Row ---- */
@@ -445,19 +447,19 @@
   padding: 6px 12px;
   margin: 2px 4px 4px;
   font-size: 13px;
-  color: var(--text-black-50);
+  color: #9ca3af;
   cursor: pointer;
-  border-radius: var(--radius-xs);
-  border: 2px dashed var(--border-lumen-dark);
+  border-radius: 4px;
+  border: 1px dashed #d1d5db;
   background: transparent;
   transition: all 0.15s ease;
   font-family: inherit;
 }
 
 .collections-panel__new-button:hover {
-  background-color: var(--vast-5);
-  border-color: var(--text-black-50);
-  color: var(--text-black-70);
+  background-color: rgba(0, 0, 0, 0.02);
+  border-color: #9ca3af;
+  color: #6b7280;
 }
 
 /* ---- Context Menu ---- */
@@ -466,10 +468,10 @@
   position: fixed;
   z-index: 1000;
   min-width: 160px;
-  background: var(--color-lumen);
-  border: 2px solid var(--border-secondary);
-  border-radius: var(--radius-button);
-  box-shadow: var(--shadow-dialog);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   padding: 4px 0;
   font-family: inherit;
 }
@@ -477,7 +479,7 @@
 .collection-context-header {
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-black-50);
+  color: #9ca3af;
   padding: 6px 12px 4px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -495,27 +497,27 @@
   border: none;
   background: transparent;
   font-size: 13px;
-  color: var(--text-primary);
+  color: #374151;
   cursor: pointer;
   font-family: inherit;
   transition: background-color 0.1s ease;
 }
 
 .collection-context-item:hover {
-  background-color: var(--vast-5);
+  background-color: #f3f4f6;
 }
 
 .collection-context-item--danger {
-  color: var(--color-error-text);
+  color: #ef4444;
 }
 
 .collection-context-item--danger:hover {
-  background-color: var(--color-error-bg);
+  background-color: #fef2f2;
 }
 
 .collection-context-separator {
-  height: 2px;
-  background-color: var(--border-lumen-dark);
+  height: 1px;
+  background-color: #e5e7eb;
   margin: 4px 0;
 }
 
@@ -525,17 +527,17 @@
   position: fixed;
   z-index: 1001;
   width: 220px;
-  background: var(--color-lumen);
-  border: 2px solid var(--border-secondary);
-  border-radius: var(--radius-button);
-  box-shadow: var(--shadow-dialog);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   padding: 8px;
 }
 
 .collection-icon-picker__header {
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-black-50);
+  color: #9ca3af;
   padding: 2px 4px 6px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -554,7 +556,7 @@
   width: 36px;
   height: 36px;
   border: 2px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.1s ease;
 }
@@ -578,10 +580,10 @@
 }
 
 .collections-panel__content::-webkit-scrollbar-thumb {
-  background-color: var(--vast-15);
+  background-color: rgba(0, 0, 0, 0.12);
   border-radius: 2px;
 }
 
 .collections-panel__content::-webkit-scrollbar-thumb:hover {
-  background-color: var(--vast-30);
+  background-color: rgba(0, 0, 0, 0.2);
 }

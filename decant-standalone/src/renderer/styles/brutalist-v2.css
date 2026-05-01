@@ -1,28 +1,31 @@
 /* ============================================================================
-   BRUTALIST V2 — Decant Design System Override
+   BRUTALIST V2 — Stitch Design System Override
    Scoped under .bv2 class to avoid polluting the default theme.
    Applied only when the UI mode toggle is set to 'brutalist-v2'.
    ============================================================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
 /* ---------------------------------------------------------------------------
-   CSS VARIABLES — Mapped to design system tokens
+   CSS VARIABLES — Stitch palette
    --------------------------------------------------------------------------- */
 .bv2 {
-  --bv2-bg-main: var(--color-lumen);
-  --bv2-panel-bg: var(--color-lumen-dark);
-  --bv2-header-bg: var(--color-fathom);
-  --bv2-text-primary: var(--text-primary);
-  --bv2-accent-green: var(--segment-finance);
-  --bv2-accent-purple: var(--color-dawn);
-  --bv2-accent-steel: var(--neutral-dark);
-  --bv2-accent-plum: var(--color-dawn);
-  --bv2-accent-yellow: var(--color-glow);
-  --bv2-accent-red: var(--color-error-text);
-  --bv2-accent-blue: var(--segment-tech);
-  --bv2-border: var(--border-secondary);
-  --bv2-sub-level-bg: var(--color-lumen-dark);
+  --bv2-bg-main: #f1f5f9;
+  --bv2-panel-bg: #e2e8f0;
+  --bv2-header-bg: #1e3a8a;
+  --bv2-text-primary: #0f172a;
+  --bv2-accent-green: #22c55e;
+  --bv2-accent-purple: #9333ea;
+  --bv2-accent-steel: #475569;
+  --bv2-accent-plum: #7e22ce;
+  --bv2-accent-yellow: #facc15;
+  --bv2-accent-red: #ef4444;
+  --bv2-accent-blue: #3b82f6;
+  --bv2-border: #000000;
+  --bv2-sub-level-bg: #cbd5e1;
 
-  font-family: var(--font--body-font);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   background-color: var(--bv2-bg-main);
   color: var(--bv2-text-primary);
   letter-spacing: -0.01em;
@@ -47,7 +50,7 @@
    STRUCTURAL UTILITIES
    --------------------------------------------------------------------------- */
 .bv2 .brutalist-border {
-  border: 2px solid var(--bv2-border);
+  border: 1px solid var(--bv2-border);
 }
 
 .bv2 .brutalist-border-bold {
@@ -63,39 +66,39 @@
    --------------------------------------------------------------------------- */
 .bv2 .nested-level-1 {
   padding-left: 1rem;
-  background-color: var(--vast-2);
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
 .bv2 .nested-level-2 {
   padding-left: 2rem;
-  background-color: var(--vast-5);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .bv2 .nested-level-3 {
   padding-left: 3rem;
-  background-color: var(--vast-10);
+  background-color: rgba(0, 0, 0, 0.07);
 }
 
 /* ---------------------------------------------------------------------------
    TABLE — Category headers & row styles
    --------------------------------------------------------------------------- */
 .bv2 tr.category-header {
-  background-color: var(--color-lumen-dark);
+  background-color: #cbd5e1;
   font-weight: 800;
   font-size: 10px;
   text-transform: uppercase;
 }
 
 .bv2 tr.subcategory-row {
-  background-color: var(--color-lumen);
+  background-color: #f8fafc;
 }
 
 .bv2 tr.data-row:hover {
-  background-color: var(--color-lumen);
+  background-color: #f8fafc;
 }
 
 .bv2 tr.data-row.selected {
-  background-color: var(--color-dawn);
+  background-color: #e0e7ff;
 }
 
 .bv2 .bv2-badge {
@@ -104,13 +107,13 @@
   font-size: 8px;
   font-weight: 700;
   text-transform: uppercase;
-  border: 2px solid var(--bv2-border);
+  border: 1px solid var(--bv2-border);
   line-height: 1.6;
 }
 
 .bv2 .bv2-badge-white {
-  background-color: var(--color-lumen);
-  color: var(--text-primary);
+  background-color: white;
+  color: black;
 }
 
 /* ---------------------------------------------------------------------------
@@ -118,8 +121,8 @@
    --------------------------------------------------------------------------- */
 .bv2 .bv2-card {
   padding: 8px;
-  background: var(--color-lumen);
-  border: 2px solid var(--bv2-border);
+  background: white;
+  border: 1px solid var(--bv2-border);
 }
 
 .bv2 .bv2-card-header {
@@ -127,7 +130,7 @@
   font-weight: 900;
   text-transform: uppercase;
   color: var(--bv2-accent-steel);
-  border-bottom: 2px solid var(--color-lumen-dark);
+  border-bottom: 1px solid #e2e8f0;
   padding-bottom: 4px;
   margin-bottom: 8px;
 }
@@ -168,27 +171,27 @@
 
 .bv2 .bv2-btn-yellow {
   background-color: var(--bv2-accent-yellow);
-  color: var(--text-primary);
+  color: black;
 }
 
 .bv2 .bv2-btn-white {
-  background-color: var(--color-lumen);
-  color: var(--text-primary);
+  background-color: white;
+  color: black;
 }
 
 .bv2 .bv2-btn-green {
   background-color: var(--bv2-accent-green);
-  color: var(--text-primary);
+  color: black;
 }
 
 .bv2 .bv2-btn-black {
-  background-color: var(--color-vast);
-  color: var(--text-secondary);
+  background-color: black;
+  color: white;
 }
 
 .bv2 .bv2-btn-purple {
   background-color: var(--bv2-accent-purple);
-  color: var(--text-primary);
+  color: white;
 }
 
 /* ---------------------------------------------------------------------------

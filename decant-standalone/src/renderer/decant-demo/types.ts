@@ -43,34 +43,12 @@ export interface TreeNodeData {
 }
 
 export interface HierarchyFilter {
-  type: 'all' | 'segment' | 'category' | 'branch' | 'workspace' | 'multi';
+  type: 'all' | 'segment' | 'category' | 'branch';
   segmentCode?: string;
-  segmentCodes?: string[];
   categoryCode?: string;
   branchId?: string;
   branchNodeIds?: Set<string>;
-  workspaceFilter?: 'starred' | 'recent' | 'uncategorized';
 }
-
-export interface SidebarCollection {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  nodeCount: number;
-}
-
-export type SidebarNavigationTarget =
-  | { type: 'all' }
-  | { type: 'starred' }
-  | { type: 'recent' }
-  | { type: 'uncategorized' }
-  | { type: 'segment'; segmentCode: string; label: string }
-  | { type: 'category'; segmentCode: string; categoryCode: string; label: string }
-  | { type: 'branch'; branchId: string; node: TreeNodeData }
-  | { type: 'collection'; collectionId: string; label: string }
-  | { type: 'tag'; tagId: string; label: string }
-  | { type: 'multi'; segmentCodes: string[] };
 
 export interface TableRow {
   id: string;
