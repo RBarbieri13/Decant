@@ -7,9 +7,10 @@
   width: 90%;
   max-width: 600px;
   max-height: 80vh;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  background: var(--color-lumen);
+  border: 2px solid var(--border-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-dialog);
   display: flex;
   flex-direction: column;
   animation: modal-slide-up 0.3s ease-out;
@@ -32,7 +33,7 @@
   align-items: center;
   gap: 12px;
   padding: 24px 24px 16px;
-  border-bottom: 1px solid var(--decant-gray-200, #e7e5e4);
+  border-bottom: 2px solid var(--border-lumen-dark);
 }
 
 .decant-error-modal__icon {
@@ -47,15 +48,15 @@
 }
 
 .decant-error-modal__icon--error {
-  background-color: #fef2f2;
-  color: #ef4444;
+  background-color: var(--color-error-bg);
+  color: var(--color-error-text);
 }
 
 .decant-error-modal__title {
   flex: 1;
   font-size: 18px;
   font-weight: 600;
-  color: var(--decant-gray-900, #1c1917);
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -68,8 +69,8 @@
   padding: 0;
   background: transparent;
   border: none;
-  border-radius: 6px;
-  color: var(--decant-gray-500, #78716c);
+  border-radius: var(--radius-xs);
+  color: var(--text-black-50);
   cursor: pointer;
   transition: all 0.2s;
   font-size: 24px;
@@ -77,8 +78,8 @@
 }
 
 .decant-error-modal__close:hover {
-  background-color: var(--decant-gray-100, #f5f5f4);
-  color: var(--decant-gray-700, #44403c);
+  background-color: var(--vast-5);
+  color: var(--text-primary);
 }
 
 /* Content */
@@ -91,21 +92,21 @@
 .decant-error-modal__message {
   font-size: 14px;
   line-height: 1.6;
-  color: var(--decant-gray-700, #44403c);
+  color: var(--text-black-70);
   margin: 0 0 16px;
 }
 
 .decant-error-modal__detail {
   font-size: 13px;
-  color: var(--decant-gray-600, #57534e);
+  color: var(--text-black-70);
   margin-bottom: 16px;
   padding: 12px;
-  background-color: var(--decant-gray-50, #fafaf9);
-  border-radius: 6px;
+  background-color: var(--vast-5);
+  border-radius: var(--radius-sm);
 }
 
 .decant-error-modal__detail strong {
-  color: var(--decant-gray-700, #44403c);
+  color: var(--text-primary);
 }
 
 /* Sections */
@@ -116,7 +117,7 @@
 .decant-error-modal__section-title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--decant-gray-700, #44403c);
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
@@ -125,12 +126,12 @@
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  background-color: var(--decant-gray-50, #fafaf9);
-  border: 1px solid var(--decant-gray-200, #e7e5e4);
-  border-radius: 6px;
+  background-color: var(--vast-5);
+  border: 2px solid var(--border-lumen-dark);
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 500;
-  color: var(--decant-gray-700, #44403c);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s;
   width: 100%;
@@ -138,8 +139,8 @@
 }
 
 .decant-error-modal__section-toggle:hover {
-  background-color: var(--decant-gray-100, #f5f5f4);
-  border-color: var(--decant-gray-300, #d6d3d1);
+  background-color: var(--vast-10);
+  border-color: var(--border-secondary);
 }
 
 .decant-error-modal__section-toggle i {
@@ -149,9 +150,9 @@
 /* Context */
 .decant-error-modal__context {
   padding: 12px;
-  background-color: var(--decant-gray-50, #fafaf9);
-  border: 1px solid var(--decant-gray-200, #e7e5e4);
-  border-radius: 6px;
+  background-color: var(--vast-5);
+  border: 2px solid var(--border-lumen-dark);
+  border-radius: var(--radius-sm);
 }
 
 .decant-error-modal__context-item {
@@ -167,12 +168,12 @@
 
 .decant-error-modal__context-key {
   font-weight: 500;
-  color: var(--decant-gray-600, #57534e);
+  color: var(--text-black-70);
   flex-shrink: 0;
 }
 
 .decant-error-modal__context-value {
-  color: var(--decant-gray-700, #44403c);
+  color: var(--text-primary);
   word-break: break-word;
 }
 
@@ -180,10 +181,10 @@
 .decant-error-modal__stack-trace {
   margin-top: 8px;
   padding: 12px;
-  background-color: var(--decant-gray-900, #1c1917);
+  background-color: var(--surface-tertiary);
   color: #10b981;
-  border-radius: 6px;
-  font-family: var(--decant-font-mono, 'SF Mono', Monaco, Consolas, monospace);
+  border-radius: var(--radius-sm);
+  font-family: var(--font--mono);
   font-size: 12px;
   line-height: 1.5;
   overflow-x: auto;
@@ -198,9 +199,9 @@
   justify-content: space-between;
   gap: 12px;
   padding: 16px 24px;
-  border-top: 1px solid var(--decant-gray-200, #e7e5e4);
-  background-color: var(--decant-gray-50, #fafaf9);
-  border-radius: 0 0 12px 12px;
+  border-top: 2px solid var(--border-lumen-dark);
+  background-color: var(--vast-5);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
 .decant-error-modal__actions {
@@ -214,19 +215,19 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background-color: white;
-  border: 1px solid var(--decant-gray-300, #d6d3d1);
-  border-radius: 6px;
+  background-color: var(--color-lumen);
+  border: 2px solid var(--border-lumen-dark);
+  border-radius: var(--radius-button);
   font-size: 14px;
   font-weight: 500;
-  color: var(--decant-gray-700, #44403c);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .decant-error-modal__button:hover:not(:disabled) {
-  background-color: var(--decant-gray-50, #fafaf9);
-  border-color: var(--decant-gray-400, #a8a29e);
+  background-color: var(--vast-5);
+  border-color: var(--border-secondary);
 }
 
 .decant-error-modal__button:active:not(:disabled) {
@@ -239,14 +240,15 @@
 }
 
 .decant-error-modal__button--primary {
-  background-color: var(--decant-brand-primary, #2d5b47);
-  color: white;
-  border-color: var(--decant-brand-primary, #2d5b47);
+  background-color: var(--color-fathom);
+  color: var(--text-secondary);
+  border-color: var(--color-fathom);
 }
 
 .decant-error-modal__button--primary:hover:not(:disabled) {
-  background-color: var(--decant-brand-dark, #1a3a2f);
-  border-color: var(--decant-brand-dark, #1a3a2f);
+  background-color: var(--color-fathom);
+  border-color: var(--color-fathom);
+  opacity: 0.9;
 }
 
 .decant-error-modal__button i.bx-spin {

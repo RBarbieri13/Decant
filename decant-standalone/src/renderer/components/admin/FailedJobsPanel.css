@@ -6,7 +6,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: var(--decant-off-white, #f8f7f5);
+  background-color: var(--color-lumen);
 }
 
 /* Header */
@@ -15,8 +15,8 @@
   align-items: flex-start;
   justify-content: space-between;
   padding: 24px;
-  background-color: white;
-  border-bottom: 1px solid var(--decant-gray-200, #e7e5e4);
+  background-color: var(--color-lumen);
+  border-bottom: 2px solid var(--border-lumen-dark);
 }
 
 .decant-failed-jobs__title-section {
@@ -29,7 +29,7 @@
   gap: 12px;
   font-size: 20px;
   font-weight: 600;
-  color: var(--decant-gray-900, #1c1917);
+  color: var(--text-primary);
   margin: 0 0 4px;
 }
 
@@ -40,16 +40,16 @@
   min-width: 28px;
   height: 28px;
   padding: 0 8px;
-  background-color: #fef2f2;
-  color: #ef4444;
-  border-radius: 14px;
+  background-color: var(--color-error-bg);
+  color: var(--color-error-text);
+  border-radius: var(--radius-pill);
   font-size: 13px;
   font-weight: 600;
 }
 
 .decant-failed-jobs__subtitle {
   font-size: 14px;
-  color: var(--decant-gray-600, #57534e);
+  color: var(--text-black-70);
   margin: 0;
 }
 
@@ -63,40 +63,39 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background-color: white;
-  border: 1px solid var(--decant-gray-300, #d6d3d1);
-  border-radius: 6px;
+  background-color: var(--color-lumen);
+  border: 2px solid var(--border-lumen-dark);
+  border-radius: var(--radius-button);
   font-size: 14px;
   font-weight: 500;
-  color: var(--decant-gray-700, #44403c);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .decant-failed-jobs__button:hover {
-  background-color: var(--decant-gray-50, #fafaf9);
-  border-color: var(--decant-gray-400, #a8a29e);
+  background-color: var(--vast-5);
+  border-color: var(--border-secondary);
 }
 
 .decant-failed-jobs__button--primary {
-  background-color: var(--decant-brand-primary, #2d5b47);
-  color: white;
-  border-color: var(--decant-brand-primary, #2d5b47);
+  background-color: var(--color-fathom);
+  color: var(--text-secondary);
+  border-color: var(--color-fathom);
 }
 
 .decant-failed-jobs__button--primary:hover {
-  background-color: var(--decant-brand-dark, #1a3a2f);
+  opacity: 0.9;
 }
 
 .decant-failed-jobs__button--danger {
-  background-color: #fef2f2;
-  color: #ef4444;
-  border-color: #fecaca;
+  background-color: var(--color-error-bg);
+  color: var(--color-error-text);
+  border-color: var(--color-error-text);
 }
 
 .decant-failed-jobs__button--danger:hover {
-  background-color: #fee2e2;
-  border-color: #fca5a5;
+  opacity: 0.9;
 }
 
 /* Filters */
@@ -105,8 +104,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
-  background-color: white;
-  border-bottom: 1px solid var(--decant-gray-200, #e7e5e4);
+  background-color: var(--color-lumen);
+  border-bottom: 2px solid var(--border-lumen-dark);
 }
 
 .decant-failed-jobs__filter-group {
@@ -117,24 +116,24 @@
 .decant-failed-jobs__filter {
   padding: 6px 12px;
   background-color: transparent;
-  border: 1px solid transparent;
-  border-radius: 6px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-button);
   font-size: 13px;
   font-weight: 500;
-  color: var(--decant-gray-600, #57534e);
+  color: var(--text-black-70);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .decant-failed-jobs__filter:hover {
-  background-color: var(--decant-gray-50, #fafaf9);
-  color: var(--decant-gray-700, #44403c);
+  background-color: var(--vast-5);
+  color: var(--text-primary);
 }
 
 .decant-failed-jobs__filter--active {
-  background-color: var(--decant-gray-100, #f5f5f4);
-  color: var(--decant-gray-900, #1c1917);
-  border-color: var(--decant-gray-300, #d6d3d1);
+  background-color: var(--vast-10);
+  color: var(--text-primary);
+  border-color: var(--border-lumen-dark);
 }
 
 /* Loading */
@@ -145,7 +144,7 @@
   justify-content: center;
   gap: 12px;
   padding: 48px 24px;
-  color: var(--decant-gray-500, #78716c);
+  color: var(--text-black-50);
   font-size: 14px;
 }
 
@@ -166,19 +165,19 @@
 
 .decant-failed-jobs__empty i {
   font-size: 48px;
-  color: var(--decant-green, #22c55e);
+  color: var(--color-success-text);
 }
 
 .decant-failed-jobs__empty h3 {
   font-size: 18px;
   font-weight: 600;
-  color: var(--decant-gray-900, #1c1917);
+  color: var(--text-primary);
   margin: 0;
 }
 
 .decant-failed-jobs__empty p {
   font-size: 14px;
-  color: var(--decant-gray-600, #57534e);
+  color: var(--text-black-70);
   margin: 0;
 }
 
@@ -195,15 +194,15 @@
   gap: 12px;
   padding: 12px;
   margin-bottom: 12px;
-  background-color: white;
-  border-radius: 8px;
-  border: 1px solid var(--decant-gray-200, #e7e5e4);
+  background-color: var(--color-lumen);
+  border-radius: var(--radius-button);
+  border: 2px solid var(--border-lumen-dark);
 }
 
 .decant-failed-jobs__list-header-text {
   font-size: 13px;
   font-weight: 500;
-  color: var(--decant-gray-600, #57534e);
+  color: var(--text-black-70);
 }
 
 /* Job Item */
@@ -213,20 +212,20 @@
   gap: 12px;
   padding: 16px;
   margin-bottom: 12px;
-  background-color: white;
-  border: 1px solid var(--decant-gray-200, #e7e5e4);
-  border-radius: 8px;
+  background-color: var(--color-lumen);
+  border: 2px solid var(--border-lumen-dark);
+  border-radius: var(--radius-button);
   transition: all 0.2s;
 }
 
 .decant-failed-jobs__item:hover {
-  border-color: var(--decant-gray-300, #d6d3d1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-color: var(--border-secondary);
+  box-shadow: var(--shadow-chip);
 }
 
 .decant-failed-jobs__item--selected {
-  border-color: var(--decant-brand-primary, #2d5b47);
-  background-color: #f0fdf4;
+  border-color: var(--color-fathom);
+  background-color: var(--color-success-bg);
 }
 
 .decant-failed-jobs__item-content {
@@ -245,7 +244,7 @@
 .decant-failed-jobs__item-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--decant-gray-900, #1c1917);
+  color: var(--text-primary);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -254,7 +253,7 @@
 
 .decant-failed-jobs__item-time {
   font-size: 12px;
-  color: var(--decant-gray-500, #78716c);
+  color: var(--text-black-50);
   flex-shrink: 0;
 }
 
@@ -269,7 +268,7 @@
 .decant-failed-jobs__badge {
   display: inline-block;
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -277,38 +276,38 @@
 }
 
 .decant-failed-jobs__badge--validation {
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 .decant-failed-jobs__badge--fetch {
-  background-color: #dbeafe;
-  color: #1e3a8a;
+  background-color: var(--tag-blue-bg);
+  color: var(--tag-blue-text);
 }
 
 .decant-failed-jobs__badge--classification {
-  background-color: #e0e7ff;
-  color: #3730a3;
+  background-color: var(--tag-purple-bg);
+  color: var(--tag-purple-text);
 }
 
 .decant-failed-jobs__badge--enrichment {
-  background-color: #fce7f3;
-  color: #831843;
+  background-color: var(--tag-pink-bg);
+  color: var(--tag-pink-text);
 }
 
 .decant-failed-jobs__badge--save {
-  background-color: #fef2f2;
-  color: #7f1d1d;
+  background-color: var(--color-error-bg);
+  color: var(--color-error-text);
 }
 
 .decant-failed-jobs__retry-info {
   font-size: 12px;
-  color: var(--decant-gray-600, #57534e);
+  color: var(--text-black-70);
 }
 
 .decant-failed-jobs__url {
   font-size: 12px;
-  color: var(--decant-gray-500, #78716c);
+  color: var(--text-black-50);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -316,7 +315,7 @@
 
 .decant-failed-jobs__error {
   font-size: 13px;
-  color: #dc2626;
+  color: var(--color-error-text);
   margin: 0;
   line-height: 1.4;
 }
@@ -332,19 +331,19 @@
   align-items: center;
   gap: 4px;
   padding: 6px 12px;
-  background-color: white;
-  border: 1px solid var(--decant-gray-300, #d6d3d1);
-  border-radius: 6px;
+  background-color: var(--color-lumen);
+  border: 2px solid var(--border-lumen-dark);
+  border-radius: var(--radius-button);
   font-size: 13px;
   font-weight: 500;
-  color: var(--decant-gray-700, #44403c);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .decant-failed-jobs__item-button:hover:not(:disabled) {
-  background-color: var(--decant-gray-50, #fafaf9);
-  border-color: var(--decant-gray-400, #a8a29e);
+  background-color: var(--vast-5);
+  border-color: var(--border-secondary);
 }
 
 .decant-failed-jobs__item-button:disabled {
@@ -353,13 +352,13 @@
 }
 
 .decant-failed-jobs__item-button--retry {
-  background-color: var(--decant-brand-primary, #2d5b47);
-  color: white;
-  border-color: var(--decant-brand-primary, #2d5b47);
+  background-color: var(--color-fathom);
+  color: var(--text-secondary);
+  border-color: var(--color-fathom);
 }
 
 .decant-failed-jobs__item-button--retry:hover:not(:disabled) {
-  background-color: var(--decant-brand-dark, #1a3a2f);
+  opacity: 0.9;
 }
 
 /* Checkbox */
@@ -367,20 +366,20 @@
   flex-shrink: 0;
   width: 20px;
   height: 20px;
-  border: 2px solid var(--decant-gray-300, #d6d3d1);
-  border-radius: 4px;
+  border: 2px solid var(--border-lumen-dark);
+  border-radius: var(--radius-xs);
   cursor: pointer;
   transition: all 0.2s;
   position: relative;
 }
 
 .decant-checkbox:hover {
-  border-color: var(--decant-gray-400, #a8a29e);
+  border-color: var(--border-secondary);
 }
 
 .decant-checkbox--checked {
-  background-color: var(--decant-brand-primary, #2d5b47);
-  border-color: var(--decant-brand-primary, #2d5b47);
+  background-color: var(--color-fathom);
+  border-color: var(--color-fathom);
 }
 
 .decant-checkbox--checked::after {
@@ -390,14 +389,14 @@
   top: 2px;
   width: 4px;
   height: 8px;
-  border: solid white;
+  border: solid var(--text-secondary);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
 
 .decant-checkbox--indeterminate {
-  background-color: var(--decant-brand-primary, #2d5b47);
-  border-color: var(--decant-brand-primary, #2d5b47);
+  background-color: var(--color-fathom);
+  border-color: var(--color-fathom);
 }
 
 .decant-checkbox--indeterminate::after {
@@ -407,7 +406,7 @@
   top: 7px;
   width: 10px;
   height: 2px;
-  background-color: white;
+  background-color: var(--text-secondary);
 }
 
 /* Spin animation */
