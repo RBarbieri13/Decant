@@ -8,16 +8,17 @@
   justify-content: center;
   min-height: 100vh;
   padding: 24px;
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  background: linear-gradient(135deg, var(--color-error-bg) 0%, var(--color-error-bg) 100%);
 }
 
 .decant-error-boundary__container {
   max-width: 600px;
   width: 100%;
   padding: 48px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  background: var(--color-lumen);
+  border: 2px solid var(--border-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-dialog);
   text-align: center;
 }
 
@@ -28,23 +29,23 @@
   width: 80px;
   height: 80px;
   margin-bottom: 24px;
-  background-color: #fef2f2;
+  background-color: var(--color-error-bg);
   border-radius: 50%;
-  color: #ef4444;
+  color: var(--color-error-text);
   font-size: 48px;
 }
 
 .decant-error-boundary__title {
   font-size: 28px;
   font-weight: 700;
-  color: var(--decant-gray-900, #1c1917);
+  color: var(--text-primary);
   margin: 0 0 12px;
 }
 
 .decant-error-boundary__message {
   font-size: 16px;
   line-height: 1.6;
-  color: var(--decant-gray-600, #57534e);
+  color: var(--text-black-70);
   margin: 0 0 32px;
 }
 
@@ -59,12 +60,12 @@
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background-color: var(--decant-gray-50, #fafaf9);
-  border: 1px solid var(--decant-gray-200, #e7e5e4);
-  border-radius: 6px;
+  background-color: var(--vast-5);
+  border: 2px solid var(--border-lumen-dark);
+  border-radius: var(--radius-sm);
   font-size: 14px;
   font-weight: 500;
-  color: var(--decant-gray-700, #44403c);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s;
   list-style: none;
@@ -75,8 +76,8 @@
 }
 
 .decant-error-boundary__details-summary:hover {
-  background-color: var(--decant-gray-100, #f5f5f4);
-  border-color: var(--decant-gray-300, #d6d3d1);
+  background-color: var(--vast-10);
+  border-color: var(--border-secondary);
 }
 
 .decant-error-boundary__details[open] .decant-error-boundary__details-summary {
@@ -85,22 +86,22 @@
 
 .decant-error-boundary__details-content {
   padding: 16px;
-  background-color: var(--decant-gray-50, #fafaf9);
-  border: 1px solid var(--decant-gray-200, #e7e5e4);
-  border-radius: 8px;
+  background-color: var(--vast-5);
+  border: 2px solid var(--border-lumen-dark);
+  border-radius: var(--radius-button);
 }
 
 .decant-error-boundary__error-info {
   font-size: 14px;
-  color: var(--decant-gray-700, #44403c);
+  color: var(--text-primary);
   margin-bottom: 16px;
   padding: 12px;
-  background-color: white;
-  border-radius: 6px;
+  background-color: var(--color-lumen);
+  border-radius: var(--radius-sm);
 }
 
 .decant-error-boundary__error-info strong {
-  color: #ef4444;
+  color: var(--color-error-text);
 }
 
 .decant-error-boundary__stack {
@@ -110,16 +111,16 @@
 .decant-error-boundary__stack strong {
   display: block;
   font-size: 13px;
-  color: var(--decant-gray-700, #44403c);
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
 .decant-error-boundary__stack pre {
   padding: 12px;
-  background-color: var(--decant-gray-900, #1c1917);
+  background-color: var(--surface-tertiary);
   color: #10b981;
-  border-radius: 6px;
-  font-family: var(--decant-font-mono, 'SF Mono', Monaco, Consolas, monospace);
+  border-radius: var(--radius-sm);
+  font-family: var(--font--mono);
   font-size: 12px;
   line-height: 1.5;
   overflow-x: auto;
@@ -142,21 +143,21 @@
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background-color: white;
-  border: 1px solid var(--decant-gray-300, #d6d3d1);
-  border-radius: 8px;
+  background-color: var(--color-lumen);
+  border: 2px solid var(--border-lumen-dark);
+  border-radius: var(--radius-button);
   font-size: 15px;
   font-weight: 500;
-  color: var(--decant-gray-700, #44403c);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .decant-error-boundary__button:hover {
-  background-color: var(--decant-gray-50, #fafaf9);
-  border-color: var(--decant-gray-400, #a8a29e);
+  background-color: var(--vast-5);
+  border-color: var(--border-secondary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-soft);
 }
 
 .decant-error-boundary__button:active {
@@ -164,14 +165,13 @@
 }
 
 .decant-error-boundary__button--primary {
-  background-color: var(--decant-brand-primary, #2d5b47);
-  color: white;
-  border-color: var(--decant-brand-primary, #2d5b47);
+  background-color: var(--color-fathom);
+  color: var(--text-secondary);
+  border-color: var(--color-fathom);
 }
 
 .decant-error-boundary__button--primary:hover {
-  background-color: var(--decant-brand-dark, #1a3a2f);
-  border-color: var(--decant-brand-dark, #1a3a2f);
+  opacity: 0.9;
 }
 
 .decant-error-boundary__button i {
@@ -181,12 +181,12 @@
 /* Debug info */
 .decant-error-boundary__debug {
   padding-top: 24px;
-  border-top: 1px solid var(--decant-gray-200, #e7e5e4);
+  border-top: 2px solid var(--border-lumen-dark);
 }
 
 .decant-error-boundary__debug p {
   font-size: 13px;
-  color: var(--decant-gray-500, #78716c);
+  color: var(--text-black-50);
   margin: 0;
 }
 

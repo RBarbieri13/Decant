@@ -6,8 +6,8 @@
 
 .collections-panel-anchor {
   flex-shrink: 0;
-  background-color: var(--decant-zone-sidebar-bg, #e8e4df);
-  border-top: 1px solid #d5cec3;
+  background-color: var(--color-lumen);
+  border-top: 2px solid var(--border-lumen-dark);
 }
 
 /* ---- Floating Panel (expanded) ---- */
@@ -17,10 +17,10 @@
   z-index: 500;
   display: flex;
   flex-direction: column;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06);
+  background: var(--color-lumen);
+  border: 2px solid var(--border-secondary);
+  border-radius: var(--radius-button);
+  box-shadow: var(--shadow-dialog);
   animation: collections-float-in 0.15s ease;
   overflow: hidden;
 }
@@ -48,8 +48,8 @@
   height: 42px;
   min-height: 42px;
   padding: 0 10px 0 14px;
-  background: var(--decant-zone-sidebar-bg, #e8e4df);
-  border-bottom: 1px solid #d5cec3;
+  background: var(--vast-5);
+  border-bottom: 2px solid var(--border-lumen-dark);
   cursor: grab;
   user-select: none;
 }
@@ -68,15 +68,14 @@
 .collections-floating-title {
   font-size: 16px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
   white-space: nowrap;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   letter-spacing: -0.01em;
 }
 
 .collections-floating-subtitle {
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--text-black-50);
   white-space: nowrap;
 }
 
@@ -95,16 +94,16 @@
   height: 24px;
   padding: 0;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: transparent;
-  color: #9ca3af;
+  color: var(--text-black-50);
   cursor: pointer;
   transition: all 0.12s ease;
 }
 
 .collections-floating-close:hover {
-  background: rgba(0, 0, 0, 0.08);
-  color: #374151;
+  background: var(--vast-10);
+  color: var(--text-primary);
 }
 
 /* Floating body */
@@ -144,7 +143,7 @@
 }
 
 .floating-resize-handle:hover {
-  background: rgba(45, 91, 71, 0.15);
+  background: rgba(3, 79, 70, 0.15);
   border-radius: 2px;
 }
 
@@ -162,7 +161,7 @@
 }
 
 .collections-panel__bar:hover {
-  background-color: rgba(0, 0, 0, 0.03);
+  background-color: var(--vast-5);
 }
 
 .collections-panel__bar-left {
@@ -184,21 +183,20 @@
   width: 3px;
   height: 18px;
   border-radius: 2px;
-  background-color: var(--decant-brand-primary, #2d5b47);
+  background-color: var(--color-fathom);
   flex-shrink: 0;
 }
 
 .collections-panel__bar-icon {
-  color: #6b7280;
+  color: var(--text-black-70);
   flex-shrink: 0;
 }
 
 .collections-panel__bar-label {
   font-size: 15px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
   white-space: nowrap;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   letter-spacing: -0.01em;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -207,15 +205,15 @@
 .collections-panel__bar-count {
   font-size: 11px;
   font-weight: 500;
-  color: #6b7280;
-  background-color: rgba(0, 0, 0, 0.06);
+  color: var(--text-black-70);
+  background-color: var(--vast-10);
   padding: 1px 7px;
-  border-radius: 10px;
+  border-radius: var(--radius-pill);
   flex-shrink: 0;
 }
 
 .collections-panel__bar-chevron {
-  color: #9ca3af;
+  color: var(--text-black-50);
 }
 
 .collections-panel__bar-add {
@@ -226,23 +224,23 @@
   height: 24px;
   padding: 0;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: transparent;
-  color: #9ca3af;
+  color: var(--text-black-50);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .collections-panel__bar-add:hover {
-  background-color: rgba(0, 0, 0, 0.06);
-  color: #374151;
+  background-color: var(--vast-10);
+  color: var(--text-primary);
 }
 
 /* ---- Expanded Content (used inside floating body) ---- */
 
 .collections-panel__subtitle {
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--text-black-50);
   padding: 0 12px 4px;
   font-weight: 500;
 }
@@ -260,13 +258,13 @@
 
 .collection-tree-empty__text {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--text-black-70);
   margin: 0 0 4px;
 }
 
 .collection-tree-empty__hint {
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--text-black-50);
   margin: 0;
 }
 
@@ -279,21 +277,21 @@
   height: 30px;
   padding-right: 8px;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   margin: 1px 4px;
   transition: background-color 0.1s ease;
 }
 
 .collection-tree-item:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: var(--vast-5);
 }
 
 .collection-tree-item--selected {
-  background-color: rgba(45, 91, 71, 0.08);
+  background-color: rgba(3, 79, 70, 0.08);
 }
 
 .collection-tree-item--selected:hover {
-  background-color: rgba(45, 91, 71, 0.12);
+  background-color: rgba(3, 79, 70, 0.12);
 }
 
 /* Chevron */
@@ -304,13 +302,13 @@
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  color: #9ca3af;
+  color: var(--text-black-50);
   cursor: pointer;
   border-radius: 3px;
 }
 
 .collection-tree-chevron:hover {
-  background-color: rgba(0, 0, 0, 0.06);
+  background-color: var(--vast-10);
 }
 
 .collection-tree-chevron--hidden {
@@ -325,7 +323,7 @@
   width: 22px;
   height: 22px;
   font-size: 13px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   flex-shrink: 0;
 }
 
@@ -333,7 +331,7 @@
 .collection-tree-item__name {
   flex: 1;
   font-size: 13px;
-  color: #374151;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -343,7 +341,7 @@
 /* Count badge */
 .collection-tree-item__count {
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--text-black-50);
   flex-shrink: 0;
   margin-left: auto;
   padding-right: 2px;
@@ -358,9 +356,9 @@
   height: 22px;
   padding: 0;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: transparent;
-  color: #9ca3af;
+  color: var(--text-black-50);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -370,8 +368,8 @@
 }
 
 .collection-tree-item__menu:hover {
-  background-color: rgba(0, 0, 0, 0.06);
-  color: #374151;
+  background-color: var(--vast-10);
+  color: var(--text-primary);
 }
 
 /* ---- Rename Field ---- */
@@ -380,11 +378,11 @@
   flex: 1;
   min-width: 0;
   font-size: 13px;
-  color: #374151;
+  color: var(--text-primary);
   padding: 2px 6px;
-  border: 1px solid var(--decant-brand-primary, #2d5b47);
-  border-radius: 4px;
-  background-color: #fff;
+  border: 2px solid var(--color-fathom);
+  border-radius: var(--radius-xs);
+  background-color: var(--color-lumen);
   outline: none;
   font-family: inherit;
 }
@@ -398,32 +396,32 @@
   height: 22px;
   padding: 0;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: transparent;
   cursor: pointer;
   flex-shrink: 0;
 }
 
 .collection-rename-confirm {
-  color: var(--decant-brand-primary, #2d5b47);
+  color: var(--color-fathom);
 }
 
 .collection-rename-confirm:hover {
-  background-color: rgba(45, 91, 71, 0.1);
+  background-color: rgba(3, 79, 70, 0.1);
 }
 
 .collection-rename-confirm:disabled {
-  color: #d1d5db;
+  color: var(--text-black-20);
   cursor: default;
 }
 
 .collection-rename-cancel {
-  color: #9ca3af;
+  color: var(--text-black-50);
 }
 
 .collection-rename-cancel:hover {
-  background-color: rgba(0, 0, 0, 0.06);
-  color: #6b7280;
+  background-color: var(--vast-10);
+  color: var(--text-black-70);
 }
 
 /* ---- New Collection Input Row ---- */
@@ -447,19 +445,19 @@
   padding: 6px 12px;
   margin: 2px 4px 4px;
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--text-black-50);
   cursor: pointer;
-  border-radius: 4px;
-  border: 1px dashed #d1d5db;
+  border-radius: var(--radius-xs);
+  border: 2px dashed var(--border-lumen-dark);
   background: transparent;
   transition: all 0.15s ease;
   font-family: inherit;
 }
 
 .collections-panel__new-button:hover {
-  background-color: rgba(0, 0, 0, 0.02);
-  border-color: #9ca3af;
-  color: #6b7280;
+  background-color: var(--vast-5);
+  border-color: var(--text-black-50);
+  color: var(--text-black-70);
 }
 
 /* ---- Context Menu ---- */
@@ -468,10 +466,10 @@
   position: fixed;
   z-index: 1000;
   min-width: 160px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  background: var(--color-lumen);
+  border: 2px solid var(--border-secondary);
+  border-radius: var(--radius-button);
+  box-shadow: var(--shadow-dialog);
   padding: 4px 0;
   font-family: inherit;
 }
@@ -479,7 +477,7 @@
 .collection-context-header {
   font-size: 11px;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--text-black-50);
   padding: 6px 12px 4px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -497,27 +495,27 @@
   border: none;
   background: transparent;
   font-size: 13px;
-  color: #374151;
+  color: var(--text-primary);
   cursor: pointer;
   font-family: inherit;
   transition: background-color 0.1s ease;
 }
 
 .collection-context-item:hover {
-  background-color: #f3f4f6;
+  background-color: var(--vast-5);
 }
 
 .collection-context-item--danger {
-  color: #ef4444;
+  color: var(--color-error-text);
 }
 
 .collection-context-item--danger:hover {
-  background-color: #fef2f2;
+  background-color: var(--color-error-bg);
 }
 
 .collection-context-separator {
-  height: 1px;
-  background-color: #e5e7eb;
+  height: 2px;
+  background-color: var(--border-lumen-dark);
   margin: 4px 0;
 }
 
@@ -527,17 +525,17 @@
   position: fixed;
   z-index: 1001;
   width: 220px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  background: var(--color-lumen);
+  border: 2px solid var(--border-secondary);
+  border-radius: var(--radius-button);
+  box-shadow: var(--shadow-dialog);
   padding: 8px;
 }
 
 .collection-icon-picker__header {
   font-size: 11px;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--text-black-50);
   padding: 2px 4px 6px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -556,7 +554,7 @@
   width: 36px;
   height: 36px;
   border: 2px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.1s ease;
 }
@@ -580,10 +578,10 @@
 }
 
 .collections-panel__content::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.12);
+  background-color: var(--vast-15);
   border-radius: 2px;
 }
 
 .collections-panel__content::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: var(--vast-30);
 }

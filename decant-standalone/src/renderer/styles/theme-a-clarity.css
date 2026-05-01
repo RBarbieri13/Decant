@@ -1,49 +1,49 @@
 /* ============================================================================
    THEME A: "CLARITY"
-   Clean, bright, high-contrast. Pure whites, sharper typography,
-   crisp borders, subtle blue-tinted shadows. Feels like a premium
-   productivity tool — think Linear meets Notion.
+   Clean, bright, high-contrast. Lumen cream surfaces, sharper typography,
+   crisp borders, subtle shadows. Feels like a premium productivity tool.
+   Now using Decant design system tokens.
    ============================================================================ */
 
 /* Override color palette */
 :root {
-  /* Brighter, cleaner backgrounds */
-  --decant-off-white: #fafbfc;
-  --decant-gray-50: #f6f8fa;
-  --decant-gray-100: #eef1f5;
-  --decant-gray-200: #e1e5eb;
-  --decant-gray-300: #c9cfd7;
-  --decant-gray-400: #a3acb9;
-  --decant-gray-500: #7d8694;
-  --decant-gray-600: #5a6370;
-  --decant-gray-700: #434a54;
-  --decant-gray-800: #2d333b;
-  --decant-gray-900: #1c2028;
+  /* Brighter, cleaner backgrounds — mapped to design tokens */
+  --decant-off-white: var(--color-lumen);
+  --decant-gray-50: var(--color-lumen);
+  --decant-gray-100: var(--color-lumen-dark);
+  --decant-gray-200: var(--color-lumen-dark);
+  --decant-gray-300: var(--neutral-lighter);
+  --decant-gray-400: var(--neutral-light);
+  --decant-gray-500: var(--neutral);
+  --decant-gray-600: var(--neutral-dark);
+  --decant-gray-700: var(--neutral-darker);
+  --decant-gray-800: var(--neutral-darkest);
+  --decant-gray-900: var(--text-primary);
 
-  /* Refined forest green — cooler, more modern */
-  --decant-brand-dark: #1a3a2e;
-  --decant-brand-primary: #1e6b4f;
-  --decant-brand-light: #2a8f6a;
-  --decant-brand-accent: #34a87d;
+  /* Fathom teal brand */
+  --decant-brand-dark: var(--color-fathom);
+  --decant-brand-primary: var(--color-fathom);
+  --decant-brand-light: var(--color-fathom);
+  --decant-brand-accent: var(--color-fathom);
 
   /* Crisper borders */
-  --decant-border: #dce1e8;
-  --decant-border-dark: #c4cbd5;
+  --decant-border: var(--border-lumen-dark);
+  --decant-border-dark: var(--border-primary);
 
   /* Zones */
-  --decant-zone-sidebar-bg: #f0f2f5;
-  --decant-zone-sidebar-border: #dce1e8;
-  --decant-zone-table-bg: #ffffff;
+  --decant-zone-sidebar-bg: var(--color-lumen);
+  --decant-zone-sidebar-border: var(--border-lumen-dark);
+  --decant-zone-table-bg: var(--color-lumen);
 
-  /* Typography — tighter, crisper */
-  --decant-font: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  /* Typography — use design system font */
+  --decant-font: var(--font--body-font);
 }
 
-/* --- Header: darker, more contrast --- */
+/* --- Header: Fathom teal, more contrast --- */
 .decant-header {
-  background: linear-gradient(135deg, #152e24 0%, #1a3d2f 100%);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  background: var(--color-fathom);
+  border-bottom: 2px solid var(--border-secondary);
+  box-shadow: var(--shadow-soft);
 }
 
 .decant-header__logo {
@@ -52,122 +52,121 @@
   font-size: 22px;
 }
 
-/* Search bar — brighter, glassy */
+/* Search bar — cream tinted */
 .decant-header__search {
-  background: rgba(255,255,255,0.12) !important;
-  border: 1px solid rgba(255,255,255,0.15) !important;
-  border-radius: 8px !important;
-  backdrop-filter: blur(8px);
+  background: rgba(255,255,235,0.12) !important;
+  border: 2px solid rgba(255,255,235,0.15) !important;
+  border-radius: var(--radius-button) !important;
 }
 
 .decant-header__search:focus-within {
-  background: rgba(255,255,255,0.18) !important;
-  border-color: rgba(255,255,255,0.3) !important;
-  box-shadow: 0 0 0 2px rgba(52, 168, 125, 0.25);
+  background: rgba(255,255,235,0.18) !important;
+  border-color: rgba(255,255,235,0.3) !important;
+  box-shadow: 0 0 0 2px rgba(3, 79, 70, 0.25);
 }
 
 .decant-header__search input {
-  color: rgba(255,255,255,0.95) !important;
+  color: var(--text-secondary) !important;
 }
 
 .decant-header__search input::placeholder {
-  color: rgba(255,255,255,0.5) !important;
+  color: var(--lumen-50) !important;
 }
 
 /* Header buttons — refined */
 .decant-header__btn {
-  border-radius: 8px !important;
+  border-radius: var(--radius-button) !important;
   font-weight: 600 !important;
   letter-spacing: -0.01em;
-  border-width: 1.5px !important;
+  border-width: 2px !important;
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .decant-header__btn:hover {
   transform: translateY(-0.5px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: var(--shadow-soft);
 }
 
-/* --- Sidebar: cleaner, brighter --- */
+/* --- Sidebar: cleaner, lumen cream --- */
 .decant-spaces {
-  background-color: #f4f6f9 !important;
-  border-right: 1px solid #dce1e8 !important;
+  background-color: var(--color-lumen) !important;
+  border-right: 2px solid var(--border-lumen-dark) !important;
 }
 
 .decant-sidebar__search {
-  background: #ffffff !important;
-  border: 1px solid #dce1e8 !important;
-  border-radius: 8px !important;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  background: var(--color-lumen) !important;
+  border: 2px solid var(--border-lumen-dark) !important;
+  border-radius: var(--radius-button) !important;
+  box-shadow: var(--shadow-chip);
 }
 
 .decant-sidebar__search:focus-within {
-  border-color: var(--decant-brand-primary) !important;
-  box-shadow: 0 0 0 2px rgba(30, 107, 79, 0.1);
+  border-color: var(--color-fathom) !important;
+  box-shadow: 0 0 0 2px rgba(3, 79, 70, 0.1);
 }
 
 /* Tree items — crisper hover states */
 .decant-tree-item {
-  border-radius: 6px !important;
+  border-radius: var(--radius-sm) !important;
   transition: background-color 0.12s ease;
 }
 
 .decant-tree-item:hover {
-  background-color: rgba(30, 107, 79, 0.06) !important;
+  background-color: var(--vast-5) !important;
 }
 
 .decant-tree-item--selected {
-  background-color: rgba(30, 107, 79, 0.1) !important;
+  background-color: var(--vast-10) !important;
   font-weight: 600;
 }
 
 /* --- Table: high contrast, clean grid --- */
 .decant-table {
-  background: #ffffff;
+  background: var(--color-lumen);
 }
 
 /* Title bar — clean flat */
 .decant-table__title-bar {
-  border-bottom: 1px solid #eef1f5;
+  border-bottom: 2px solid var(--color-lumen-dark);
 }
 
 .decant-table__title {
   font-weight: 700 !important;
-  color: #1c2028 !important;
+  color: var(--text-primary) !important;
   font-size: 20px !important;
   letter-spacing: -0.3px;
 }
 
 /* Quick filter chips — refined pills */
 .decant-quick-filter {
-  border-radius: 6px !important;
+  border-radius: var(--radius-sm) !important;
   font-weight: 550 !important;
   font-size: 12.5px !important;
   padding: 5px 14px !important;
-  border: 1px solid #dce1e8 !important;
-  background: #ffffff !important;
-  color: #5a6370 !important;
+  border: 2px solid var(--border-lumen-dark) !important;
+  background: var(--color-lumen) !important;
+  color: var(--neutral-dark) !important;
   transition: all 0.12s ease !important;
 }
 
 .decant-quick-filter:hover {
-  background: #f6f8fa !important;
-  border-color: #c4cbd5 !important;
-  color: #2d333b !important;
+  background: var(--vast-5) !important;
+  border-color: var(--border-primary) !important;
+  color: var(--neutral-darker) !important;
 }
 
 .decant-quick-filter--active {
-  background: #1e6b4f !important;
-  border-color: #1e6b4f !important;
-  color: #ffffff !important;
+  background: var(--color-fathom) !important;
+  border-color: var(--color-fathom) !important;
+  color: var(--text-secondary) !important;
   font-weight: 600 !important;
-  box-shadow: 0 1px 3px rgba(30, 107, 79, 0.3);
+  box-shadow: var(--shadow-chip);
 }
 
-/* Column headers — crisp, modern */
+/* Column headers — fathom teal */
 .decant-table__header {
-  background: linear-gradient(180deg, #1e6b4f 0%, #1a5d45 100%) !important;
-  border-bottom: 2px solid #155a3e !important;
+  background: var(--color-fathom) !important;
+  border-bottom: 2px solid var(--border-secondary) !important;
   min-height: 36px;
 }
 
@@ -175,74 +174,74 @@
   font-size: 11px !important;
   font-weight: 650 !important;
   letter-spacing: 0.8px !important;
-  color: rgba(255,255,255,0.92) !important;
-  border-right-color: rgba(255,255,255,0.1) !important;
+  color: var(--lumen-70) !important;
+  border-right-color: rgba(255,255,235,0.1) !important;
 }
 
 /* Filter row — clean */
 .decant-table__filter-row {
-  background: #f8f9fb !important;
-  border-bottom: 1px solid #eef1f5 !important;
+  background: var(--color-lumen) !important;
+  border-bottom: 2px solid var(--color-lumen-dark) !important;
 }
 
 .decant-table__filter-input {
-  background: #ffffff !important;
-  border: 1px solid #dce1e8 !important;
-  border-radius: 5px !important;
+  background: var(--color-lumen) !important;
+  border: 2px solid var(--border-lumen-dark) !important;
+  border-radius: var(--radius-xs) !important;
   font-size: 11.5px !important;
-  color: #434a54 !important;
+  color: var(--neutral-darker) !important;
   transition: border-color 0.12s ease !important;
 }
 
 .decant-table__filter-input:focus {
-  border-color: #1e6b4f !important;
-  box-shadow: 0 0 0 2px rgba(30, 107, 79, 0.08) !important;
+  border-color: var(--color-fathom) !important;
+  box-shadow: 0 0 0 2px rgba(3, 79, 70, 0.08) !important;
 }
 
 /* Row styling — crisp borders, clean hover */
 .decant-table__row {
-  border-bottom: 1px solid #eef1f5 !important;
+  border-bottom: 2px solid var(--color-lumen-dark) !important;
   transition: background-color 0.1s ease !important;
 }
 
 .decant-table__row:nth-child(even) {
-  background-color: #fafbfc !important;
+  background-color: var(--color-lumen) !important;
 }
 
 .decant-table__row:hover {
-  background-color: #f0f7f4 !important;
+  background-color: var(--vast-5) !important;
 }
 
 .decant-table__row--selected {
-  background-color: #e8f4ef !important;
-  border-left-color: #1e6b4f !important;
+  background-color: var(--vast-10) !important;
+  border-left-color: var(--color-fathom) !important;
 }
 
 /* Cell text — sharper */
 .decant-table__cell {
   font-size: 13px !important;
   font-weight: 430 !important;
-  color: #434a54 !important;
-  border-right-color: #eef1f5 !important;
+  color: var(--neutral-darker) !important;
+  border-right-color: var(--color-lumen-dark) !important;
 }
 
 .decant-table__cell--title {
   font-weight: 570 !important;
-  color: #1c2028 !important;
+  color: var(--text-primary) !important;
 }
 
 /* Tags — brighter, crisper */
 .decant-meta-tag {
-  border-radius: 4px !important;
+  border-radius: var(--radius-xs) !important;
   font-weight: 550 !important;
   font-size: 11px !important;
   letter-spacing: 0.02em;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
 }
 
 /* Type badges — clean */
 .decant-type-badge {
-  border-radius: 4px !important;
+  border-radius: var(--radius-xs) !important;
   font-weight: 600 !important;
   font-size: 10.5px !important;
   letter-spacing: 0.03em;
@@ -252,49 +251,49 @@
 /* Category pills — vibrant */
 .decant-category-pill {
   font-weight: 550 !important;
-  border-radius: 4px !important;
+  border-radius: var(--radius-xs) !important;
 }
 
 /* Group headers — cleaner */
 .decant-table__group-header {
-  background: linear-gradient(to right, #f4f6f9, #f8f9fb) !important;
-  border-bottom: 1px solid #dce1e8 !important;
-  border-top: 1px solid #dce1e8 !important;
+  background: var(--color-lumen) !important;
+  border-bottom: 2px solid var(--border-lumen-dark) !important;
+  border-top: 2px solid var(--border-lumen-dark) !important;
   font-weight: 650 !important;
 }
 
 /* Status bar — subtle */
 .decant-table__status {
-  color: #7d8694 !important;
+  color: var(--neutral) !important;
   font-size: 11.5px !important;
   font-weight: 450;
-  border-top: 1px solid #eef1f5;
+  border-top: 2px solid var(--color-lumen-dark);
 }
 
 /* Zoom controls — refined */
 .decant-zoom-controls__btn {
-  border-color: #dce1e8 !important;
-  border-radius: 5px !important;
+  border-color: var(--border-lumen-dark) !important;
+  border-radius: var(--radius-xs) !important;
 }
 
 .decant-zoom-controls__label {
   font-weight: 550 !important;
   font-size: 11px !important;
-  color: #7d8694 !important;
+  color: var(--neutral) !important;
 }
 
 /* Scrollbar — refined */
 *:hover::-webkit-scrollbar-track {
-  background: #f0f2f5 !important;
+  background: var(--color-lumen) !important;
 }
 
 *:hover::-webkit-scrollbar-thumb {
-  background: #1e6b4f !important;
-  border-color: #f0f2f5 !important;
+  background: var(--color-fathom) !important;
+  border-color: var(--color-lumen) !important;
 }
 
 /* Bottom shelf — clean */
 .decant-shelf {
-  background: #f4f6f9 !important;
-  border-top: 1px solid #dce1e8 !important;
+  background: var(--color-lumen) !important;
+  border-top: 2px solid var(--border-lumen-dark) !important;
 }
