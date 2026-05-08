@@ -134,10 +134,10 @@ interface SectionHeaderProps {
 }
 
 const SectionHeader: React.FC<SectionHeaderProps> = ({ label }) => (
-  <div className="px-3 pt-3 pb-1">
+  <div className="px-3 pt-4 pb-2">
     <span
-      style={{ fontSize: '9px', letterSpacing: '0.12em' }}
-      className="font-black uppercase text-[#475569]"
+      style={{ fontSize: '14px', letterSpacing: '0.14em', fontWeight: 900 }}
+      className="uppercase text-black"
     >
       {label}
     </span>
@@ -179,22 +179,27 @@ const StaticNavItem: React.FC<StaticNavItemProps> = ({
       onClick={() => onSelect(id)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(id); }}
       className={[
-        'flex items-center gap-2 px-3 py-1.5 cursor-pointer select-none',
+        'flex items-center gap-2.5 px-3 py-2 cursor-pointer select-none',
         'border-black',
         isFirst ? 'border-y' : isLast ? 'border-b' : 'border-b',
         isSelected
-          ? 'bg-white font-bold text-black'
-          : 'hover:bg-white/60 text-slate-700',
+          ? 'bg-white font-extrabold text-black'
+          : 'hover:bg-white/60 text-black',
       ].join(' ')}
     >
       <span
         className="material-symbols-outlined"
-        style={{ fontSize: '15px', color: iconColor }}
+        style={{ fontSize: '20px', color: iconColor }}
         aria-hidden="true"
       >
         {icon}
       </span>
-      <span className="text-[11px] flex-1 truncate">{label}</span>
+      <span
+        className="flex-1 truncate"
+        style={{ fontSize: '15px', fontWeight: 700 }}
+      >
+        {label}
+      </span>
     </div>
   );
 };
@@ -279,10 +284,10 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = React.memo(({
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         className={[
-          'flex items-center gap-2 px-3 py-1 cursor-pointer select-none outline-none',
+          'flex items-center gap-2.5 px-3 cursor-pointer select-none outline-none',
+          level === 0 ? 'py-2' : 'py-1.5',
           'focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-purple-400',
-          isSelected ? 'bg-white font-bold text-black' : 'hover:bg-white/60 text-slate-800',
-          level === 0 ? 'font-bold' : '',
+          isSelected ? 'bg-white text-black' : 'hover:bg-white/60 text-black',
         ].join(' ')}
         style={{ ...bgStyle, paddingLeft }}
       >
@@ -292,23 +297,26 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = React.memo(({
             tabIndex={-1}
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
             onClick={handleToggle}
-            className="flex items-center justify-center w-3 h-3 shrink-0 text-slate-400 hover:text-slate-700"
+            className="flex items-center justify-center w-4 h-4 shrink-0 text-slate-600 hover:text-black"
           >
             <span
               className="material-symbols-outlined"
-              style={{ fontSize: '12px' }}
+              style={{ fontSize: '16px', fontWeight: 700 }}
               aria-hidden="true"
             >
               {isExpanded ? 'expand_more' : 'chevron_right'}
             </span>
           </button>
         ) : (
-          <span className="w-3 h-3 shrink-0" aria-hidden="true" />
+          <span className="w-4 h-4 shrink-0" aria-hidden="true" />
         )}
 
         <span
           className="material-symbols-outlined shrink-0"
-          style={{ fontSize: '14px', color: iconColor }}
+          style={{
+            fontSize: level === 0 ? '20px' : level === 1 ? '18px' : '16px',
+            color: iconColor,
+          }}
           aria-hidden="true"
         >
           {icon}
@@ -316,14 +324,20 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = React.memo(({
 
         <span
           className="flex-1 truncate"
-          style={{ fontSize: level >= 2 ? '11px' : '12px' }}
+          style={{
+            fontSize: level === 0 ? '17px' : level === 1 ? '15px' : '13px',
+            fontWeight: level === 0 ? 900 : level === 1 ? 700 : 600,
+            letterSpacing: level === 0 ? '-0.01em' : 0,
+            color: '#000',
+          }}
         >
           {node.name}
         </span>
 
         {count != null && count > 0 && (
           <span
-            className="shrink-0 text-[9px] font-bold text-slate-500 tabular-nums"
+            className="shrink-0 font-bold text-slate-700 tabular-nums"
+            style={{ fontSize: '11px' }}
             aria-label={`${count} items`}
           >
             {count}
@@ -449,8 +463,8 @@ export const BrutalistSidebar: React.FC<BrutalistSidebarProps> = ({
       aria-label="Decant sidebar"
       className="flex flex-col overflow-y-auto"
       style={{
-        width: '208px',
-        minWidth: '208px',
+        width: '248px',
+        minWidth: '248px',
         background: '#e2e8f0',
         height: '100%',
       }}

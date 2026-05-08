@@ -13,7 +13,8 @@ import { BatchImportModal } from '../components/import/BatchImportModal';
 import { QuickAddModal } from '../components/import/QuickAddModal';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
 import { useApp } from '../context/AppContext';
-import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI, userTagsAPI, imessageAPI } from '../services/api';
+import { nodesAPI, hierarchyAPI, adminAPI, reclassifyAPI, userTagsAPI, imessageAPI, collectionsAPI } from '../services/api';
+import { useCollections } from '../hooks/useCollections';
 import type { UserTag } from '../services/api';
 import { ImessageLinkPicker } from '../components/import/ImessageLinkPicker';
 import { createIntegratedSSEClient, getEnrichmentTracker } from '../services/realtimeService';
@@ -23,7 +24,7 @@ import { UserTagManager } from './components/UserTagManager';
 
 import type {
   ViewMode, TagColor, RowColor, ColumnFilters,
-  TableRow, TreeNodeData, BreadcrumbItem, HierarchyFilter,
+  TableRow, TreeNodeData, BreadcrumbItem, HierarchyFilter, SidebarCollection,
   DateAddedFilter,
 } from './types';
 import {
@@ -190,6 +191,11 @@ export default function DecantDemo() {
   const [treeData, setTreeData] = useState<TreeNodeData[]>(SAMPLE_TREE_DATA);
   const [hierarchyView] = useState<'function' | 'organization'>('function');
   const [hierarchyFilter, setHierarchyFilter] = useState<HierarchyFilter>({ type: 'all' });
+  const [multiSelectedSegments, setMultiSelectedSegments] = useState<Set<string>>(new Set());
+  const [workspaceSelection, setWorkspaceSelection] = useState<'all' | 'starred' | 'recent' | 'uncategorized' | null>('all');
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+  const [collectionMemberIds, setCollectionMemberIds] = useState<Set<string>>(new Set());
   const [currentCategoryTitle, setCurrentCategoryTitle] = useState('All Items');
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([
     { label: 'All Items', id: 'all' },
@@ -403,6 +409,20 @@ export default function DecantDemo() {
     loadUserTags();
   }, [loadUserTags]);
 
+  // Collections for sidebar
+  const collectionsHook = useCollections();
+  const sidebarCollections = useMemo<SidebarCollection[]>(() => {
+    const flatten = (nodes: typeof collectionsHook.collections): SidebarCollection[] => {
+      const out: SidebarCollection[] = [];
+      for (const c of nodes) {
+        out.push({ id: c.id, name: c.name, icon: c.icon, color: c.color, nodeCount: c.nodeCount });
+        if (c.children?.length) out.push(...flatten(c.children));
+      }
+      return out;
+    };
+    return flatten(collectionsHook.collections);
+  }, [collectionsHook.collections]);
+
   // SSE client for real-time enrichment updates
   useEffect(() => {
     const sseClient = createIntegratedSSEClient(
@@ -436,6 +456,35 @@ export default function DecantDemo() {
     return counts;
   }, [tableData]);
 
+  // Workspace-level counts
+  const workspaceCounts = useMemo(() => {
+    const now = Date.now();
+    const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+    let starred = 0, recent = 0, uncategorized = 0;
+    for (const item of tableData) {
+      if (item.starred) starred++;
+      const d = item.date ? Date.parse(item.date) : NaN;
+      if (!Number.isNaN(d) && d >= weekAgo) recent++;
+      if (!item.segmentCode || !item.categoryCode || item.categoryCode === 'OTH') uncategorized++;
+    }
+    return { starred, recent, uncategorized };
+  }, [tableData]);
+
+  // Tag counts for sidebar (item counts per user tag)
+  const userTagCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const item of tableData) {
+      if (item.userTags) {
+        for (const t of item.userTags) counts.set(t.id, (counts.get(t.id) || 0) + 1);
+      }
+    }
+    return counts;
+  }, [tableData]);
+
+  const sidebarUserTags = useMemo(() =>
+    allUserTags.map(t => ({ id: t.id, name: t.name, color: t.color, count: userTagCounts.get(t.id) || 0 })),
+    [allUserTags, userTagCounts]);
+
   const selectedItem = useMemo(
     () => tableData.find((item) => item.id === selectedRowId) || null,
     [tableData, selectedRowId]
@@ -453,6 +502,26 @@ export default function DecantDemo() {
       filtered = filtered.filter(
         item => item.segmentCode === hierarchyFilter.segmentCode && item.categoryCode === hierarchyFilter.categoryCode
       );
+    } else if (hierarchyFilter.type === 'multi' && hierarchyFilter.segmentCodes?.length) {
+      const allowed = new Set(hierarchyFilter.segmentCodes);
+      filtered = filtered.filter(item => allowed.has(item.segmentCode));
+    } else if (hierarchyFilter.type === 'workspace' && hierarchyFilter.workspaceFilter) {
+      const wf = hierarchyFilter.workspaceFilter;
+      if (wf === 'starred') filtered = filtered.filter(i => i.starred);
+      else if (wf === 'recent') {
+        const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        filtered = filtered.filter(i => {
+          const d = i.date ? Date.parse(i.date) : NaN;
+          return !Number.isNaN(d) && d >= weekAgo;
+        });
+      } else if (wf === 'uncategorized') {
+        filtered = filtered.filter(i => !i.segmentCode || !i.categoryCode || i.categoryCode === 'OTH');
+      }
+    } else if (hierarchyFilter.type === 'collection' && hierarchyFilter.collectionId) {
+      filtered = filtered.filter(i => collectionMemberIds.has(i.id));
+    } else if (hierarchyFilter.type === 'tag' && hierarchyFilter.tagId) {
+      const tagId = hierarchyFilter.tagId;
+      filtered = filtered.filter(i => i.userTags?.some(t => t.id === tagId));
     }
 
     // Per-column filters
@@ -513,7 +582,7 @@ export default function DecantDemo() {
     }
 
     return filtered;
-  }, [tableData, hierarchyFilter, debouncedColumnFilters, searchQuery, showStarredOnly, dateAddedFilter]);
+  }, [tableData, hierarchyFilter, debouncedColumnFilters, searchQuery, showStarredOnly, dateAddedFilter, collectionMemberIds]);
 
   const groupedTableData = useMemo(() => {
     if (hierarchyFilter.type === 'all') {
@@ -596,8 +665,105 @@ export default function DecantDemo() {
     return null;
   }, []);
 
+  const handleSelectWorkspace = useCallback((ws: 'all' | 'starred' | 'recent' | 'uncategorized') => {
+    setWorkspaceSelection(ws);
+    setMultiSelectedSegments(new Set());
+    setSelectedCollectionId(null);
+    setSelectedTagId(null);
+    setCollectionMemberIds(new Set());
+    setSelectedTreeId(null);
+
+    if (ws === 'all') {
+      setHierarchyFilter({ type: 'all' });
+      setCurrentCategoryTitle('All Items');
+      setBreadcrumbs([{ label: 'All Items', id: 'all' }]);
+    } else {
+      const labels = { starred: 'Starred', recent: 'Recent', uncategorized: 'Uncategorized' };
+      setHierarchyFilter({ type: 'workspace', workspaceFilter: ws });
+      setCurrentCategoryTitle(labels[ws]);
+      setBreadcrumbs([{ label: 'All Items', id: 'all' }, { label: labels[ws], id: `ws-${ws}` }]);
+    }
+  }, []);
+
+  const handleMultiSelectSegment = useCallback((segmentCode: string) => {
+    setMultiSelectedSegments((prev) => {
+      const next = new Set(prev);
+      if (next.has(segmentCode)) next.delete(segmentCode);
+      else next.add(segmentCode);
+
+      // Update hierarchy filter based on new set
+      if (next.size === 0) {
+        setHierarchyFilter({ type: 'all' });
+        setCurrentCategoryTitle('All Items');
+        setBreadcrumbs([{ label: 'All Items', id: 'all' }]);
+      } else if (next.size === 1) {
+        const code = [...next][0];
+        const label = SEGMENT_LABELS[code] || code;
+        setHierarchyFilter({ type: 'segment', segmentCode: code });
+        setCurrentCategoryTitle(label);
+        setBreadcrumbs([{ label: 'All Items', id: 'all' }, { label, id: `seg-${code}` }]);
+      } else {
+        setHierarchyFilter({ type: 'multi', segmentCodes: [...next] });
+        setCurrentCategoryTitle(`${next.size} segments`);
+        setBreadcrumbs([{ label: 'All Items', id: 'all' }, { label: `${next.size} segments`, id: 'multi' }]);
+      }
+      return next;
+    });
+    setWorkspaceSelection(null);
+    setSelectedCollectionId(null);
+    setSelectedTagId(null);
+  }, [SEGMENT_LABELS]);
+
+  const handleClearMultiSelect = useCallback(() => {
+    setMultiSelectedSegments(new Set());
+    setHierarchyFilter({ type: 'all' });
+    setCurrentCategoryTitle('All Items');
+    setBreadcrumbs([{ label: 'All Items', id: 'all' }]);
+    setWorkspaceSelection('all');
+  }, []);
+
+  const handleSelectCollection = useCallback(async (collectionId: string) => {
+    setSelectedCollectionId(collectionId);
+    setMultiSelectedSegments(new Set());
+    setSelectedTagId(null);
+    setWorkspaceSelection(null);
+    setSelectedTreeId(null);
+
+    const collection = sidebarCollections.find(c => c.id === collectionId);
+    const label = collection?.name || 'Collection';
+    try {
+      const memberIds = await collectionsAPI.getNodes(collectionId);
+      setCollectionMemberIds(new Set(memberIds));
+      setHierarchyFilter({ type: 'collection', collectionId });
+      setCurrentCategoryTitle(label);
+      setBreadcrumbs([{ label: 'All Items', id: 'all' }, { label, id: `col-${collectionId}` }]);
+    } catch (err) {
+      console.error('Failed to load collection members:', err);
+    }
+  }, [sidebarCollections]);
+
+  const handleSelectTag = useCallback((tagId: string) => {
+    setSelectedTagId(tagId);
+    setMultiSelectedSegments(new Set());
+    setSelectedCollectionId(null);
+    setWorkspaceSelection(null);
+    setSelectedTreeId(null);
+
+    const tag = allUserTags.find(t => t.id === tagId);
+    const label = tag?.name || 'Tag';
+    setHierarchyFilter({ type: 'tag', tagId });
+    setCurrentCategoryTitle(label);
+    setBreadcrumbs([{ label: 'All Items', id: 'all' }, { label, id: `tag-${tagId}` }]);
+  }, [allUserTags]);
+
   const handleTreeSelect = useCallback((id: string, node: TreeNodeData) => {
     setSelectedTreeId(id);
+    // Single-select through the tree clears other sidebar scopes
+    setMultiSelectedSegments(new Set());
+    setSelectedCollectionId(null);
+    setSelectedTagId(null);
+    setCollectionMemberIds(new Set());
+    setWorkspaceSelection(id === 'all' ? 'all' : null);
 
     if (id === 'all' || id === null) {
       setHierarchyFilter({ type: 'all' });
@@ -969,6 +1135,8 @@ export default function DecantDemo() {
           reclassifyProgress={reclassifyProgress}
           onSettingsClick={() => appActions.openSettingsDialog()}
           onToggleUiMode={toggleUiMode}
+          onImessageImportClick={handleImessageImport}
+          showImessageButton={imessageAvailable}
           treeData={treeData}
           selectedTreeId={selectedTreeId}
           onTreeNodeSelect={handleTreeSelect}
@@ -1032,6 +1200,34 @@ export default function DecantDemo() {
           onResizeStart={handleSidebarResizeStart}
           itemCounts={sidebarItemCounts}
           onDropItem={handleDropItem}
+          starredCount={workspaceCounts.starred}
+          recentCount={workspaceCounts.recent}
+          uncategorizedCount={workspaceCounts.uncategorized}
+          workspaceSelection={workspaceSelection}
+          onSelectWorkspace={handleSelectWorkspace}
+          multiSelectedSegments={multiSelectedSegments}
+          onMultiSelectSegment={handleMultiSelectSegment}
+          onClearMultiSelect={handleClearMultiSelect}
+          collections={sidebarCollections}
+          selectedCollectionId={selectedCollectionId}
+          onSelectCollection={handleSelectCollection}
+          onCreateCollection={async (name, icon, color) => {
+            await collectionsHook.createCollection(name, null, icon, color);
+          }}
+          onRenameCollection={async (id, name) => {
+            await collectionsHook.renameCollection(id, name);
+          }}
+          onUpdateCollectionIcon={async (id, icon, color) => {
+            await collectionsHook.updateCollectionIcon(id, icon, color);
+          }}
+          onDeleteCollection={async (id) => {
+            await collectionsHook.deleteCollection(id);
+          }}
+          userTags={sidebarUserTags}
+          selectedTagId={selectedTagId}
+          onSelectTag={handleSelectTag}
+          onAddResourceClick={() => setIsQuickAddOpen(true)}
+          onOpenSettingsClick={() => appActions.openSettingsDialog()}
         />
 
         <main className="decant-main">

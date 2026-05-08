@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+> **SOUL.md: Read `SOUL.md` in this directory at session start.** Core agent DNA — completeness over convenience, no workarounds, no deferring, ship the finished product.
+
+> **RESOURCE DISCOVERY:** Follow `~/.claude/RESOURCES.md` in full for every non-trivial task in this project. Check local skills → active MCPs → installed plugins → subscribed marketplaces before writing custom code. Report findings in one sentence.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Deployment & Repo (Official)
