@@ -54,6 +54,8 @@ interface BrutalistShellProps {
   reclassifyProgress?: { completed: number; total: number; phase?: string } | null;
   onSettingsClick?: () => void;
   onToggleUiMode: () => void;
+  onImessageImportClick?: () => void;
+  showImessageButton?: boolean;
 
   // Sidebar
   treeData: TreeNodeData[];
@@ -112,6 +114,8 @@ export const BrutalistShell: React.FC<BrutalistShellProps> = React.memo(({
   reclassifyProgress,
   onSettingsClick,
   onToggleUiMode,
+  onImessageImportClick,
+  showImessageButton,
   // Sidebar
   treeData,
   selectedTreeId,
@@ -159,6 +163,8 @@ export const BrutalistShell: React.FC<BrutalistShellProps> = React.memo(({
         reclassifyProgress={reclassifyProgress}
         onSettingsClick={onSettingsClick}
         onToggleUiMode={onToggleUiMode}
+        onImessageImportClick={onImessageImportClick}
+        showImessageButton={showImessageButton}
       />
 
       {/* ---- Main content (flex-1) ---- */}

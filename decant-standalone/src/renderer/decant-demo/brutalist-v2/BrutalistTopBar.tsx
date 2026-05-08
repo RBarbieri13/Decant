@@ -37,6 +37,8 @@ interface BrutalistTopBarProps {
   reclassifyProgress?: { completed: number; total: number; phase?: string } | null;
   onSettingsClick?: () => void;
   onToggleUiMode: () => void;
+  onImessageImportClick?: () => void;
+  showImessageButton?: boolean;
 }
 
 // ============================================================================
@@ -248,6 +250,8 @@ export const BrutalistTopBar: React.FC<BrutalistTopBarProps> = React.memo(({
   reclassifyProgress,
   onSettingsClick,
   onToggleUiMode,
+  onImessageImportClick,
+  showImessageButton = false,
 }) => {
   const reclassifyLabel = (() => {
     if (!isReclassifying) return 'Reclassify';
@@ -373,6 +377,17 @@ export const BrutalistTopBar: React.FC<BrutalistTopBarProps> = React.memo(({
           bgColor="#facc15"
           title="Quick Add (Cmd+N)"
         />
+
+        {/* iMessage — only on macOS */}
+        {showImessageButton && (
+          <ActionButton
+            label="iMessage"
+            iconName="sms"
+            onClick={onImessageImportClick}
+            bgColor="#34d399"
+            title="Import links from your iMessage notes-to-self"
+          />
+        )}
 
         {/* SYNC */}
         <ActionButton

@@ -17,9 +17,39 @@ import { log } from '../../logger/index.js';
 
 const IMESSAGE_DB_PATH = join(homedir(), 'Library/Messages/chat.db');
 const TEMP_DB_PATH = '/tmp/decant_chat_copy.db';
-const DEFAULT_CHAT_ID = 117;
 const DEFAULT_COUNT = 20;
 const MAX_MESSAGES_SCAN = 1000;
+
+/**
+ * Self-identifiers used to resolve the "notes-to-self" chat dynamically.
+ * Can be overridden via DECANT_SELF_IDENTIFIERS env var (comma-separated).
+ * Matches both iMessage/SMS raw forms (phone/email, any case, with or
+ * without the leading '+' / country code).
+ */
+const DEFAULT_SELF_IDENTIFIERS = [
+  '9523346507',
+  '+19523346507',
+  'rbarbieri13@gmail.com',
+];
+
+function normalizeIdentifier(raw: string): string {
+  return raw
+    .toLowerCase()
+    .replace(/^\+?1?/, '')   // strip leading '+' and optional US country code
+    .replace(/[\s()\-.]/g, ''); // strip formatting characters
+}
+
+function getSelfIdentifiers(): string[] {
+  const env = process.env.DECANT_SELF_IDENTIFIERS;
+  const list = env ? env.split(',').map((s) => s.trim()).filter(Boolean) : DEFAULT_SELF_IDENTIFIERS;
+  // Keep both raw and normalized forms for matching both representations
+  const out = new Set<string>();
+  for (const id of list) {
+    out.add(id.toLowerCase());
+    out.add(normalizeIdentifier(id));
+  }
+  return [...out];
+}
 
 /** Regex to extract URLs from message text and binary blobs */
 const URL_PATTERN = /https?:\/\/[^\s<>"{|}\\^\x60\[\]\x00-\x1f\x7f-\xff]+/g;
@@ -37,7 +67,7 @@ export interface ExtractUrlsOptions {
   count?: number;
   /** Number of unique URLs to skip before collecting (for pagination) */
   offset?: number;
-  /** iMessage chat ID for self-texts (default: 117) */
+  /** Override the auto-resolved chat ID (advanced / debugging) */
   chatId?: number;
 }
 
@@ -147,11 +177,49 @@ function appleTimestampToISO(timestamp: number | null): string | null {
 }
 
 /**
- * Extract the most recent unique URLs from iMessage self-texts.
+ * Resolve the "notes-to-self" chat ID(s) by matching your identifiers
+ * (phone / email) against both chat_identifier and participant handles.
+ * Falls back to any chat where the single participant IS you.
+ */
+function resolveSelfChatIds(db: Database.Database): number[] {
+  const selves = getSelfIdentifiers();
+  if (selves.length === 0) return [];
+
+  // Strategy 1: chat.chat_identifier exactly matches one of your identifiers.
+  // This is the most reliable for Notes-to-Self chats created on recent macOS.
+  const placeholders = selves.map(() => '?').join(',');
+
+  const byChatIdentifier = db.prepare(`
+    SELECT ROWID as id, chat_identifier, display_name
+    FROM chat
+    WHERE lower(chat_identifier) IN (${placeholders})
+       OR replace(replace(replace(replace(lower(chat_identifier),'+',''),'-',''),' ',''),'(','') IN (${placeholders})
+  `).all(...selves, ...selves) as Array<{ id: number; chat_identifier: string; display_name: string | null }>;
+
+  const ids = new Set<number>();
+  for (const row of byChatIdentifier) ids.add(row.id);
+  if (ids.size > 0) return [...ids];
+
+  // Strategy 2: handles joined to chats where all participants are you.
+  const byHandle = db.prepare(`
+    SELECT DISTINCT chj.chat_id as id
+    FROM chat_handle_join chj
+    JOIN handle h ON h.ROWID = chj.handle_id
+    WHERE lower(h.id) IN (${placeholders})
+       OR replace(replace(replace(replace(lower(h.id),'+',''),'-',''),' ',''),'(','') IN (${placeholders})
+  `).all(...selves, ...selves) as Array<{ id: number }>;
+
+  for (const row of byHandle) ids.add(row.id);
+  return [...ids];
+}
+
+/**
+ * Extract the most recent unique URLs from iMessage notes-to-self.
  *
  * Copies the iMessage database to a temp location (permission workaround),
- * queries the specified chat for messages with URLs, and returns
- * up to `count` unique URLs ordered most-recent-first.
+ * resolves your self-chat by matching phone/email identifiers,
+ * queries for messages with URLs, and returns up to `count` unique URLs
+ * ordered most-recent-first.
  *
  * Supports offset-based pagination: skip `offset` unique URLs before
  * collecting the next `count`.
@@ -161,7 +229,7 @@ export async function extractRecentUrls(
 ): Promise<ExtractUrlsResult> {
   const count = options?.count ?? DEFAULT_COUNT;
   const offset = options?.offset ?? 0;
-  const chatId = options?.chatId ?? DEFAULT_CHAT_ID;
+  const chatIdOverride = options?.chatId;
 
   // Verify iMessage database exists
   if (!existsSync(IMESSAGE_DB_PATH)) {
@@ -180,16 +248,30 @@ export async function extractRecentUrls(
     const db = new Database(TEMP_DB_PATH, { readonly: true, timeout: 5000 });
 
     try {
-      // Step 3: Query messages from the self-text chat, newest first.
-      // We fetch many rows since not all messages contain URLs.
+      // Step 3: Resolve the self-chat ID(s) from your phone / email.
+      const chatIds = chatIdOverride != null
+        ? [chatIdOverride]
+        : resolveSelfChatIds(db);
+
+      if (chatIds.length === 0) {
+        return {
+          urls: [],
+          hasMore: false,
+          error:
+            'Could not resolve your Notes-to-Self chat. Make sure you have sent at least one message to yourself (952-334-6507 or rbarbieri13@gmail.com), or set DECANT_SELF_IDENTIFIERS to the identifier your iMessage uses.',
+        };
+      }
+
+      // Step 4: Query messages from the resolved chat(s), newest first.
+      const placeholders = chatIds.map(() => '?').join(',');
       const rows = db.prepare(`
         SELECT m.ROWID, m.text, m.attributedBody, m.date
         FROM message m
         JOIN chat_message_join cmj ON m.ROWID = cmj.message_id
-        WHERE cmj.chat_id = ?
+        WHERE cmj.chat_id IN (${placeholders})
         ORDER BY m.ROWID DESC
         LIMIT ?
-      `).all(chatId, MAX_MESSAGES_SCAN) as Array<{
+      `).all(...chatIds, MAX_MESSAGES_SCAN) as Array<{
         ROWID: number;
         text: string | null;
         attributedBody: Buffer | null;
@@ -200,7 +282,7 @@ export async function extractRecentUrls(
         return {
           urls: [],
           hasMore: false,
-          error: `No messages found in chat ID ${chatId}. Verify this is your self-text thread.`,
+          error: `Resolved self-chat (ID${chatIds.length > 1 ? 's' : ''} ${chatIds.join(', ')}) but found no messages.`,
         };
       }
 
@@ -226,7 +308,7 @@ export async function extractRecentUrls(
       const hasMore = allUniqueUrls.length > offset + count;
 
       log.info('Extracted iMessage URLs', {
-        chatId,
+        chatIds,
         requested: count,
         offset,
         found: page.length,
